@@ -91,7 +91,7 @@ public class WorkerService : IWorkerService
         }
     }
 
-    public async Task<ApiResponseDto<List<Workers?>>> GetWorkerById(int id)
+    public async Task<ApiResponseDto<Workers?>> GetWorkerById(int id)
     {
         HttpResponseMessage response;
         try
@@ -101,7 +101,7 @@ public class WorkerService : IWorkerService
             if (response.StatusCode is not System.Net.HttpStatusCode.OK)
             {
                 AnsiConsole.Markup($"[Red]Error: Worker not found[/]\n");
-                return new ApiResponseDto<List<Workers?>>
+                return new ApiResponseDto<Workers?>
                 {
                     RequestFailed = true,
                     ResponseCode = response.StatusCode,
@@ -112,19 +112,20 @@ public class WorkerService : IWorkerService
             else
             {
                 AnsiConsole.Markup("[Green]Worker retrieved successfully.[/]\n");
-                return await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Workers?>>>()
-                    ?? new ApiResponseDto<List<Workers?>>
+                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Workers?>>()
+                    ?? new ApiResponseDto<Workers?>
                     {
                         RequestFailed = false,
-                        Message = "Worker data obtained successfully",
-                        Data = new List<Workers?>(),
-                    };
-            }
+                        ResponseCode = response.StatusCode,
+                        Message = "Data obtained",
+                        Data = response.Content.ReadFromJsonAsync<Workers>().Result ,
+					};
+			}
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Try catch failed for GetWorkerById: {ex}");
-            return new ApiResponseDto<List<Workers?>>
+            return new ApiResponseDto<Workers?>
             {
                 RequestFailed = true,
                 ResponseCode = HttpStatusCode.InternalServerError,

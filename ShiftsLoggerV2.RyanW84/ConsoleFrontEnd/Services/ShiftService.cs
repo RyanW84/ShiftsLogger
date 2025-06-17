@@ -13,110 +13,115 @@ public class ShiftService : IShiftService
         BaseAddress = new Uri("https://localhost:7009/"),
     };
 
-    public async Task<ApiResponseDto<List<Shifts>>> GetAllShifts(
-        ShiftFilterOptions shiftFilterOptions
-    )
-    {
-        try
-        {
-            // Debug log for incoming search parameter
-            AnsiConsole.MarkupLine($"[yellow]Filter options received:[/]\n\n" +
-                $"  [blue]ShiftId:[/] {shiftFilterOptions.ShiftId}\t" +
-                $"  [blue]WorkerId:[/] {shiftFilterOptions.WorkerId}\t" +
-                $"  [blue]LocationId:[/] {shiftFilterOptions.LocationId}\t" +
-                $"  [blue]LocationName:[/] '{shiftFilterOptions.LocationName ?? "null"}'\n" +
-                $"  [blue]StartTime:[/] {shiftFilterOptions.StartTime?.ToString() ?? "null"}\t" +
-                $"  [blue]EndTime:[/] {shiftFilterOptions.EndTime?.ToString() ?? "null"}'\t" +
-                $"  [blue]SortBy:[/] '{shiftFilterOptions.SortBy ?? "null"}'\t" +
-                $"  [blue]SortOrder:[/] '{shiftFilterOptions.SortOrder ?? "null"}'\t" +
-                $"  [blue]Search:[/] '{shiftFilterOptions.Search ?? "null"}'\n");
+	public async Task<ApiResponseDto<List<Shifts>>> GetAllShifts(
+		ShiftFilterOptions shiftFilterOptions
+	)
+	{
+		try
+		{
+			// Debug log for incoming search parameter
+			AnsiConsole.MarkupLine($"[yellow]Filter options received:[/]\n\n" +
+				$"  [blue]ShiftId:[/] {shiftFilterOptions.ShiftId}\t" +
+				$"  [blue]WorkerId:[/] {shiftFilterOptions.WorkerId}\t" +
+				$"  [blue]LocationId:[/] {shiftFilterOptions.LocationId}\t" +
+				$"  [blue]LocationName:[/] '{shiftFilterOptions.LocationName ?? "null"}'\n" +
+				$"  [blue]StartTime:[/] {shiftFilterOptions.StartTime?.ToString() ?? "null"}\t" +
+				$"  [blue]EndTime:[/] {shiftFilterOptions.EndTime?.ToString() ?? "null"}'\t" +
+				$"  [blue]SortBy:[/] '{shiftFilterOptions.SortBy ?? "null"}'\t" +
+				$"  [blue]SortOrder:[/] '{shiftFilterOptions.SortOrder ?? "null"}'\t" +
+				$"  [blue]Search:[/] '{shiftFilterOptions.Search ?? "null"}'\n");
 
-            var queryParams = new List<string>();
+			var queryParams = new List<string>();
 
-            // Add all filter parameters
-            if (shiftFilterOptions.ShiftId != null)
-                queryParams.Add($"ShiftId={shiftFilterOptions.ShiftId}");
+			// Add all filter parameters
+			if (shiftFilterOptions.ShiftId != null)
+				queryParams.Add($"ShiftId={shiftFilterOptions.ShiftId}");
 
-            if (shiftFilterOptions.WorkerId != null)
-                queryParams.Add($"WorkerId={shiftFilterOptions.WorkerId}");
+			if (shiftFilterOptions.WorkerId != null)
+				queryParams.Add($"WorkerId={shiftFilterOptions.WorkerId}");
 
-            if (shiftFilterOptions.LocationId != null)
-                queryParams.Add($"LocationId={shiftFilterOptions.LocationId}");
+			if (shiftFilterOptions.LocationId != null)
+				queryParams.Add($"LocationId={shiftFilterOptions.LocationId}");
 
-            // Date/time parameters
-            if (shiftFilterOptions.StartTime != null)
-                queryParams.Add($"StartTime={shiftFilterOptions.StartTime:O}");
+			// Date/time parameters
+			if (shiftFilterOptions.StartTime != null)
+				queryParams.Add($"StartTime={shiftFilterOptions.StartTime:O}");
 
-            if (shiftFilterOptions.EndTime != null)
-                queryParams.Add($"EndTime={shiftFilterOptions.EndTime:O}");
+			if (shiftFilterOptions.EndTime != null)
+				queryParams.Add($"EndTime={shiftFilterOptions.EndTime:O}");
 
-            if (shiftFilterOptions.StartTime != null)
-                queryParams.Add($"StartDate={shiftFilterOptions.StartTime.Value.Date:yyyy-MM-dd}");
+			if (shiftFilterOptions.StartTime != null)
+				queryParams.Add($"StartDate={shiftFilterOptions.StartTime.Value.Date:yyyy-MM-dd}");
 
-            if (shiftFilterOptions.EndTime != null)
-                queryParams.Add($"EndDate={shiftFilterOptions.EndTime.Value.Date:yyyy-MM-dd}");
+			if (shiftFilterOptions.EndTime != null)
+				queryParams.Add($"EndDate={shiftFilterOptions.EndTime.Value.Date:yyyy-MM-dd}");
 
-            // Search parameter - improved with trimming and proper null checking
-            if (!string.IsNullOrWhiteSpace(shiftFilterOptions.Search?.Trim()))
-            {
-                queryParams.Add($"Search={Uri.EscapeDataString(shiftFilterOptions.Search.Trim())}");
-                AnsiConsole.MarkupLine($"[green]Adding search parameter: '{shiftFilterOptions.Search.Trim()}'[/]");
-            }
+			// Search parameter - improved with trimming and proper null checking
+			if (!string.IsNullOrWhiteSpace(shiftFilterOptions.Search?.Trim()))
+			{
+				queryParams.Add($"Search={Uri.EscapeDataString(shiftFilterOptions.Search.Trim())}");
+				AnsiConsole.MarkupLine($"[green]Adding search parameter: '{shiftFilterOptions.Search.Trim()}'[/]");
+			}
 
-            // Other parameters
-            if (!string.IsNullOrWhiteSpace(shiftFilterOptions.LocationName))
-                queryParams.Add($"LocationName={Uri.EscapeDataString(shiftFilterOptions.LocationName)}");
+			// Other parameters
+			if (!string.IsNullOrWhiteSpace(shiftFilterOptions.LocationName))
+				queryParams.Add($"LocationName={Uri.EscapeDataString(shiftFilterOptions.LocationName)}");
 
-            if (!string.IsNullOrWhiteSpace(shiftFilterOptions.SortBy))
-                queryParams.Add($"SortBy={Uri.EscapeDataString(shiftFilterOptions.SortBy)}");
+			if (!string.IsNullOrWhiteSpace(shiftFilterOptions.SortBy))
+				queryParams.Add($"SortBy={Uri.EscapeDataString(shiftFilterOptions.SortBy)}");
 
-            if (!string.IsNullOrWhiteSpace(shiftFilterOptions.SortOrder))
-                queryParams.Add($"SortOrder={Uri.EscapeDataString(shiftFilterOptions.SortOrder)}");
+			if (!string.IsNullOrWhiteSpace(shiftFilterOptions.SortOrder))
+				queryParams.Add($"SortOrder={Uri.EscapeDataString(shiftFilterOptions.SortOrder)}");
 
-            // Build and log the final URL
-            var queryString = "api/shifts";
-            if (queryParams.Count > 0)
-                queryString += "?" + string.Join("&", queryParams);
+			// Build and log the final URL
+			var queryString = "api/shifts";
+			if (queryParams.Count > 0)
+				queryString += "?" + string.Join("&" , queryParams);
 
 			AnsiConsole.MarkupLine($"[blue]Final request URL: {httpClient.BaseAddress}{queryString}[/]\n");
 
 			// Make the request
 			var response = await httpClient.GetAsync(queryString);
 
-            if (response.StatusCode is System.Net.HttpStatusCode.OK)
-            {
-                var shifts =
-                    await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Shifts>>>()
-                    ?? new ApiResponseDto<List<Shifts>>
-                    {
-                        ResponseCode = response.StatusCode,
-                        Message = "Data obtained",
-                        Data = [],
-                    };
+			if (response.StatusCode is System.Net.HttpStatusCode.OK)
+			{
+				ApiResponseDto<List<Shifts>> shiftsResponse =
+					await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Shifts>>>()
+					?? new ApiResponseDto<List<Shifts>>
+					{
+						ResponseCode = response.StatusCode ,
+						Message = "Data obtained" ,
+						Data = new List<Shifts>() , // Fixed initialization of 'Data'
+					};
 
-                return shifts;
-            }
-            else
-            {
-                var shifts =
-                    await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Shifts>>>()
-                    ?? new ApiResponseDto<List<Shifts>>()
-                    {
-                        RequestFailed = true,
-                        Message = $"{response.ReasonPhrase}",
-                        Data = [],
-                    };
-                return shifts;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Try catch failed for GetAllShifts: {ex}");
-            throw;
-        }
-    }
+				return shiftsResponse;
+			}
+			else
+			{
+				var shiftsResponse =
+					await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Shifts>>>()
+					?? new ApiResponseDto<List<Shifts>>()
+					{
+						RequestFailed = true ,
+						Message = $"{response.ReasonPhrase}" ,
+						Data = new List<Shifts>() , // Fixed initialization of 'Data'
+					};
+				return new ApiResponseDto<List<Shifts>>
+				{
+					ResponseCode = response.StatusCode ,
+					Message = shiftsResponse.Message ,
+					Data = null ,
+				};
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Try catch failed for GetAllShifts: {ex}");
+			throw;
+		}
+	}
 
-    public async Task<ApiResponseDto<List<Shifts>>> GetShiftById(int id)
+    public async Task<ApiResponseDto<Shifts>> GetShiftById(int id)
     {
         HttpResponseMessage response;
         try
@@ -127,7 +132,7 @@ public class ShiftService : IShiftService
             {
                 AnsiConsole.Markup($"\n[Red]Error - {response.StatusCode}[/]\n");
 
-                return new ApiResponseDto<List<Shifts>>
+                return new ApiResponseDto<Shifts>
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase,
@@ -137,13 +142,13 @@ public class ShiftService : IShiftService
             else
             {
                 AnsiConsole.Markup("\n[Green]Shift retrieved successfully[/]\n");
-                return await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Shifts>>>()
-                    ?? new ApiResponseDto<List<Shifts>>
+                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Shifts>>()
+                    ?? new ApiResponseDto<Shifts>
                     {
                         ResponseCode = response.StatusCode,
                         Message = "No data returned.",
-                        Data = [],
-                        TotalCount = 0,
+                        Data = response.Content.ReadFromJsonAsync<Shifts>().Result ,
+						TotalCount = 0,
                     };
             }
         }

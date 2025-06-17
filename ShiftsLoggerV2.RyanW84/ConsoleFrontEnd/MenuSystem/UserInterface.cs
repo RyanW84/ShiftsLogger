@@ -1,6 +1,10 @@
 ﻿using ConsoleFrontEnd.Models;
+using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
 using ConsoleFrontEnd.Services;
+
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+
 using Spectre.Console;
 
 namespace ConsoleFrontEnd.MenuSystem;
@@ -125,8 +129,14 @@ public class UserInterface
         return createdShift;
     }
 
-    public void DisplayShiftsTable(IEnumerable<Shifts> shifts)
+    public void DisplayShiftsTable(ApiResponseDto<List<Shifts?>> shiftsResponse)
     {
+        if (shiftsResponse.Data == null || !shiftsResponse.Data.Any())
+        {
+            AnsiConsole.MarkupLine("[red]No shifts found.[/]");
+            ContinueAndClearScreen();
+            return;
+        }
         Table table = new();
         table.AddColumn("Index #");
         table.AddColumn("Worker #");
@@ -134,9 +144,9 @@ public class UserInterface
         table.AddColumn("Start Time");
         table.AddColumn("End Time");
         table.AddColumn("Duration");
-
-        var shiftList = shifts.ToList();
-        for (int i = 0; i < shiftList.Count; i++)
+        List<Shifts> shiftList = shiftsResponse.Data;
+		
+		for (int i = 0; i < shiftList.Count; i++)
         {
             var shift = shiftList[i];
             if (shift != null)
@@ -163,31 +173,31 @@ public class UserInterface
         return shiftId;
     }
 
-    public Shifts UpdateShiftUi(List<Shifts> existingShift)
+    public Shifts UpdateShiftUi(Shifts existingShift)
     {
         var startTime = AnsiConsole.Ask<DateTime?>(
             "Enter [green]Start Time[/] (leave blank to keep current):",
-            existingShift[0].StartTime.DateTime
+            existingShift.StartTime.DateTime
         );
         var endTime = AnsiConsole.Ask<DateTime?>(
             "Enter [green]End Time[/] (leave blank to keep current):",
-            existingShift[0].EndTime.DateTime
+            existingShift.EndTime.DateTime
         );
         var locationId = AnsiConsole.Ask<int?>(
             "Enter [green]Location ID[/] (leave blank to keep current):",
-            existingShift[0].LocationId
+            existingShift.LocationId
         );
         var workerId = AnsiConsole.Ask<int?>(
             "Enter [green]Worker ID[/] (leave blank to keep current):",
-            existingShift[0].WorkerId
+            existingShift.WorkerId
         );
 
         var updatedShift = new Shifts
         {
-            StartTime = startTime ?? existingShift[0].StartTime,
-            EndTime = endTime ?? existingShift[0].EndTime,
-            LocationId = locationId ?? existingShift[0].LocationId,
-            WorkerId = workerId ?? existingShift[0].WorkerId,
+            StartTime = startTime ?? existingShift.StartTime,
+            EndTime = endTime ?? existingShift.EndTime,
+            LocationId = locationId ?? existingShift.LocationId,
+            WorkerId = workerId ?? existingShift.WorkerId,
         };
 
         return updatedShift;
@@ -305,19 +315,19 @@ public class UserInterface
         return workerId;
     }
 
-    public Workers UpdateWorkerUi(List<Workers> existingWorker)
+    public Workers UpdateWorkerUi(Workers existingWorker)
     {
         var name = AnsiConsole.Ask<string>(
             "Enter [green]Name[/] (leave blank to keep current):",
-            existingWorker[0].Name
+            existingWorker.Name
         );
         var email = AnsiConsole.Ask<string>(
             "Enter [green]Email[/] (leave blank to keep current):",
-            existingWorker[0].Email
+            existingWorker.Email
         );
         var phoneNumber = AnsiConsole.Ask<string>(
             "Enter [green]Phone Number[/] (leave blank to keep current):",
-            existingWorker[0].PhoneNumber
+            existingWorker.PhoneNumber
         );
         var updatedWorker = new Workers
         {

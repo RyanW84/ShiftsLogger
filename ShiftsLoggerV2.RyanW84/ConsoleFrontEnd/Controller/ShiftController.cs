@@ -29,9 +29,9 @@ namespace ConsoleFrontEnd.Controller
         };
 
         // Helpers
-        public async Task<ApiResponseDto<List<Shifts>>> ShiftsNotFoundHelper(int shiftId)
+        public async Task<ApiResponseDto<Shifts>> ShiftsNotFoundHelper(int shiftId)
         {
-            var checkedShift = await shiftService.GetShiftById(shiftId);
+            ApiResponseDto<Shifts>? checkedShift = await shiftService.GetShiftById(shiftId);
             while (checkedShift.ResponseCode == System.Net.HttpStatusCode.NotFound)
             {
                 Console.WriteLine();
@@ -43,7 +43,7 @@ namespace ConsoleFrontEnd.Controller
                 if (exitSelection is "Exit")
                 {
                     Console.Clear();
-                    return new ApiResponseDto<List<Shifts>>
+                    return new ApiResponseDto<Shifts>
                     {
                         RequestFailed = true,
                         ResponseCode = System.Net.HttpStatusCode.NotFound,
@@ -104,9 +104,9 @@ namespace ConsoleFrontEnd.Controller
                 var filterOptions = userInterface.FilterShiftsUi();
 
                 shiftFilterOptions = filterOptions;
-                var shifts = await shiftService.GetAllShifts(shiftFilterOptions);
+                ApiResponseDto<List<Shifts?>> shifts = await shiftService.GetAllShifts(shiftFilterOptions);
 
-                userInterface.DisplayShiftsTable(shifts.Data);
+                userInterface.DisplayShiftsTable(shifts);
             }
             catch (Exception ex)
             {
@@ -114,28 +114,37 @@ namespace ConsoleFrontEnd.Controller
             }
         }
 
-        public async Task GetShiftById()
-        {
-            try
-            {
-                AnsiConsole.Clear();
-                AnsiConsole.Write(
-                    new Rule("[bold yellow]View Shift by ID[/]").RuleStyle("yellow").Centered()
-                );
-                var shiftId = userInterface.GetShiftByIdUi();
-                var shift = await ShiftsNotFoundHelper(shiftId);
-                if (shift.ResponseCode is System.Net.HttpStatusCode.NotFound || shift.Data == null)
-                {
-                    return;
-                }
-                userInterface.DisplayShiftsTable(shift.Data);
-                userInterface.ContinueAndClearScreen();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Exception: {ex}");
-            }
-        }
+		public async Task GetShiftById( )
+		{
+			try
+			{
+				AnsiConsole.Clear();
+				AnsiConsole.Write(
+					new Rule("[bold yellow]View Shift by ID[/]").RuleStyle("yellow").Centered()
+				);
+				var shiftId = userInterface.GetShiftByIdUi();
+				ApiResponseDto<Shifts?> shift = await ShiftsNotFoundHelper(shiftId);
+				if (shift.ResponseCode is System.Net.HttpStatusCode.NotFound || shift.Data == null)
+				{
+					return;
+				}
+
+				// Fix for CS9174: Create a new ApiResponseDto<List<Shifts?>> object instead of using a collection initializer.
+				var shiftsResponse = new ApiResponseDto<List<Shifts?>>()
+				{
+					RequestFailed = false ,
+					ResponseCode = System.Net.HttpStatusCode.OK ,
+					Message = "Shift retrieved successfully." ,
+					Data = new List<Shifts?> { shift.Data }
+				};
+
+				userInterface.DisplayShiftsTable(shiftsResponse);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Exception: {ex}");
+			}
+		}
 
         public async Task UpdateShift()
         {
@@ -146,7 +155,7 @@ namespace ConsoleFrontEnd.Controller
                     new Rule("[bold yellow]Update Shift[/]").RuleStyle("yellow").Centered()
                 );
                 var shiftId = userInterface.GetShiftByIdUi();
-                var existingShift = await ShiftsNotFoundHelper(shiftId);
+                ApiResponseDto<Shifts> existingShift = await ShiftsNotFoundHelper(shiftId);
 
                 if (existingShift.ResponseCode is System.Net.HttpStatusCode.NotFound)
                 {

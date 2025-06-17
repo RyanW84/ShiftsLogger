@@ -1,4 +1,5 @@
 ﻿using ConsoleFrontEnd.Models;
+using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
 using ConsoleFrontEnd.Services;
 using Spectre.Console;
@@ -11,10 +12,10 @@ public class WorkerController
     private readonly WorkerService workerService = new();
     private WorkerFilterOptions workerFilterOptions = new()
     {
-        WorkerId = null ,
-        Name = null ,
-        PhoneNumber = null ,
-        Email = null
+        WorkerId = null,
+        Name = null,
+        PhoneNumber = null,
+        Email = null,
     };
 
     public async Task CreateWorker()
@@ -28,12 +29,12 @@ public class WorkerController
             var worker = userInterface.CreateWorkerUi();
             var createdWorker = await workerService.CreateWorker(worker);
             userInterface.ContinueAndClearScreen();
-		}
+        }
         catch (Exception ex)
         {
-			Console.WriteLine ($"Exception: {ex.Message}");
+            Console.WriteLine($"Exception: {ex.Message}");
             userInterface.ContinueAndClearScreen();
-		}
+        }
     }
 
     public async Task GetAllWorkers()
@@ -62,48 +63,49 @@ public class WorkerController
         }
         catch (Exception ex)
         {
-			Console.WriteLine ($"Exception: {ex.Message}");
+            Console.WriteLine($"Exception: {ex.Message}");
         }
     }
 
-    public async Task GetWorkerById()
-    {
-        try
-        {
-            Console.Clear();
-            AnsiConsole.Write(
-                new Rule("[bold yellow]View Worker by ID[/]").RuleStyle("yellow").Centered()
-            );
-            var workerId = userInterface.GetWorkerByIdUi();
-            var worker = await workerService.GetWorkerById(workerId);
+	public async Task GetWorkerById( )
+	{
+		try
+		{
+			Console.Clear();
+			AnsiConsole.Write(
+				new Rule("[bold yellow]View Worker by ID[/]").RuleStyle("yellow").Centered()
+			);
+			var workerId = userInterface.GetWorkerByIdUi();
+			ApiResponseDto<Workers?> worker = await workerService.GetWorkerById(workerId);
 
-            while (worker.ResponseCode is System.Net.HttpStatusCode.NotFound)
-            {
-                var exitSelection = AnsiConsole.Prompt(
-                    new SelectionPrompt<string>()
-                        .Title("Try again or exit?")
-                        .AddChoices(new[] { "Try Again", "Exit" })
-                );
-                if (exitSelection is "Exit")
-                {
-                    Console.Clear();
-                    return;
-                }
-                else if (exitSelection is "Try Again")
-                {
-                    Console.Clear();
-                    workerId = userInterface.GetWorkerByIdUi();
-                    worker = await workerService.GetWorkerById(workerId);
-                }
-            }
+			while (worker.ResponseCode is System.Net.HttpStatusCode.NotFound)
+			{
+				var exitSelection = AnsiConsole.Prompt(
+					new SelectionPrompt<string>()
+						.Title("Try again or exit?")
+						.AddChoices(new[] { "Try Again" , "Exit" })
+				);
+				if (exitSelection is "Exit")
+				{
+					Console.Clear();
+					return;
+				}
+				else if (exitSelection is "Try Again")
+				{
+					Console.Clear();
+					workerId = userInterface.GetWorkerByIdUi();
+					worker = await workerService.GetWorkerById(workerId);
+				}
+			}
 
-            userInterface.DisplayWorkersTable(worker.Data);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Exception: {ex}");
-        }
-    }
+			// Fix: Wrap the single worker object in a collection to match the expected type
+			userInterface.DisplayWorkersTable(new List<Workers?> { worker.Data });
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Exception: {ex}");
+		}
+	}
 
 	public async Task UpdateWorker( )
 	{
@@ -138,14 +140,10 @@ public class WorkerController
 				}
 			}
 
-			// Safely convert List<Workers?> to List<Workers> and handle nulls
-			var nonNullWorkers = (existingWorker.Data ?? new List<Workers?>())
-				.Where(w => w != null)
-				.Cast<Workers>()
-				.ToList();
+		
+			var updatedWorker = userInterface.UpdateWorkerUi(existingWorker.Data);
 
-			var updatedWorker = userInterface.UpdateWorkerUi(nonNullWorkers);
-
+			// Fix: Pass Workers to UpdateWorker, not ApiResponseDto<Workers>
 			var updatedWorkerResponse = await workerService.UpdateWorker(workerId , updatedWorker);
 		}
 		catch (Exception ex)
@@ -154,40 +152,40 @@ public class WorkerController
 		}
 	}
 
-    public async Task DeleteWorker()
-    {
-        try
-        {
-            Console.Clear();
-            AnsiConsole.Write(
-                new Rule("[bold yellow]Delete Worker[/]").RuleStyle("yellow").Centered()
-            );
-            var workerId = userInterface.GetWorkerByIdUi();
-            var deletedWorker = await workerService.DeleteWorker(workerId);
-            if (deletedWorker.ResponseCode is System.Net.HttpStatusCode.NotFound)
-            {
-                var exitSelection = AnsiConsole.Prompt(
-                    new SelectionPrompt<string>()
-                        .Title("Try again or exit?")
-                        .AddChoices(new[] { "Try Again", "Exit" })
-                );
-                if (exitSelection == "Exit")
-                {
-                    Console.Clear();
-                    return;
-                }
-                else
-                {
-                    Console.Clear();
-                    await DeleteWorker(); // Retry
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Try Pass failed in Worker Controller: Delete Worker {ex}");
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
-        }
-    }
+	public async Task DeleteWorker( )
+	{
+		try
+		{
+			Console.Clear();
+			AnsiConsole.Write(
+				new Rule("[bold yellow]Delete Worker[/]").RuleStyle("yellow").Centered()
+			);
+			var workerId = userInterface.GetWorkerByIdUi();
+			var deletedWorker = await workerService.DeleteWorker(workerId);
+			if (deletedWorker.ResponseCode is System.Net.HttpStatusCode.NotFound)
+			{
+				var exitSelection = AnsiConsole.Prompt(
+					new SelectionPrompt<string>()
+						.Title("Try again or exit?")
+						.AddChoices(new[] { "Try Again" , "Exit" })
+				);
+				if (exitSelection == "Exit")
+				{
+					Console.Clear();
+					return;
+				}
+				else
+				{
+					Console.Clear();
+					await DeleteWorker(); // Retry
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Try Pass failed in Worker Controller: Delete Worker {ex}");
+			Console.WriteLine("Press any key to continue...");
+			Console.ReadKey();
+		}
+	}
 }
