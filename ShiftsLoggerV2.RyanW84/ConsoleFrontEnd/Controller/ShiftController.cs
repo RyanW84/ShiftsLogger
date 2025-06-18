@@ -106,7 +106,18 @@ namespace ConsoleFrontEnd.Controller
                 shiftFilterOptions = filterOptions;
                 ApiResponseDto<List<Shifts?>> shifts = await shiftService.GetAllShifts(shiftFilterOptions);
 
-                userInterface.DisplayShiftsTable(shifts);
+                if (shifts.ResponseCode is not System.Net.HttpStatusCode.OK)
+                {
+                    AnsiConsole.MarkupLine($"[Red]{shifts.Message}[/]");
+                    userInterface.ContinueAndClearScreen();
+				}
+                else
+                {
+					AnsiConsole.MarkupLine($"[Green]{shifts.Message}[/]\n");
+					userInterface.DisplayShiftsTable(shifts.Data);
+				}
+
+               
             }
             catch (Exception ex)
             {
@@ -129,16 +140,9 @@ namespace ConsoleFrontEnd.Controller
 					return;
 				}
 
-				// Fix for CS9174: Create a new ApiResponseDto<List<Shifts?>> object instead of using a collection initializer.
-				var shiftsResponse = new ApiResponseDto<List<Shifts?>>()
-				{
-					RequestFailed = false ,
-					ResponseCode = System.Net.HttpStatusCode.OK ,
-					Message = "Shift retrieved successfully." ,
-					Data = new List<Shifts?> { shift.Data }
-				};
+			
 
-				userInterface.DisplayShiftsTable(shiftsResponse);
+				userInterface.DisplayShiftsTable([shift.Data]);
 			}
 			catch (Exception ex)
 			{

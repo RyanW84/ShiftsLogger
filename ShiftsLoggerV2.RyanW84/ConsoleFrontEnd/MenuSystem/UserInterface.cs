@@ -129,9 +129,9 @@ public class UserInterface
         return createdShift;
     }
 
-    public void DisplayShiftsTable(ApiResponseDto<List<Shifts?>> shiftsResponse)
+    public void DisplayShiftsTable(IEnumerable<Shifts> shiftsResponse)
     {
-        if (shiftsResponse.Data == null || !shiftsResponse.Data.Any())
+        if (shiftsResponse is null )
         {
             AnsiConsole.MarkupLine("[red]No shifts found.[/]");
             ContinueAndClearScreen();
@@ -144,7 +144,7 @@ public class UserInterface
         table.AddColumn("Start Time");
         table.AddColumn("End Time");
         table.AddColumn("Duration");
-        List<Shifts> shiftList = shiftsResponse.Data;
+        List<Shifts> shiftList = shiftsResponse.ToList();
 		
 		for (int i = 0; i < shiftList.Count; i++)
         {
@@ -203,6 +203,7 @@ public class UserInterface
         return updatedShift;
     }
 
+    // Workers
     public WorkerFilterOptions FilterWorkersUi()
     {
         var filterOptions = new WorkerFilterOptions
