@@ -6,7 +6,7 @@ using Spectre.Console;
 
 namespace ConsoleFrontEnd.Controller;
 
-public class WorkerController // Testy test
+public class WorkerController 
 {
     private readonly MenuSystem.UserInterface userInterface = new();
     private readonly WorkerService workerService = new();
