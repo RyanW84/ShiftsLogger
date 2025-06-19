@@ -51,41 +51,42 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task<ApiResponseDto<List<Locations?>>> GetLocationById(int id)
-    {
-        try
-        {
-            var response = await httpClient.GetAsync($"api/locations/{id}");
+	public async Task<ApiResponseDto<Locations>> GetLocationById(int id)
+	{
+		HttpResponseMessage response;
+		try
+		{
+			response = await httpClient.GetAsync($"api/locations/{id}");
 
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
-            {
-                AnsiConsole.Markup("[red]Error: Location not found[/]\n");
-                return new ApiResponseDto<List<Locations>>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = response.ReasonPhrase ?? "Not found",
-                    Data = null,
-                };
-            }
+			if (response.StatusCode is not System.Net.HttpStatusCode.OK)
+			{
+				return new ApiResponseDto<Locations>
+				{
+					ResponseCode = response.StatusCode ,
+					Message = response.ReasonPhrase ,
+					Data = null ,
+				};
+			}
+			else
+			{
+				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Locations>>()
+					?? new ApiResponseDto<Locations>
+					{
+						ResponseCode = response.StatusCode ,
+						Message = "No data returned." ,
+						Data = response.Content.ReadFromJsonAsync<Locations>().Result ,
+						TotalCount = 0 ,
+					};
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Try catch failed for GetLocationById: {ex}");
+			throw;
+		}
+	}
 
-            AnsiConsole.Markup("[green]Location retrieved successfully.[/]\n");
-            return await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Locations>>>()
-                ?? new ApiResponseDto<List<Locations>>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = "Location found",
-                    Data = response.Content.ReadFromJsonAsync<List<Locations>>().Result ?? new List<Locations>() ,
-					TotalCount = 0,
-                };
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Try catch failed for GetLocationById: {ex}");
-            throw;
-        }
-    }
-
-    public async Task<ApiResponseDto<Locations>> CreateLocation(Locations createdLocation)
+	public async Task<ApiResponseDto<Locations>> CreateLocation(Locations createdLocation)
     {
         try
         {

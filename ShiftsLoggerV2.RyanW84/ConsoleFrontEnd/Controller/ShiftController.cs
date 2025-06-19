@@ -8,8 +8,6 @@ namespace ConsoleFrontEnd.Controller
 {
     public class ShiftController()
     {
-        // This class acts as a controller for managing shifts, handling user input and interaction with the ShiftService.
-        // It provides methods to create a shift and retrieve all shifts with optional filtering.
         private readonly MenuSystem.UserInterface userInterface = new();
         private readonly ShiftService shiftService = new ShiftService();
 
@@ -104,20 +102,20 @@ namespace ConsoleFrontEnd.Controller
                 var filterOptions = userInterface.FilterShiftsUi();
 
                 shiftFilterOptions = filterOptions;
-                ApiResponseDto<List<Shifts?>> shifts = await shiftService.GetAllShifts(shiftFilterOptions);
+                ApiResponseDto<List<Shifts?>> shifts = await shiftService.GetAllShifts(
+                    shiftFilterOptions
+                );
 
                 if (shifts.ResponseCode is not System.Net.HttpStatusCode.OK)
                 {
                     AnsiConsole.MarkupLine($"[Red]{shifts.Message}[/]");
                     userInterface.ContinueAndClearScreen();
-				}
+                }
                 else
                 {
-					AnsiConsole.MarkupLine($"[Green]{shifts.Message}[/]\n");
-					userInterface.DisplayShiftsTable(shifts.Data);
-				}
-
-               
+                    AnsiConsole.MarkupLine($"[Green]{shifts.Message}[/]\n");
+                    userInterface.DisplayShiftsTable(shifts.Data);
+                }
             }
             catch (Exception ex)
             {
@@ -125,30 +123,28 @@ namespace ConsoleFrontEnd.Controller
             }
         }
 
-		public async Task GetShiftById( )
-		{
-			try
-			{
-				AnsiConsole.Clear();
-				AnsiConsole.Write(
-					new Rule("[bold yellow]View Shift by ID[/]").RuleStyle("yellow").Centered()
-				);
-				var shiftId = userInterface.GetShiftByIdUi();
-				ApiResponseDto<Shifts?> shift = await ShiftsNotFoundHelper(shiftId);
-				if (shift.ResponseCode is System.Net.HttpStatusCode.NotFound || shift.Data == null)
-				{
-					return;
-				}
+        public async Task GetShiftById()
+        {
+            try
+            {
+                AnsiConsole.Clear();
+                AnsiConsole.Write(
+                    new Rule("[bold yellow]View Shift by ID[/]").RuleStyle("yellow").Centered()
+                );
+                var shiftId = userInterface.GetShiftByIdUi();
+                ApiResponseDto<Shifts> shift = await ShiftsNotFoundHelper(shiftId);
+                if (shift.ResponseCode is System.Net.HttpStatusCode.NotFound || shift.Data == null)
+                {
+                    return;
+                }
 
-			
-
-				userInterface.DisplayShiftsTable([shift.Data]);
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"Exception: {ex}");
-			}
-		}
+                userInterface.DisplayShiftsTable([shift.Data]);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex}");
+            }
+        }
 
         public async Task UpdateShift()
         {
