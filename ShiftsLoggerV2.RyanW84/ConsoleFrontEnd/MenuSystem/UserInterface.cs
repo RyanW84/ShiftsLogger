@@ -176,7 +176,6 @@ public class UserInterface
             }
         }
         AnsiConsole.Write(table);
-        ContinueAndClearScreen();
     }
 
     public int GetShiftByIdUi()
@@ -497,7 +496,7 @@ public class UserInterface
     public int GetLocationByIdUi()
     {
         // 1. Gather user input (UI Layer)
-        var locationId = AnsiConsole.Ask<int>($"Enter [green]Worker ID:[/] ");
+        var locationId = AnsiConsole.Ask<int>($"Enter [green]Location ID:[/] ");
         return locationId;
     }
 

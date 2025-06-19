@@ -15,49 +15,63 @@ namespace ConsoleFrontEnd.Controller
         {
             ShiftId = null,
             WorkerId = null,
-            LocationId = null,
             StartTime = null,
             EndTime = null,
             StartDate = null,
             EndDate = null,
             LocationName = null,
+            Search = null,
             SortBy = null,
             SortOrder = null,
-            Search = null,
         };
 
         // Helpers
-        public async Task<ApiResponseDto<Shifts>> ShiftsNotFoundHelper(int shiftId)
+        public async Task<ApiResponseDto<Shifts>> CheckShiftExists(int shiftId)
         {
-            ApiResponseDto<Shifts>? checkedShift = await shiftService.GetShiftById(shiftId);
-            while (checkedShift.ResponseCode == System.Net.HttpStatusCode.NotFound)
+            try
             {
-                Console.WriteLine();
-                var exitSelection = AnsiConsole.Prompt(
-                    new SelectionPrompt<string>()
-                        .Title("Try again or exit?")
-                        .AddChoices(new[] { "Try Again", "Exit" })
-                );
-                if (exitSelection is "Exit")
-                {
-                    Console.Clear();
-                    return new ApiResponseDto<Shifts>
-                    {
-                        RequestFailed = true,
-                        ResponseCode = System.Net.HttpStatusCode.NotFound,
-                        Message = "Shift not found.",
-                        Data = null,
-                    };
-                }
-                else
-                {
-                    Console.Clear();
-                    shiftId = userInterface.GetShiftByIdUi();
-                    checkedShift = await shiftService.GetShiftById(shiftId);
-                }
-            }
+                var response = await shiftService.GetShiftById(shiftId);
 
-            return checkedShift;
+                while (response.ResponseCode is not System.Net.HttpStatusCode.OK)
+                {
+                    userInterface.DisplayErrorMessage(response.Message);
+                    Console.WriteLine();
+                    var exitSelection = AnsiConsole.Prompt(
+                        new SelectionPrompt<string>()
+                            .Title("Try again or exit?")
+                            .AddChoices(new[] { "Try Again", "Exit" })
+                    );
+                    if (exitSelection is "Exit")
+                    {
+                        return new ApiResponseDto<Shifts>
+                        {
+                            RequestFailed = true,
+                            ResponseCode = System.Net.HttpStatusCode.NotFound,
+                            Message = "User exited the operation.",
+                            Data = null,
+                        };
+                    }
+                    else if (exitSelection is "Try Again")
+                    {
+                        AnsiConsole.Markup("[Yellow]Please enter a correct ID: [/]");
+                        shiftId = userInterface.GetShiftByIdUi();
+                        response = await shiftService.GetShiftById(shiftId);
+                    }
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Try catch failed for CheckShiftExists: {ex}");
+                return new ApiResponseDto<Shifts>
+                {
+                    RequestFailed = true,
+                    ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                    Message = $"Exception occurred: {ex.Message}",
+                    Data = null,
+                };
+            }
         }
 
         // CRUD
@@ -67,20 +81,14 @@ namespace ConsoleFrontEnd.Controller
             {
                 var shift = userInterface.CreateShiftUi();
                 var createdShift = await shiftService.CreateShift(shift);
-                if (
-                    createdShift.ResponseCode is not System.Net.HttpStatusCode.Created
-                    || createdShift.ResponseCode is not System.Net.HttpStatusCode.OK
-                )
+                if (createdShift.ResponseCode is System.Net.HttpStatusCode.Created)
                 {
-                    AnsiConsole.MarkupLine(
-                        $"[red]Error: Failed to create shift: {createdShift.ResponseCode}[/]"
-                    );
+                    userInterface.DisplaySuccessMessage(createdShift.Message);
+                    userInterface.ContinueAndClearScreen();
                 }
                 else
                 {
-                    AnsiConsole.MarkupLine("[green]Shift created successfully![/]");
-                    AnsiConsole.MarkupLine($"[green]Shift ID: {createdShift.Data.ShiftId}[/]");
-                    userInterface.ContinueAndClearScreen();
+                    userInterface.DisplayErrorMessage(createdShift.Message);
                 }
             }
             catch (Exception ex)
@@ -102,24 +110,26 @@ namespace ConsoleFrontEnd.Controller
                 var filterOptions = userInterface.FilterShiftsUi();
 
                 shiftFilterOptions = filterOptions;
-                ApiResponseDto<List<Shifts?>> shifts = await shiftService.GetAllShifts(
+                ApiResponseDto<List<Shifts>> shifts = await shiftService.GetAllShifts(
                     shiftFilterOptions
                 );
 
-                if (shifts.ResponseCode is not System.Net.HttpStatusCode.OK)
+                if (shifts.ResponseCode is System.Net.HttpStatusCode.OK)
                 {
-                    AnsiConsole.MarkupLine($"[Red]{shifts.Message}[/]");
+                    userInterface.DisplaySuccessMessage(shifts.Message);
+                    userInterface.DisplayShiftsTable(shifts.Data);
                     userInterface.ContinueAndClearScreen();
                 }
                 else
                 {
-                    AnsiConsole.MarkupLine($"[Green]{shifts.Message}[/]\n");
-                    userInterface.DisplayShiftsTable(shifts.Data);
+                    userInterface.DisplayErrorMessage(shifts.Message);
+                    userInterface.ContinueAndClearScreen();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception: {ex.Message}");
+                AnsiConsole.MarkupLine($"[red]Exception: {ex.Message}[/]");
+                userInterface.ContinueAndClearScreen();
             }
         }
 
@@ -127,22 +137,30 @@ namespace ConsoleFrontEnd.Controller
         {
             try
             {
-                AnsiConsole.Clear();
+                Console.Clear();
+
                 AnsiConsole.Write(
                     new Rule("[bold yellow]View Shift by ID[/]").RuleStyle("yellow").Centered()
                 );
                 var shiftId = userInterface.GetShiftByIdUi();
-                ApiResponseDto<Shifts> shift = await ShiftsNotFoundHelper(shiftId);
-                if (shift.ResponseCode is System.Net.HttpStatusCode.NotFound || shift.Data == null)
-                {
-                    return;
-                }
+                var shift = await CheckShiftExists(shiftId);
 
-                userInterface.DisplayShiftsTable([shift.Data]);
+                if (shift.Data is not null)
+                {
+                    userInterface.DisplaySuccessMessage(shift.Message);
+                    userInterface.DisplayShiftsTable([shift.Data]);
+                    userInterface.ContinueAndClearScreen();
+                }
+                else
+                {
+                    userInterface.DisplayErrorMessage(shift.Message);
+                    userInterface.ContinueAndClearScreen();
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception: {ex}");
+                AnsiConsole.MarkupLine($"[red]Exception: {ex.Message}[/]");
+                userInterface.ContinueAndClearScreen();
             }
         }
 
@@ -150,25 +168,32 @@ namespace ConsoleFrontEnd.Controller
         {
             try
             {
-                AnsiConsole.Clear();
+                Console.Clear();
                 AnsiConsole.Write(
                     new Rule("[bold yellow]Update Shift[/]").RuleStyle("yellow").Centered()
                 );
-                var shiftId = userInterface.GetShiftByIdUi();
-                ApiResponseDto<Shifts> existingShift = await ShiftsNotFoundHelper(shiftId);
 
-                if (existingShift.ResponseCode is System.Net.HttpStatusCode.NotFound)
+                var shiftId = userInterface.GetShiftByIdUi();
+
+                var existingShift = await CheckShiftExists(shiftId);
+
+                if (existingShift.Data is null)
                 {
+                    userInterface.DisplayErrorMessage(existingShift.Message);
+                    userInterface.ContinueAndClearScreen();
                     return;
                 }
 
                 var updatedShift = userInterface.UpdateShiftUi(existingShift.Data);
+
                 var updatedShiftResponse = await shiftService.UpdateShift(shiftId, updatedShift);
+                userInterface.DisplaySuccessMessage($"\n{updatedShiftResponse.Message}");
                 userInterface.ContinueAndClearScreen();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception - {ex.Message}");
+                AnsiConsole.MarkupLine($"[red]Exception: {ex.Message}[/]");
+                userInterface.ContinueAndClearScreen();
             }
         }
 
@@ -176,23 +201,39 @@ namespace ConsoleFrontEnd.Controller
         {
             try
             {
-                AnsiConsole.Clear();
+                Console.Clear();
                 AnsiConsole.Write(
                     new Rule("[bold yellow]Delete Shift[/]").RuleStyle("yellow").Centered()
                 );
-                var shiftId = userInterface.GetShiftByIdUi();
-                var deletedShift = await ShiftsNotFoundHelper(shiftId);
 
-                if (deletedShift.ResponseCode is System.Net.HttpStatusCode.NotFound)
+                var shiftId = userInterface.GetShiftByIdUi();
+                var existingShift = await CheckShiftExists(shiftId);
+
+                if (existingShift.Data is null)
                 {
+                    userInterface.DisplayErrorMessage(existingShift.Message);
+                    userInterface.ContinueAndClearScreen();
                     return;
                 }
-                var deleteResponse = await shiftService.DeleteShift(shiftId);
+
+                var deletedShiftResponse = await shiftService.DeleteShift(
+                    existingShift.Data.ShiftId
+                );
+
+                if (deletedShiftResponse.RequestFailed)
+                {
+                    userInterface.DisplayErrorMessage(deletedShiftResponse.Message);
+                }
+                else
+                {
+                    userInterface.DisplaySuccessMessage($"\n{deletedShiftResponse.Message}");
+                }
+
                 userInterface.ContinueAndClearScreen();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Try Pass failed in Shift Controller: Delete Shift {ex}");
+                AnsiConsole.MarkupLine($"[red]Exception: {ex.Message}[/]");
                 userInterface.ContinueAndClearScreen();
             }
         }

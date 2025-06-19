@@ -2,9 +2,7 @@
 using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
 using ConsoleFrontEnd.Services;
-
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-
 using Spectre.Console;
 
 namespace ConsoleFrontEnd.Controller;
@@ -26,6 +24,56 @@ public class LocationController
         SortOrder = "asc", // Default sorting order is ascending
     };
 
+    // Helpers
+    public async Task<ApiResponseDto<Locations>> CheckLocationExists(int locationId)
+    {
+        try
+        {
+            var response = await locationService.GetLocationById(locationId);
+
+            while (response.ResponseCode is not System.Net.HttpStatusCode.OK)
+            {
+                userInterface.DisplayErrorMessage(response.Message);
+                Console.WriteLine();
+                var exitSelection = AnsiConsole.Prompt(
+                    new SelectionPrompt<string>()
+                        .Title("Try again or exit?")
+                        .AddChoices(new[] { "Try Again", "Exit" })
+                );
+                if (exitSelection is "Exit")
+                {
+                    return new ApiResponseDto<Locations>
+                    {
+                        RequestFailed = true,
+                        ResponseCode = System.Net.HttpStatusCode.NotFound,
+                        Message = "User exited the operation.",
+                        Data = null,
+                    };
+                }
+                else if (exitSelection is "Try Again")
+                {
+                    AnsiConsole.Markup("[Yellow]Please enter a correct ID: [/]");
+                    locationId = userInterface.GetLocationByIdUi();
+                    response = await locationService.GetLocationById(locationId);
+                }
+            }
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Try catch failed for CheckLocationExists: {ex}");
+            return new ApiResponseDto<Locations>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = $"Exception occurred: {ex.Message}",
+                Data = null,
+            };
+        }
+    }
+
+    // CRUD
     public async Task CreateLocation()
     {
         try
@@ -114,8 +162,16 @@ public class LocationController
 
             var existingLocation = await CheckLocationExists(locationId);
 
+            if (existingLocation.Data is null)
+            {
+                userInterface.DisplayErrorMessage(existingLocation.Message);
+                userInterface.ContinueAndClearScreen();
+                return;
+            }
+
             var updatedLocation = userInterface.UpdateLocationUi(existingLocation.Data);
 
+            
             var updatedLocationResponse = await locationService.UpdateLocation(
                 locationId,
                 updatedLocation
@@ -148,7 +204,9 @@ public class LocationController
                 return;
             }
 
-            var deletedLocationResponse = await locationService.DeleteLocation(existingLocation.Data.LocationId);
+            var deletedLocationResponse = await locationService.DeleteLocation(
+                existingLocation.Data.LocationId
+            );
 
             if (deletedLocationResponse.RequestFailed)
             {
@@ -165,54 +223,6 @@ public class LocationController
         {
             Console.WriteLine($"Try Pass failed in Location Controller: Delete Location {ex}");
             userInterface.ContinueAndClearScreen();
-        }
-    }
-
-    public async Task<ApiResponseDto<Locations>> CheckLocationExists(int locationId)
-    {
-        try
-        {
-            var response = await locationService.GetLocationById(locationId);
-
-            while (response.ResponseCode is not System.Net.HttpStatusCode.OK)
-            {
-                userInterface.DisplayErrorMessage(response.Message);
-                Console.WriteLine();
-                var exitSelection = AnsiConsole.Prompt(
-                    new SelectionPrompt<string>()
-                        .Title("Try again or exit?")
-                        .AddChoices(new[] { "Try Again", "Exit" })
-                );
-                if (exitSelection is "Exit")
-                {
-                    return new ApiResponseDto<Locations>
-                    {
-                        RequestFailed = true,
-                        ResponseCode = System.Net.HttpStatusCode.NotFound,
-                        Message = "User exited the operation.",
-                        Data = null,
-                    };
-                }
-                else if (exitSelection is "Try Again")
-                {
-                    AnsiConsole.Markup("[Yellow]Please enter a correct ID: [/]");
-                    locationId = userInterface.GetLocationByIdUi();
-                    response = await locationService.GetLocationById(locationId);
-                }
-            }
-
-            return response;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Try catch failed for CheckLocationExists: {ex}");
-            return new ApiResponseDto<Locations>
-            {
-                RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = $"Exception occurred: {ex.Message}",
-                Data = null,
-            };
         }
     }
 }
