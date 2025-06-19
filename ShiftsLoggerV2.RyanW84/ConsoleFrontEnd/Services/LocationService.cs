@@ -63,7 +63,7 @@ public class LocationService : ILocationService
 				return new ApiResponseDto<Locations>
 				{
 					ResponseCode = response.StatusCode ,
-					Message = response.ReasonPhrase ,
+					Message = $"Location Error: {response.StatusCode}" ,
 					Data = null ,
 				};
 			}
@@ -116,61 +116,58 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task<ApiResponseDto<Locations?>> UpdateLocation(int id, Locations updatedLocation)
-    {
-        try
-        {
-            var response = await httpClient.PutAsJsonAsync($"api/locations/{id}", updatedLocation);
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
-            {
-                Console.WriteLine($"Error: {response.StatusCode} - {response.ReasonPhrase}");
-                return new ApiResponseDto<Locations>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = response.ReasonPhrase ?? "Update failed",
-                    Data = null,
-                };
-            }
-
-            AnsiConsole.Markup("[green]Location updated successfully.[/]\n");
-            Console.WriteLine("Press any key to continue");
-            Console.ReadKey();
-            Console.Clear();
-            return new ApiResponseDto<Locations>
-            {
-                ResponseCode = response.StatusCode,
-                Data = await response.Content.ReadFromJsonAsync<Locations>() ?? updatedLocation,
-            };
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Try catch failed for UpdateLocation: {ex}");
-            throw;
-        }
-    }
-
-    public async Task<ApiResponseDto<string?>> DeleteLocation(int id)
+	public async Task<ApiResponseDto<Locations?>> UpdateLocation(int id , Locations updatedLocation)
+	{
+		HttpResponseMessage response;
+		try
+		{
+			response = await httpClient.PutAsJsonAsync($"api/locations/{id}" , updatedLocation);
+			if (response.StatusCode is not System.Net.HttpStatusCode.OK)
+			{
+				return new ApiResponseDto<Locations>
+				{
+					ResponseCode = response.StatusCode ,
+					Message = response.ReasonPhrase ,
+					Data = null ,
+				};
+			}
+			else
+			{
+				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Locations>>()
+					?? new ApiResponseDto<Locations>
+					{
+						ResponseCode = response.StatusCode ,
+						Message = "Update Location succeeded." ,
+						Data = null ,
+					};
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Try catch failed for UpdateLocation: {ex}");
+			throw;
+		}
+	}
+	public async Task<ApiResponseDto<string?>> DeleteLocation(int id)
     {
         try
         {
             var response = await httpClient.DeleteAsync($"api/locations/{id}");
             if (response.StatusCode != System.Net.HttpStatusCode.NoContent)
             {
-                AnsiConsole.Markup("[red]Error: Location not found please try again![/]\n");
                 return new ApiResponseDto<string>
                 {
                     ResponseCode = response.StatusCode,
-                    Message = $"Error: {response.StatusCode}",
+                    Message = $"Error deleting Location - {response.StatusCode}",
                     Data = null,
                 };
             }
 
-            AnsiConsole.Markup("[green]Location deleted successfully![/]");
             return new ApiResponseDto<string>
             {
                 ResponseCode = response.StatusCode,
-                Message = response.ReasonPhrase,
-                Data = null,
+                Message = $"Location deleted successfully." ,
+				Data = null,
             };
         }
         catch (Exception ex)

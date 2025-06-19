@@ -2,9 +2,7 @@
 using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
 using ConsoleFrontEnd.Services;
-
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
-
 using Spectre.Console;
 
 namespace ConsoleFrontEnd.MenuSystem;
@@ -24,6 +22,22 @@ public class UserInterface
             Console.ReadKey();
             Console.Clear();
         }
+    }
+
+    public void DisplayErrorMessage(string message)
+    {
+        AnsiConsole.MarkupLine($"[red]{message}[/]");
+    }
+
+    public void DisplaySuccessMessage(string message)
+    {
+        AnsiConsole.MarkupLine($"[green]{message}[/]");
+    }
+
+    // Constructor
+    public UserInterface()
+    {
+        shiftService = new ShiftService();
     }
 
     // Shifts
@@ -131,7 +145,7 @@ public class UserInterface
 
     public void DisplayShiftsTable(IEnumerable<Shifts> shiftsResponse)
     {
-        if (shiftsResponse is null )
+        if (shiftsResponse is null)
         {
             AnsiConsole.MarkupLine("[red]No shifts found.[/]");
             ContinueAndClearScreen();
@@ -145,8 +159,8 @@ public class UserInterface
         table.AddColumn("End Time");
         table.AddColumn("Duration");
         List<Shifts> shiftList = shiftsResponse.ToList();
-		
-		for (int i = 0; i < shiftList.Count; i++)
+
+        for (int i = 0; i < shiftList.Count; i++)
         {
             var shift = shiftList[i];
             if (shift != null)
@@ -168,6 +182,7 @@ public class UserInterface
     public int GetShiftByIdUi()
     {
         // 1. Gather user input (UI Layer)
+        Console.WriteLine();
         var shiftId = AnsiConsole.Ask<int>($"Enter [green]Shift ID:[/] ");
 
         return shiftId;
@@ -214,7 +229,7 @@ public class UserInterface
             Email = null,
             Search = null,
             SortBy = null,
-            SortOrder = null, 
+            SortOrder = null,
         };
 
         // Gather user input (UI Layer)
@@ -373,48 +388,47 @@ public class UserInterface
         {
             AnsiConsole.MarkupLine("[yellow]Choose which filters...[/]");
             filterLocationOptions.LocationId = AnsiConsole.Ask<int?>(
-                "Enter [green]Location ID[/] (or leave blank):" ,
+                "Enter [green]Location ID[/] (or leave blank):",
                 defaultValue: null
             );
             filterLocationOptions.Name = AnsiConsole.Ask<string?>(
-                "Enter [green]Name[/] (or leave blank):" ,
+                "Enter [green]Name[/] (or leave blank):",
                 defaultValue: null
             );
             filterLocationOptions.Address = AnsiConsole.Ask<string?>(
-                "Enter [green]Address[/] (or leave blank):" ,
+                "Enter [green]Address[/] (or leave blank):",
                 defaultValue: null
             );
             filterLocationOptions.TownOrCity = AnsiConsole.Ask<string?>(
-                "Enter [green]Town or City[/] (or leave blank):" ,
+                "Enter [green]Town or City[/] (or leave blank):",
                 defaultValue: null
             );
             filterLocationOptions.StateOrCounty = AnsiConsole.Ask<string?>(
-                "Enter [green]State or County[/] (or leave blank):" ,
+                "Enter [green]State or County[/] (or leave blank):",
                 defaultValue: null
             );
             filterLocationOptions.ZipOrPostCode = AnsiConsole.Ask<string?>(
-                "Enter [green]Zip or Post Code[/] (or leave blank):" ,
+                "Enter [green]Zip or Post Code[/] (or leave blank):",
                 defaultValue: null
             );
             filterLocationOptions.Country = AnsiConsole.Ask<string?>(
-                "Enter [green]Country[/] (or leave blank):" ,
+                "Enter [green]Country[/] (or leave blank):",
                 defaultValue: null
             );
             filterLocationOptions.Search = AnsiConsole.Ask<string?>(
-                 "Enter [green]Search Criteria[/] (or leave blank):" ,
-                 defaultValue: null
-                 );
-            filterLocationOptions.SortBy = AnsiConsole.Ask<string?>(
-                 "Enter [green]Sort By[/] (or leave blank):" ,
-                 defaultValue: null
-                 );
-            filterLocationOptions.SortOrder = AnsiConsole.Ask<string?>(
-                "Enter [green]Sort Order[/] (or leave blank):" ,
+                "Enter [green]Search Criteria[/] (or leave blank):",
                 defaultValue: null
-                );
+            );
+            filterLocationOptions.SortBy = AnsiConsole.Ask<string?>(
+                "Enter [green]Sort By[/] (or leave blank):",
+                defaultValue: null
+            );
+            filterLocationOptions.SortOrder = AnsiConsole.Ask<string?>(
+                "Enter [green]Sort Order[/] (or leave blank):",
+                defaultValue: null
+            );
 
-
-			return filterLocationOptions; // Return the filter options with user input
+            return filterLocationOptions; // Return the filter options with user input
         }
     }
 
@@ -441,20 +455,28 @@ public class UserInterface
         return createdLocation;
     }
 
-    public void DisplayLocationsTable(IEnumerable<Locations?> locations)
+    public void DisplayLocationsTable(IEnumerable<Locations> locationResponse)
     {
+        if (locationResponse is null)
+        {
+            AnsiConsole.MarkupLine("[red]No locations found.[/]");
+            ContinueAndClearScreen();
+            return;
+        }
         Table table = new();
-        table.AddColumn("Location #");
+        table.AddColumn("Index #");
         table.AddColumn("Name");
         table.AddColumn("Address");
-        table.AddColumn("Town/City");
-        table.AddColumn("State/County");
+        table.AddColumn("Town or City");
+        table.AddColumn("State or County");
+        table.AddColumn("Zip or Post Code");
         table.AddColumn("Country");
+        // Convert IEnumerable to List for easier indexing
+        List<Locations> locationsList = locationResponse.ToList();
 
-        var locationList = locations.ToList();
-        for (int i = 0; i < locationList.Count; i++)
+        for (int i = 0; i < locationsList.Count; i++)
         {
-            var location = locationList[i];
+            var location = locationsList[i];
             if (location != null)
             {
                 table.AddRow(
@@ -463,6 +485,7 @@ public class UserInterface
                     location.Address,
                     location.TownOrCity,
                     location.StateOrCounty,
+                    location.ZipOrPostCode,
                     location.Country
                 );
             }
@@ -478,34 +501,34 @@ public class UserInterface
         return locationId;
     }
 
-    public Locations UpdateLocationUi(List<Locations> existingLocation)
+    public Locations UpdateLocationUi(Locations existingLocation)
     {
         var name = AnsiConsole.Ask<string>(
             "Enter [green]Name[/] (leave blank to keep current):",
-            existingLocation.FirstOrDefault()?.Name ?? string.Empty
+            existingLocation.Name ?? string.Empty
         );
         var address = AnsiConsole.Ask<string>(
             "Enter [green]Email[/] (leave blank to keep current):",
-            existingLocation.FirstOrDefault()?.Address ?? string.Empty
+            existingLocation.Address ?? string.Empty
         );
         var townOrCity = AnsiConsole.Ask<string>(
             "Enter [green]Phone Number[/] (leave blank to keep current):",
-            existingLocation.FirstOrDefault()?.TownOrCity ?? string.Empty
+            existingLocation.TownOrCity ?? string.Empty
         );
 
         var stateOrCounty = AnsiConsole.Ask<string>(
             "Enter [green]State or County[/] (leave blank to keep current):",
-            existingLocation.FirstOrDefault()?.StateOrCounty ?? string.Empty
+            existingLocation.StateOrCounty ?? string.Empty
         );
 
         var zipOrPostCode = AnsiConsole.Ask<string>(
             "Enter [green]Zip or Post Code[/] (leave blank to keep current):",
-            existingLocation.FirstOrDefault()?.ZipOrPostCode ?? string.Empty
+            existingLocation.ZipOrPostCode ?? string.Empty
         );
 
         var country = AnsiConsole.Ask<string>(
             "Enter [green]Country[/] (leave blank to keep current):",
-            existingLocation.FirstOrDefault()?.Country ?? string.Empty
+            existingLocation.Country ?? string.Empty
         );
         var updatedLocation = new Locations
         {
