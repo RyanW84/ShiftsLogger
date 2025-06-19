@@ -3,7 +3,6 @@ using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
 using ShiftsLoggerV2.RyanW84.Services;
-
 using Spectre.Console;
 
 namespace ShiftsLoggerV2.RyanW84.Controllers;
@@ -39,13 +38,13 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
 
             if (result.ResponseCode is System.Net.HttpStatusCode.NotFound)
             {
-				AnsiConsole.MarkupLine($"[red]Shift: {id} Not Found![/]");
-				return NotFound(); // Equivalent to 404
+                AnsiConsole.MarkupLine($"[red]Shift: {id} Not Found![/]");
+                return NotFound(); // Equivalent to 404
             }
             else if (result.ResponseCode is System.Net.HttpStatusCode.NoContent)
             {
-				AnsiConsole.MarkupLine($"[red]Shift: {id} {result.ResponseCode}[/]");
-				return NoContent(); // Equivalent to 204
+                AnsiConsole.MarkupLine($"[red]Shift: {id} {result.ResponseCode}[/]");
+                return NoContent(); // Equivalent to 204
             }
             else if (result.ResponseCode is System.Net.HttpStatusCode.BadRequest)
             {
@@ -55,6 +54,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
             {
                 return StatusCode((int)result.ResponseCode, result.Message); // Return the response code and message
             }
+
             AnsiConsole.MarkupLine($"[Green]Shift: {id} returned {result.ResponseCode}[/]");
             // Return the shift data with a 200 OK status code
             return Ok(result);

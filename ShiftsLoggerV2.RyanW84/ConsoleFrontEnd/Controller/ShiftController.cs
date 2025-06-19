@@ -133,38 +133,33 @@ namespace ConsoleFrontEnd.Controller
             }
         }
 
-        public async Task GetShiftById()
-        {
-            try
-            {
-                Console.Clear();
+		public async Task GetShiftById( )
+		{
+			try
+			{
+				Console.Clear();
 
-                AnsiConsole.Write(
-                    new Rule("[bold yellow]View Shift by ID[/]").RuleStyle("yellow").Centered()
-                );
-                var shiftId = userInterface.GetShiftByIdUi();
-                var shift = await CheckShiftExists(shiftId);
+				AnsiConsole.Write(
+					new Rule("[bold yellow]View Shift by ID[/]").RuleStyle("yellow").Centered()
+				);
+				var shiftId = userInterface.GetShiftByIdUi();
+				var shift = await CheckShiftExists(shiftId);
 
-                if (shift.Data is not null)
-                {
-                    userInterface.DisplaySuccessMessage(shift.Message);
-                    userInterface.DisplayShiftsTable([shift.Data]);
-                    userInterface.ContinueAndClearScreen();
-                }
-                else
-                {
-                    userInterface.DisplayErrorMessage(shift.Message);
-                    userInterface.ContinueAndClearScreen();
-                }
-            }
-            catch (Exception ex)
-            {
-                AnsiConsole.MarkupLine($"[red]Exception: {ex.Message}[/]");
-                userInterface.ContinueAndClearScreen();
-            }
-        }
+				if (shift.Data is not null)
+				{
+					userInterface.DisplayShiftsTable([shift.Data]);
+				}
+				else
+					userInterface.DisplayErrorMessage(shift.Message);
+				userInterface.ContinueAndClearScreen();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Exception: {ex}");
+			}
+		}
 
-        public async Task UpdateShift()
+		public async Task UpdateShift()
         {
             try
             {

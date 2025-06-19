@@ -136,14 +136,13 @@ public class ShiftService : IShiftService
 		{
 			response = await httpClient.GetAsync($"api/shifts/{id}");
 
-			if (response.StatusCode is  System.Net.HttpStatusCode.OK)
+			if (response.StatusCode is not System.Net.HttpStatusCode.OK)
 			{
 				return new ApiResponseDto<Shifts>
 				{
-                    RequestFailed = false,
 					ResponseCode = response.StatusCode ,
-					Message = $"Shift retrieved succesfully" ,
-					Data = response.Content.ReadFromJsonAsync<Shifts>().Result
+					Message = $"Shift Error: {response.StatusCode}" ,
+					Data = null ,
 				};
 			}
 			else
@@ -152,8 +151,8 @@ public class ShiftService : IShiftService
 					?? new ApiResponseDto<Shifts>
 					{
 						ResponseCode = response.StatusCode ,
-						Message = $"Error retrieving Shift: {response.StatusCode}" ,
-						Data = null,
+						Message = "No data returned." ,
+						Data = response.Content.ReadFromJsonAsync<Shifts>().Result ,
 						TotalCount = 0 ,
 					};
 			}

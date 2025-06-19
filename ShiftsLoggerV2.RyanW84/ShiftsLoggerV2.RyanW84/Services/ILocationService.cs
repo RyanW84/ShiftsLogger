@@ -9,9 +9,9 @@ public interface ILocationService
     public Task<ApiResponseDto<List<Locations>>> GetAllLocations(
         LocationFilterOptions locationOptions
     );
-    public Task<ApiResponseDto<Locations?>> GetLocationById(int id);
+    public Task<ApiResponseDto<Locations>> GetLocationById(int id);
     public Task<ApiResponseDto<Locations>> CreateLocation(LocationApiRequestDto locationDto);
-    public Task<ApiResponseDto<Locations?>> UpdateLocation(
+    public Task<ApiResponseDto<Locations>> UpdateLocation(
         int id,
         LocationApiRequestDto updatedLocation
     );

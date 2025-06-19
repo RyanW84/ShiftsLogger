@@ -97,7 +97,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         };
     }
 
-    public async Task<ApiResponseDto<Locations?>> GetLocationById(int id)
+    public async Task<ApiResponseDto<Locations>> GetLocationById(int id)
     {
         Locations? location = await dbContext.Locations.FirstOrDefaultAsync<Locations> (l=> l.LocationId == id);
 
