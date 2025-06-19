@@ -490,7 +490,6 @@ public class UserInterface
             }
         }
         AnsiConsole.Write(table);
-        ContinueAndClearScreen();
     }
 
     public int GetLocationByIdUi()

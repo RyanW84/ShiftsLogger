@@ -120,7 +120,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         {
             RequestFailed = false,
             ResponseCode = System.Net.HttpStatusCode.OK,
-            Message = $"Location with ID: {id} retrieved successfully.",
+            Message = $"Location with ID: {id} retrieved successfully",
             Data = location,
             TotalCount = 1
         };

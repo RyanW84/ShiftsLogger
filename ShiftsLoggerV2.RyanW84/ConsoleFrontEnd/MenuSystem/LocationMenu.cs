@@ -15,7 +15,7 @@ public class LocationMenu()
             AnsiConsole.Write(
                 new Rule("[bold yellow]Location Menu[/]").RuleStyle("yellow").Centered()
             );
-            AnsiConsole.WriteLine("Please select an option from the menu below:");
+
             var choice = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
                     .Title("[yellow]Select an option:[/]")

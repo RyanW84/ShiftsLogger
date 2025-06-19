@@ -138,10 +138,13 @@ public class LocationController
             if (location.Data is not null)
             {
                 userInterface.DisplayLocationsTable([location.Data]);
+                userInterface.ContinueAndClearScreen();
             }
             else
+            {
                 userInterface.DisplayErrorMessage(location.Message);
-            userInterface.ContinueAndClearScreen();
+                userInterface.ContinueAndClearScreen();
+            }
         }
         catch (Exception ex)
         {
@@ -171,7 +174,6 @@ public class LocationController
 
             var updatedLocation = userInterface.UpdateLocationUi(existingLocation.Data);
 
-            
             var updatedLocationResponse = await locationService.UpdateLocation(
                 locationId,
                 updatedLocation
