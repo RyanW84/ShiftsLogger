@@ -69,52 +69,53 @@ public class WorkerController
             };
         }
     }
-	public async Task<ApiResponseDto<int>> SelectWorker(WorkerFilterOptions? workerFilterOptions = null)
-	{
+
+    public async Task<ApiResponseDto<int>> SelectWorker(
+        WorkerFilterOptions? workerFilterOptions = null
+    )
+    {
         // Use default filter if none provided
         workerFilterOptions ??= new WorkerFilterOptions();
 
         // Fetch workers
         var response = await workerService.GetAllWorkers(workerFilterOptions);
 
-		if (response.Data == null || response.Data.Count == 0)
-		{
-			AnsiConsole.MarkupLine("[red]No workers found.[/]");
-			return new ApiResponseDto<int>
-			{
-				RequestFailed = true ,
-				ResponseCode = response.ResponseCode ,
-				Message = "No workers available." ,
-				Data = 0
-			};
-		}
+        if (response.Data == null || response.Data.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No workers found.[/]");
+            return new ApiResponseDto<int>
+            {
+                RequestFailed = true,
+                ResponseCode = response.ResponseCode,
+                Message = "No workers available.",
+                Data = 0,
+            };
+        }
 
-		// Prepare choices for the menu
-		var choices = response.Data
-			.Select(w => new { w.WorkerId , Display = $"{w.Name}" })
-			.ToList();
+        // Prepare choices for the menu
+        var choices = response.Data.Select(w => new { w.WorkerId, Display = $"{w.Name}" }).ToList();
 
-		// Show menu and get selection
-		var selectedDisplay = AnsiConsole.Prompt(
-			new SelectionPrompt<string>()
-				.Title("[yellow]Select a worker[/]")
-				.AddChoices(choices.Select(c => c.Display))
-		);
+        // Show menu and get selection
+        var selectedDisplay = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("[yellow]Select a worker[/]")
+                .AddChoices(choices.Select(c => c.Display))
+        );
 
-		// Find the selected worker's ID
-		var selected = choices.First(c => c.Display == selectedDisplay);
+        // Find the selected worker's ID
+        var selected = choices.First(c => c.Display == selectedDisplay);
 
-		return new ApiResponseDto<int>
-		{
-			RequestFailed = false ,
-			ResponseCode = response.ResponseCode ,
-			Message = "Worker selected." ,
-			Data = selected.WorkerId
-		};
-	}
+        return new ApiResponseDto<int>
+        {
+            RequestFailed = false,
+            ResponseCode = response.ResponseCode,
+            Message = "Worker selected.",
+            Data = selected.WorkerId,
+        };
+    }
 
-	// CRUD
-	public async Task CreateWorker()
+    // CRUD
+    public async Task CreateWorker()
     {
         try
         {
@@ -201,12 +202,17 @@ public class WorkerController
                 new Rule("[bold yellow]Update Worker[/]").RuleStyle("yellow").Centered()
             );
 
-			ApiResponseDto<int>? workerId = await SelectWorker();
-			ApiResponseDto<Workers> existingWorker = await workerService.GetWorkerById(workerId.Data);
+            ApiResponseDto<int>? workerId = await SelectWorker();
+            ApiResponseDto<Workers> existingWorker = await workerService.GetWorkerById(
+                workerId.Data
+            );
 
-			var updatedWorker = userInterface.UpdateWorkerUi(existingWorker.Data);
+            var updatedWorker = userInterface.UpdateWorkerUi(existingWorker.Data);
 
-            var updatedWorkerResponse = await workerService.UpdateWorker(workerId.Data, updatedWorker);
+            var updatedWorkerResponse = await workerService.UpdateWorker(
+                workerId.Data,
+                updatedWorker
+            );
             userInterface.DisplaySuccessMessage($"\n{updatedWorkerResponse.Message}");
             userInterface.ContinueAndClearScreen();
         }
@@ -225,10 +231,12 @@ public class WorkerController
                 new Rule("[bold yellow]Delete Worker[/]").RuleStyle("yellow").Centered()
             );
 
-			ApiResponseDto<int>? workerId = await SelectWorker();
-			ApiResponseDto<Workers> existingWorker = await workerService.GetWorkerById(workerId.Data);
+            ApiResponseDto<int>? workerId = await SelectWorker();
+            ApiResponseDto<Workers> existingWorker = await workerService.GetWorkerById(
+                workerId.Data
+            );
 
-			if (existingWorker.Data is null)
+            if (existingWorker.Data is null)
             {
                 userInterface.DisplayErrorMessage(existingWorker.Message);
                 userInterface.ContinueAndClearScreen();

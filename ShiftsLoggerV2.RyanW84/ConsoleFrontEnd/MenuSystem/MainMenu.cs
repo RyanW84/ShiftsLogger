@@ -5,9 +5,10 @@ namespace ConsoleFrontEnd.MenuSystem;
 
 public class MainMenu
 {
-    public static async Task DisplayMainMenu()
+	public static bool continueLoop = true;
+	public static async Task DisplayMainMenu()
     {
-        bool continueLoop = true;
+        
         Console.Clear();
         while (continueLoop is true)
         {

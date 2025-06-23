@@ -11,20 +11,10 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
 {
     public async Task<ApiResponseDto<List<Shifts>>> GetAllShifts(ShiftFilterOptions shiftOptions)
     {
-        AnsiConsole.MarkupLine(
-            $"[yellow]Filter options received:[/]\n"
-                + $"  [blue]ShiftId:[/] {shiftOptions.ShiftId}\n"
-                + $"  [blue]WorkerId:[/] {shiftOptions.WorkerId ?? 0}\n"
-                + $"  [blue]LocationId:[/] {shiftOptions.LocationId ?? 0}\n"
-                + $"  [blue]LocationName:[/] {shiftOptions.LocationName ?? "null"}\n"
-                + $"  [blue]StartTime:[/] {shiftOptions.StartTime?.ToString() ?? "null"}\n"
-                + $"  [blue]EndTime:[/] {shiftOptions.EndTime?.ToString() ?? "null"}\n"
-                + $"  [blue]SortBy:[/] {shiftOptions.SortBy ?? "null"}\n"
-                + $"  [blue]SortOrder:[/] {shiftOptions.SortOrder ?? "null"}\n"
-                + $"  [blue]Search:[/] '{shiftOptions.Search ?? "null"}'"
-        );
-
-        IQueryable<Shifts> query = dbContext.Shifts.Include(s => s.Location).Include(s => s.Worker).AsQueryable();
+        IQueryable<Shifts> query = dbContext
+            .Shifts.Include(s => s.Location)
+            .Include(s => s.Worker)
+            .AsQueryable();
 
         // Apply all filters
         if (shiftOptions.ShiftId != null && shiftOptions.ShiftId is not 0) // This had to be done this way as Shift ID is not nullable
@@ -116,7 +106,6 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
 
         if (shifts.Count == 0)
         {
-            AnsiConsole.MarkupLine("[red]No shifts found with the specified criteria.[/]");
             return new ApiResponseDto<List<Shifts>>
             {
                 RequestFailed = true,
@@ -126,7 +115,6 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
             };
         }
 
-        AnsiConsole.MarkupLine($"[green]Successfully retrieved {shifts.Count} shifts.[/]");
         return new ApiResponseDto<List<Shifts>>
         {
             RequestFailed = false,
@@ -136,36 +124,33 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         };
     }
 
-	public async Task<ApiResponseDto<Shifts>> GetShiftById(int id)
-	{
-		Shifts shift = await dbContext.Shifts.FirstOrDefaultAsync<Shifts>(s => s.ShiftId == id);
+    public async Task<ApiResponseDto<Shifts>> GetShiftById(int id)
+    {
+        Shifts? shift = await dbContext.Shifts.FirstOrDefaultAsync<Shifts>(s => s.ShiftId == id);
 
-		if (shift is null)
-		{
-			return new ApiResponseDto<Shifts>
-			{
-				RequestFailed = true ,
-				ResponseCode = System.Net.HttpStatusCode.NotFound ,
-				Message = $"Location with ID: {id} not found." ,
-				Data = null ,
-				TotalCount = 0
-			};
-		}
-
-		AnsiConsole.MarkupLine(
-			$"[green]Successfully retrieved location with ID: {shift.ShiftId}.[/]"
-		);
-        return new ApiResponseDto<Shifts>
+        if (shift is null)
         {
-            RequestFailed = false ,
-            ResponseCode = System.Net.HttpStatusCode.OK ,
-            Message = $"Location with ID: {id} retrieved successfully." ,
-            Data = shift
+            return new ApiResponseDto<Shifts>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.NotFound,
+                Message = $"Worker with ID: {id} not found.",
+                Data = null,
+            };
+        }
+        else
+        {
+            return new ApiResponseDto<Shifts>()
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = $"Shift retrieved succesfully",
+                Data = shift,
+            };
+        }
+    }
 
-        };
-	}
-
-	public async Task<ApiResponseDto<Shifts>> CreateShift(ShiftApiRequestDto shift)
+    public async Task<ApiResponseDto<Shifts>> CreateShift(ShiftApiRequestDto shift)
     {
         try
         {
@@ -178,10 +163,6 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
             };
             var savedShift = await dbContext.Shifts.AddAsync(newShift);
             await dbContext.SaveChangesAsync();
-
-            AnsiConsole.MarkupLine(
-                $"\n[green]Successfully created shift with ID: {savedShift.Entity.ShiftId}[/]"
-            );
 
             return new ApiResponseDto<Shifts>
             {
@@ -210,12 +191,12 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
 
         if (savedShift == null)
         {
-            AnsiConsole.MarkupLine("[Red] No shift data returned from backend[/]");
+       
             return new ApiResponseDto<Shifts>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
-                Message = $"Shift with ID: {id} not found.",
+                Message = $"Shift not found",
             };
         }
 
@@ -227,7 +208,6 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         dbContext.Shifts.Update(savedShift);
         await dbContext.SaveChangesAsync();
 
-        AnsiConsole.MarkupLine("[Green]Shift Updated[/]");
         return new ApiResponseDto<Shifts?>
         {
             RequestFailed = false,
@@ -237,7 +217,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         };
     }
 
-    public async Task<ApiResponseDto<string?>> DeleteShift(int id)
+    public async Task<ApiResponseDto<string>> DeleteShift(int id)
     {
         Shifts? savedShift = await dbContext.Shifts.FindAsync(id);
 
