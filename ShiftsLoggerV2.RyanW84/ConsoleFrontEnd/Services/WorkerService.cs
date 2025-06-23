@@ -1,8 +1,12 @@
-﻿using System.Net.Http.Json;
+﻿using Azure;
+
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
+
 using Spectre.Console;
+
+using System.Net.Http.Json;
 
 namespace ConsoleFrontEnd.Services;
 
@@ -53,41 +57,42 @@ public class WorkerService : IWorkerService
         }
     }
 
-    public async Task<ApiResponseDto<Workers>> GetWorkerById(int id)
-    {
-        HttpResponseMessage response;
-        try
-        {
+	public async Task<ApiResponseDto<Workers>> GetWorkerById(int id)
+	{
+		HttpResponseMessage response;
+		try
+		{
+			response = await httpClient.GetAsync($"api/workers/{id}");
 
-            response = await httpClient.GetAsync($"api/workers/{id}");
-
-            if (response.StatusCode is not System.Net.HttpStatusCode.OK)
-            {
-                return new ApiResponseDto<Workers>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = $"Worker Error: {response.StatusCode}",
-                    Data = null,
-                };
-            }
-            else
-            {
-                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Workers>>()
-                    ?? new ApiResponseDto<Workers>
-                    {
-                        ResponseCode = response.StatusCode,
-                        Message = "No data returned.",
-                        Data = response.Content.ReadFromJsonAsync<Workers>().Result,
-                        TotalCount = 0,
-                    };
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Try catch failed for GetWorkerById: {ex}");
-            throw;
-        }
-    }
+			if (response.StatusCode == System.Net.HttpStatusCode.OK)
+			{
+				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Workers>>()
+					?? new ApiResponseDto<Workers>
+					{
+						ResponseCode = response.StatusCode ,
+						Message = "No data returned." ,
+						Data = response.Content.ReadFromJsonAsync<Workers>().Result,
+						TotalCount = 0 ,
+					};
+			}
+			else
+			{
+				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Workers>>()
+					?? new ApiResponseDto<Workers>
+					{
+						ResponseCode = response.StatusCode ,
+						Message = "No data returned." ,
+						Data = null ,
+						TotalCount = 0 ,
+					};
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Try catch failed for GetWorkerById: {ex}");
+			throw;
+		}
+	}
 
     public async Task<ApiResponseDto<Workers>> CreateWorker(Workers createdWorker)
     {
@@ -181,6 +186,7 @@ public class WorkerService : IWorkerService
         }
     }
 
+    //Helpers
     private static string BuildQueryString(string basePath, WorkerFilterOptions options)
     {
         var queryParams = new List<string>();
@@ -208,4 +214,6 @@ public class WorkerService : IWorkerService
 
         return queryParams.Count > 0 ? $"{basePath}?{string.Join("&", queryParams)}" : basePath;
     }
+
+	
 }

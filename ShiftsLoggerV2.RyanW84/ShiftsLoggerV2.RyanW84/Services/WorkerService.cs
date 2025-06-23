@@ -130,7 +130,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
                 Message = $"Worker with ID: {id} not found.",
-                Data = [],
+                Data =null,
             };
         }
         else
@@ -140,10 +140,10 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
             );
             return new ApiResponseDto<List<Workers?>>
             {
-                RequestFailed = false,
-                ResponseCode = System.Net.HttpStatusCode.OK,
-                Message = $"Worker with ID: {id} retrieved successfully.",
-                Data = [],
+                RequestFailed = false ,
+                ResponseCode = System.Net.HttpStatusCode.OK ,
+                Message = $"Worker with ID: {id} retrieved successfully." ,
+                Data = new List<Workers?>()
             };
         }
     }

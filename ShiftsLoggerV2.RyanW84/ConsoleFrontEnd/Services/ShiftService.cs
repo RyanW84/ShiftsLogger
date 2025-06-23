@@ -89,7 +89,7 @@ public class ShiftService : IShiftService
                     ?? new ApiResponseDto<Shifts>
                     {
                         ResponseCode = response.StatusCode,
-                        Message = "No data returned.",
+                        Message = "Shift obtained",
                         Data = response.Content.ReadFromJsonAsync<Shifts>().Result,
                         TotalCount = 0,
                     };
