@@ -22,7 +22,7 @@ public class WorkerController
     };
 
     // Helpers
-    public async Task<ApiResponseDto<Workers>> CheckWorkerExists(int workerId)
+    public async Task<ApiResponseDto<Worker>> CheckWorkerExists(int workerId)
     {
         try
         {
@@ -39,7 +39,7 @@ public class WorkerController
                 );
                 if (exitSelection is "Exit")
                 {
-                    return new ApiResponseDto<Workers>
+                    return new ApiResponseDto<Worker>
                     {
                         RequestFailed = true,
                         ResponseCode = System.Net.HttpStatusCode.NotFound,
@@ -60,7 +60,7 @@ public class WorkerController
         catch (Exception ex)
         {
             Console.WriteLine($"Try catch failed for CheckWorkerExists: {ex}");
-            return new ApiResponseDto<Workers>
+            return new ApiResponseDto<Worker>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.InternalServerError,
@@ -174,7 +174,7 @@ public class WorkerController
                 new Rule("[bold yellow]View Worker by ID[/]").RuleStyle("yellow").Centered()
             );
             ApiResponseDto<int>? workerId = await SelectWorker();
-            ApiResponseDto<Workers> worker = await workerService.GetWorkerById(workerId.Data);
+            ApiResponseDto<Worker> worker = await workerService.GetWorkerById(workerId.Data);
 
             if (worker.Data is not null)
             {
@@ -203,7 +203,7 @@ public class WorkerController
             );
 
             ApiResponseDto<int>? workerId = await SelectWorker();
-            ApiResponseDto<Workers> existingWorker = await workerService.GetWorkerById(
+            ApiResponseDto<Worker> existingWorker = await workerService.GetWorkerById(
                 workerId.Data
             );
 
@@ -232,7 +232,7 @@ public class WorkerController
             );
 
             ApiResponseDto<int>? workerId = await SelectWorker();
-            ApiResponseDto<Workers> existingWorker = await workerService.GetWorkerById(
+            ApiResponseDto<Worker> existingWorker = await workerService.GetWorkerById(
                 workerId.Data
             );
 

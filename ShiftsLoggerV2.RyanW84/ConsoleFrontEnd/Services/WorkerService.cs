@@ -17,7 +17,7 @@ public class WorkerService : IWorkerService
         BaseAddress = new Uri("https://localhost:7009/"),
     };
 
-    public async Task<ApiResponseDto<List<Workers>>> GetAllWorkers(
+    public async Task<ApiResponseDto<List<Worker>>> GetAllWorkers(
         WorkerFilterOptions workerFilterOptions
     )
     {
@@ -33,7 +33,7 @@ public class WorkerService : IWorkerService
             if (!response.IsSuccessStatusCode)
             {
                 AnsiConsole.Markup("[red]Workers not retrieved.[/]\n");
-                return new ApiResponseDto<List<Workers>>
+                return new ApiResponseDto<List<Worker>>
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase ?? "Unknown error",
@@ -42,12 +42,12 @@ public class WorkerService : IWorkerService
             }
 
             AnsiConsole.Markup("[green]Workers retrieved successfully.[/]\n");
-            return await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Workers>>>()
-                ?? new ApiResponseDto<List<Workers>>
+            return await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Worker>>>()
+                ?? new ApiResponseDto<List<Worker>>
                 {
                     ResponseCode = response.StatusCode,
                     Message = "Data obtained",
-                    Data = new List<Workers>(),
+                    Data = new List<Worker>(),
                 };
         }
         catch (Exception ex)
@@ -57,7 +57,7 @@ public class WorkerService : IWorkerService
         }
     }
 
-	public async Task<ApiResponseDto<Workers>> GetWorkerById(int id)
+	public async Task<ApiResponseDto<Worker>> GetWorkerById(int id)
 	{
 		HttpResponseMessage response;
 		try
@@ -66,19 +66,19 @@ public class WorkerService : IWorkerService
 
 			if (response.StatusCode == System.Net.HttpStatusCode.OK)
 			{
-				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Workers>>()
-					?? new ApiResponseDto<Workers>
+				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
+					?? new ApiResponseDto<Worker>
 					{
 						ResponseCode = response.StatusCode ,
 						Message = "No data returned." ,
-						Data = response.Content.ReadFromJsonAsync<Workers>().Result,
+						Data = response.Content.ReadFromJsonAsync<Worker>().Result,
 						TotalCount = 0 ,
 					};
 			}
 			else
 			{
-				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Workers>>()
-					?? new ApiResponseDto<Workers>
+				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
+					?? new ApiResponseDto<Worker>
 					{
 						ResponseCode = response.StatusCode ,
 						Message = "No data returned." ,
@@ -94,7 +94,7 @@ public class WorkerService : IWorkerService
 		}
 	}
 
-    public async Task<ApiResponseDto<Workers>> CreateWorker(Workers createdWorker)
+    public async Task<ApiResponseDto<Worker>> CreateWorker(Worker createdWorker)
     {
         try
         {
@@ -102,7 +102,7 @@ public class WorkerService : IWorkerService
             if (response.StatusCode != System.Net.HttpStatusCode.Created)
             {
                 Console.WriteLine($"Error: Status Code - {response.StatusCode}");
-                return new ApiResponseDto<Workers>
+                return new ApiResponseDto<Worker>
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase ?? "Creation failed",
@@ -111,10 +111,10 @@ public class WorkerService : IWorkerService
             }
 
             Console.WriteLine("Worker created successfully.");
-            return new ApiResponseDto<Workers>
+            return new ApiResponseDto<Worker>
             {
                 ResponseCode = response.StatusCode,
-                Data = await response.Content.ReadFromJsonAsync<Workers>() ?? createdWorker,
+                Data = await response.Content.ReadFromJsonAsync<Worker>() ?? createdWorker,
             };
         }
         catch (Exception ex)
@@ -124,7 +124,7 @@ public class WorkerService : IWorkerService
         }
     }
 
-    public async Task<ApiResponseDto<Workers>> UpdateWorker(int id, Workers updatedWorker)
+    public async Task<ApiResponseDto<Worker>> UpdateWorker(int id, Worker updatedWorker)
     {
         HttpResponseMessage response;
         try
@@ -132,7 +132,7 @@ public class WorkerService : IWorkerService
             response = await httpClient.PutAsJsonAsync($"api/workers/{id}", updatedWorker);
             if (response.StatusCode is not System.Net.HttpStatusCode.OK)
             {
-                return new ApiResponseDto<Workers>
+                return new ApiResponseDto<Worker>
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase,
@@ -141,8 +141,8 @@ public class WorkerService : IWorkerService
             }
             else
             {
-                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Workers>>()
-                    ?? new ApiResponseDto<Workers>
+                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
+                    ?? new ApiResponseDto<Worker>
                     {
                         ResponseCode = response.StatusCode,
                         Message = "Update Worker succeeded.",

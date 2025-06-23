@@ -2,7 +2,7 @@
 
 namespace ConsoleFrontEnd.Models;
 
-public class Locations
+public class Location
 {
     [Key]
     public int LocationId { get; set; }
@@ -13,6 +13,6 @@ public class Locations
     public required string ZipOrPostCode { get; set; }
     public required string Country { get; set; }
 
-    public virtual Shifts? Shifts { get; set; } // Navigation property to the Shifts entity
-    public virtual Workers? Workers { get; set; } // Navigation property to the Workers entity
+    public virtual Shift? Shifts { get; set; } // Navigation property to the Shifts entity
+    public virtual Worker? Workers { get; set; } // Navigation property to the Workers entity
 }

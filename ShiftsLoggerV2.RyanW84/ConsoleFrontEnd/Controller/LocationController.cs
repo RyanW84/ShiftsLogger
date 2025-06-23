@@ -25,7 +25,7 @@ public class LocationController
     };
 
     // Helpers
-    public async Task<ApiResponseDto<Locations>> CheckLocationExists(int locationId)
+    public async Task<ApiResponseDto<Location>> CheckLocationExists(int locationId)
     {
         try
         {
@@ -42,7 +42,7 @@ public class LocationController
                 );
                 if (exitSelection is "Exit")
                 {
-                    return new ApiResponseDto<Locations>
+                    return new ApiResponseDto<Location>
                     {
                         RequestFailed = true,
                         ResponseCode = System.Net.HttpStatusCode.NotFound,
@@ -63,7 +63,7 @@ public class LocationController
         catch (Exception ex)
         {
             Console.WriteLine($"Try catch failed for CheckLocationExists: {ex}");
-            return new ApiResponseDto<Locations>
+            return new ApiResponseDto<Location>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.InternalServerError,

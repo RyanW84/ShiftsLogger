@@ -1,8 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ShiftsLoggerV2.RyanW84.Models;
+namespace ConsoleFrontEnd.Models;
 
-public class Shifts
+
+public class Shift
 {
     [Key]
     public int ShiftId { get; set; }
@@ -11,9 +12,9 @@ public class Shifts
     public DateTimeOffset StartTime { get; set; }
     public DateTimeOffset EndTime { get; set; }
 
-	// Navigation property to the Location entity
-	public virtual Locations? Location { get; set; }
+    // Navigation property to the Location entity
+    public virtual Location? Location { get; set; }
 
-	// Navigation property to the Worker entity
-	public virtual Workers? Worker { get; set; }
+    // Navigation property to the Worker entity
+    public virtual Worker? Worker { get; set; }
 }

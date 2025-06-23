@@ -20,7 +20,7 @@ public class LocationsController : ControllerBase
 
     // GET: api/Location
     [HttpGet(Name = "Get All Locations")]
-    public async Task<ActionResult<ApiResponseDto<List<Locations>>>> GetAllLocations(
+    public async Task<ActionResult<ApiResponseDto<List<Location>>>> GetAllLocations(
         LocationFilterOptions? locationOptions
     )
     {
@@ -38,7 +38,7 @@ public class LocationsController : ControllerBase
 
     // GET: api/Location/{id}
     [HttpGet("{id}")]
-    public async Task<ActionResult<ApiResponseDto<Locations?>>> GetLocationById(int id)
+    public async Task<ActionResult<ApiResponseDto<Location?>>> GetLocationById(int id)
     {
         try
         {
@@ -58,7 +58,7 @@ public class LocationsController : ControllerBase
 
     // POST: api/Location
     [HttpPost]
-    public async Task<ActionResult<ApiResponseDto<Locations>>> CreateLocation(
+    public async Task<ActionResult<ApiResponseDto<Location>>> CreateLocation(
         LocationApiRequestDto location
     )
     {
@@ -85,7 +85,7 @@ public class LocationsController : ControllerBase
 
     // PUT: api/Location/{id}
     [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponseDto<Locations?>>> UpdateLocation(
+    public async Task<ActionResult<ApiResponseDto<Location?>>> UpdateLocation(
         int id,
         LocationApiRequestDto updatedLocation
     )

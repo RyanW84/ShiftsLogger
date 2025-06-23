@@ -26,7 +26,7 @@ namespace ConsoleFrontEnd.Controller
 		};
 
 		// Helpers
-		public async Task<ApiResponseDto<Shifts>> CheckShiftExists(int shiftId)
+		public async Task<ApiResponseDto<Shift>> CheckShiftExists(int shiftId)
 		{
 			try
 			{
@@ -43,7 +43,7 @@ namespace ConsoleFrontEnd.Controller
 					);
 					if (exitSelection is "Exit")
 					{
-						return new ApiResponseDto<Shifts>
+						return new ApiResponseDto<Shift>
 						{
 							RequestFailed = true ,
 							ResponseCode = System.Net.HttpStatusCode.NotFound ,
@@ -64,7 +64,7 @@ namespace ConsoleFrontEnd.Controller
 			catch (Exception ex)
 			{
 				Console.WriteLine($"Try catch failed for CheckShiftExists: {ex}");
-				return new ApiResponseDto<Shifts>
+				return new ApiResponseDto<Shift>
 				{
 					RequestFailed = true ,
 					ResponseCode = System.Net.HttpStatusCode.InternalServerError ,
@@ -177,7 +177,7 @@ namespace ConsoleFrontEnd.Controller
 					new Rule("[bold yellow]View Shift by ID[/]").RuleStyle("yellow").Centered()
 				);
 				ApiResponseDto<int>? shiftId = await SelectShift();
-				ApiResponseDto<Shifts> shift = await shiftService.GetShiftById(shiftId.Data);
+				ApiResponseDto<Shift> shift = await shiftService.GetShiftById(shiftId.Data);
 
 				if (shift.Data is not null)
 				{
@@ -206,7 +206,7 @@ namespace ConsoleFrontEnd.Controller
 				);
 
 				ApiResponseDto<int>? shiftId = await SelectShift();
-				ApiResponseDto<Shifts> existingShift = await shiftService.GetShiftById(
+				ApiResponseDto<Shift> existingShift = await shiftService.GetShiftById(
 					shiftId.Data
 				);
 
@@ -235,7 +235,7 @@ namespace ConsoleFrontEnd.Controller
 				);
 
 				ApiResponseDto<int>? shiftId = await SelectShift();
-				ApiResponseDto<Shifts> existingShift = await shiftService.GetShiftById(
+				ApiResponseDto<Shift> existingShift = await shiftService.GetShiftById(
 					shiftId.Data
 				);
 

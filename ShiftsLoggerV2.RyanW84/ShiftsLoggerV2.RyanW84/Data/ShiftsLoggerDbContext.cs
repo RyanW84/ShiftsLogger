@@ -5,30 +5,30 @@ namespace ShiftsLoggerV2.RyanW84.Data;
 
 public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options)
 {
-    public DbSet<Shifts> Shifts { get; set; }
-    public DbSet<Locations> Locations { get; set; }
-    public DbSet<Workers> Workers { get; set; }
+    public DbSet<Shift> Shifts { get; set; }
+    public DbSet<Location> Locations { get; set; }
+    public DbSet<Worker> Workers { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		modelBuilder
-			.Entity<Shifts>()
+			.Entity<Shift>()
             .HasOne(s => s.Location)
             .WithMany()
             .HasForeignKey(s => s.LocationId)
             .OnDelete(DeleteBehavior.Cascade);
         modelBuilder
-            .Entity<Shifts>()
+            .Entity<Shift>()
             .HasOne(s => s.Worker)
             .WithMany()
             .HasForeignKey(s => s.WorkerId)
             .OnDelete(DeleteBehavior.Cascade);
         modelBuilder
-            .Entity<Workers>()
+            .Entity<Worker>()
             .HasIndex(w => w.Email)
             .IsUnique(); // Ensure unique email addresses for workers
 		modelBuilder
-            .Entity<Workers>()
+            .Entity<Worker>()
             .HasIndex(w=> w.PhoneNumber)
             .IsUnique();
 
@@ -40,9 +40,9 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
         Locations.RemoveRange(Locations);
         Workers.RemoveRange(Workers);
 
-        var locations = new List<Locations>
+        var locations = new List<Location>
         {
-            new Locations
+            new Location
             {
                 Name = "Colchester General Hospital",
                 Address = "Turner Road",
@@ -51,7 +51,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
                 ZipOrPostCode = "CO4 5JL",
                 Country = "England",
             },
-            new Locations
+            new Location
             {
                 Name = "The Royal Brisbane and Women's Hospital",
                 Address = "Butterfield Street",
@@ -60,7 +60,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
                 ZipOrPostCode = "QLD 4006",
                 Country = "Australia",
             },
-            new Locations
+            new Location
             {
                 Name = "Advent Health",
                 Address = "601 E Rollins Street",
@@ -73,21 +73,21 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
 
         Locations.AddRange(locations);
 
-        var workers = new List<Workers>
+        var workers = new List<Worker>
         {
-            new Workers
+            new Worker
             {
                 Name = "John Doe",
                 PhoneNumber = "123-456-7890",
                 Email = "John@Doe.com",
             },
-            new Workers
+            new Worker
             {
                 Name = "Jane Doe",
                 PhoneNumber = "123-456-7892",
                 Email = "Jane@Doe.com",
             },
-            new Workers
+            new Worker
             {
                 Name = "Jim Doe",
                 PhoneNumber = "123-456-7893",
@@ -103,21 +103,21 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
         var workerIds = Workers.Select(w => w.WorkerId).ToList();
 
         Shifts.AddRange(
-            new Shifts
+            new Shift
             {
                 WorkerId = workerIds[0],
                 StartTime = DateTimeOffset.UtcNow.AddHours(2),
                 EndTime = DateTimeOffset.UtcNow.AddHours(10),
                 Location = locations[0],
             },
-            new Shifts
+            new Shift
             {
                 WorkerId = workerIds[1],
                 StartTime = DateTimeOffset.UtcNow.AddHours(1),
                 EndTime = DateTimeOffset.UtcNow.AddHours(5),
                 Location = locations[1],
             },
-            new Shifts
+            new Shift
             {
                 WorkerId = workerIds[2],
                 StartTime = DateTimeOffset.UtcNow.AddHours(3),

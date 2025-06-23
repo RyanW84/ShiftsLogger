@@ -3,7 +3,7 @@
 namespace ConsoleFrontEnd.Models;
 
 
-public class Workers
+public class Worker
 {
     [Key]
     public int WorkerId { get; set; }
@@ -15,6 +15,6 @@ public class Workers
     [EmailAddress]
     public string? Email { get; set; }
 
-    public virtual Shifts? Shifts { get; set; }
-    public virtual Locations? Locations { get; set; }
+    public virtual Shift? Shifts { get; set; }
+    public virtual Location? Locations { get; set; }
 }

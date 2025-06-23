@@ -14,7 +14,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
 {
     // This is the route for getting all shifts
     [HttpGet(Name = "Get All Shifts")]
-    public async Task<ActionResult<List<Shifts>>> GetAllShifts(ShiftFilterOptions shiftOptions)
+    public async Task<ActionResult<List<Shift>>> GetAllShifts(ShiftFilterOptions shiftOptions)
     {
         try
         {
@@ -30,7 +30,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
 
     // This is the route for getting a createdShift by ID
     [HttpGet("{id}")] // This will be added to the API URI (send some data during the request
-    public async Task<ActionResult<Shifts>> GetShiftById(int id)
+    public async Task<ActionResult<Shift>> GetShiftById(int id)
     {
         try
         {
@@ -68,7 +68,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
 
     // This is the route for creating a createdShift
     [HttpPost]
-    public async Task<ActionResult<Shifts>> CreateShift(ShiftApiRequestDto shift)
+    public async Task<ActionResult<Shift>> CreateShift(ShiftApiRequestDto shift)
     {
         try
         {
@@ -90,7 +90,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
 
     // This is the route for updating a createdShift
     [HttpPut("{id}")]
-    public async Task<ActionResult<Shifts>> UpdateShift(int id, ShiftApiRequestDto updatedShift)
+    public async Task<ActionResult<Shift>> UpdateShift(int id, ShiftApiRequestDto updatedShift)
     {
         try
         {

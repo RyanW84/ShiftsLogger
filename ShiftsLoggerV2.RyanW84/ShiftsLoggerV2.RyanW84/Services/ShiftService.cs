@@ -9,9 +9,9 @@ namespace ShiftsLoggerV2.RyanW84.Services;
 
 public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
 {
-    public async Task<ApiResponseDto<List<Shifts>>> GetAllShifts(ShiftFilterOptions shiftOptions)
+    public async Task<ApiResponseDto<List<Shift>>> GetAllShifts(ShiftFilterOptions shiftOptions)
     {
-        IQueryable<Shifts> query = dbContext
+        IQueryable<Shift> query = dbContext
             .Shifts.Include(s => s.Location)
             .Include(s => s.Worker)
             .AsQueryable();
@@ -106,7 +106,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
 
         if (shifts.Count == 0)
         {
-            return new ApiResponseDto<List<Shifts>>
+            return new ApiResponseDto<List<Shift>>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
@@ -115,7 +115,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
             };
         }
 
-        return new ApiResponseDto<List<Shifts>>
+        return new ApiResponseDto<List<Shift>>
         {
             RequestFailed = false,
             ResponseCode = System.Net.HttpStatusCode.OK,
@@ -124,13 +124,13 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         };
     }
 
-    public async Task<ApiResponseDto<Shifts>> GetShiftById(int id)
+    public async Task<ApiResponseDto<Shift>> GetShiftById(int id)
     {
-        Shifts? shift = await dbContext.Shifts.FirstOrDefaultAsync<Shifts>(s => s.ShiftId == id);
+        Shift? shift = await dbContext.Shifts.FirstOrDefaultAsync<Shift>(s => s.ShiftId == id);
 
         if (shift is null)
         {
-            return new ApiResponseDto<Shifts>
+            return new ApiResponseDto<Shift>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
@@ -140,7 +140,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         }
         else
         {
-            return new ApiResponseDto<Shifts>()
+            return new ApiResponseDto<Shift>()
             {
                 RequestFailed = false,
                 ResponseCode = System.Net.HttpStatusCode.OK,
@@ -150,11 +150,11 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         }
     }
 
-    public async Task<ApiResponseDto<Shifts>> CreateShift(ShiftApiRequestDto shift)
+    public async Task<ApiResponseDto<Shift>> CreateShift(ShiftApiRequestDto shift)
     {
         try
         {
-            Shifts newShift = new()
+            Shift newShift = new()
             {
                 StartTime = shift.StartTime,
                 EndTime = shift.EndTime,
@@ -164,7 +164,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
             var savedShift = await dbContext.Shifts.AddAsync(newShift);
             await dbContext.SaveChangesAsync();
 
-            return new ApiResponseDto<Shifts>
+            return new ApiResponseDto<Shift>
             {
                 RequestFailed = false,
                 ResponseCode = System.Net.HttpStatusCode.Created,
@@ -175,7 +175,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         catch (Exception ex)
         {
             Console.WriteLine($"Back end shift service - {ex}");
-            return new ApiResponseDto<Shifts>
+            return new ApiResponseDto<Shift>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.InternalServerError,
@@ -185,14 +185,14 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         }
     }
 
-    public async Task<ApiResponseDto<Shifts>> UpdateShift(int id, ShiftApiRequestDto updatedShift)
+    public async Task<ApiResponseDto<Shift>> UpdateShift(int id, ShiftApiRequestDto updatedShift)
     {
-        Shifts savedShift = await dbContext.Shifts.FindAsync(id);
+        Shift savedShift = await dbContext.Shifts.FindAsync(id);
 
         if (savedShift == null)
         {
        
-            return new ApiResponseDto<Shifts>
+            return new ApiResponseDto<Shift>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
@@ -208,7 +208,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         dbContext.Shifts.Update(savedShift);
         await dbContext.SaveChangesAsync();
 
-        return new ApiResponseDto<Shifts?>
+        return new ApiResponseDto<Shift?>
         {
             RequestFailed = false,
             ResponseCode = System.Net.HttpStatusCode.OK,
@@ -219,7 +219,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
 
     public async Task<ApiResponseDto<string>> DeleteShift(int id)
     {
-        Shifts? savedShift = await dbContext.Shifts.FindAsync(id);
+        Shift? savedShift = await dbContext.Shifts.FindAsync(id);
 
         if (savedShift is null)
         {

@@ -6,12 +6,12 @@ namespace ConsoleFrontEnd.Services;
 
 public interface ILocationService
 {
-    public Task<ApiResponseDto<List<Locations>>> GetAllLocations(
+    public Task<ApiResponseDto<List<Location>>> GetAllLocations(
         LocationFilterOptions locationOptions
     );
 
-    public Task<ApiResponseDto<Locations>> GetLocationById(int id);
-    public Task<ApiResponseDto<Locations>> CreateLocation(Locations createdLocation);
-    public Task<ApiResponseDto<Locations?>> UpdateLocation(int id, Locations updatedLocation);
+    public Task<ApiResponseDto<Location>> GetLocationById(int id);
+    public Task<ApiResponseDto<Location>> CreateLocation(Location createdLocation);
+    public Task<ApiResponseDto<Location?>> UpdateLocation(int id, Location updatedLocation);
     public Task<ApiResponseDto<string?>> DeleteLocation(int id);
 }

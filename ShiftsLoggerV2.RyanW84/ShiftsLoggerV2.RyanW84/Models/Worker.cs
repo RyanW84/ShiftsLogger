@@ -2,7 +2,7 @@
 
 namespace ShiftsLoggerV2.RyanW84.Models;
 
-public class Workers
+public class Worker
 {
     [Key]
     public int WorkerId { get; set; }

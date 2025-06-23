@@ -16,7 +16,7 @@ namespace ShiftsLoggerV2.RyanW84.Controllers;
 public class WorkersController(IWorkerService workerService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<ApiResponseDto<List<Workers>>>> GetAllWorkers(
+    public async Task<ActionResult<ApiResponseDto<List<Worker>>>> GetAllWorkers(
         WorkerFilterOptions workerOptions
     )
     {
@@ -32,7 +32,7 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
                 $"[Red]Error retrieving all workers {result.ResponseCode}.[/]"
             );
 				return NotFound(
-                    new ApiResponseDto<Workers?>
+                    new ApiResponseDto<Worker?>
                     {
                         RequestFailed = true,
                         ResponseCode = HttpStatusCode.NotFound,
@@ -54,7 +54,7 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Workers>> GetWorkerById(int id)
+    public async Task<ActionResult<Worker>> GetWorkerById(int id)
     {
         try
         {
@@ -65,7 +65,7 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
 				$"[Red]Error retrieving worker: {result.Data.WorkerId}.[/]"
 			);
 				return NotFound(
-                    new ApiResponseDto<Workers?>
+                    new ApiResponseDto<Worker?>
                     {
                         RequestFailed = true,
                         ResponseCode = HttpStatusCode.NotFound,
@@ -84,7 +84,7 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiResponseDto<Workers>>> CreateWorker(
+    public async Task<ActionResult<ApiResponseDto<Worker>>> CreateWorker(
         WorkerApiRequestDto worker
     )
     {
@@ -105,7 +105,7 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponseDto<Workers?>>> UpdateWorker(
+    public async Task<ActionResult<ApiResponseDto<Worker?>>> UpdateWorker(
         int id,
         WorkerApiRequestDto updatedWorker
     )
@@ -119,7 +119,7 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
 				$"[red]Worker not found {result.Data.WorkerId}.[/]"
 			);
 				return NotFound(
-                    new ApiResponseDto<Workers?>
+                    new ApiResponseDto<Worker?>
                     {
                         RequestFailed = true,
                         ResponseCode = HttpStatusCode.NotFound,

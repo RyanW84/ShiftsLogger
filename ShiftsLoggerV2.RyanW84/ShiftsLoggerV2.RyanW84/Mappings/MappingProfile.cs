@@ -8,11 +8,11 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<Shifts, ShiftApiRequestDto>();
-        CreateMap<ShiftApiRequestDto, Shifts>();
-        CreateMap<Workers, WorkerApiRequestDto>();
-        CreateMap<WorkerApiRequestDto, Workers>();
-        CreateMap<Locations, LocationApiRequestDto>();
-        CreateMap<LocationApiRequestDto, Locations>();
+        CreateMap<Shift, ShiftApiRequestDto>();
+        CreateMap<ShiftApiRequestDto, Shift>();
+        CreateMap<Worker, WorkerApiRequestDto>();
+        CreateMap<WorkerApiRequestDto, Worker>();
+        CreateMap<Location, LocationApiRequestDto>();
+        CreateMap<LocationApiRequestDto, Location>();
     }
 }

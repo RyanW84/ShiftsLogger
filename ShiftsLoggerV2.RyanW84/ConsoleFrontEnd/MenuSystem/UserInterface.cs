@@ -123,7 +123,7 @@ public class UserInterface
         }
     }
 
-    public Shifts CreateShiftUi()
+    public Shift CreateShiftUi()
     {
         // 1. Gather user input (UI Layer)
         AnsiConsole.WriteLine("\nPlease enter the following details for the shift:");
@@ -132,7 +132,7 @@ public class UserInterface
         var locationId = AnsiConsole.Ask<int>("Enter [green]Location ID[/]:");
         var workerId = AnsiConsole.Ask<int>("Enter [green]Worker ID[/]:");
 
-        var createdShift = new Shifts
+        var createdShift = new Shift
         {
             StartTime = startTime,
             EndTime = endTime,
@@ -143,7 +143,7 @@ public class UserInterface
         return createdShift;
     }
 
-    public void DisplayShiftsTable(IEnumerable<Shifts> shiftsResponse)
+    public void DisplayShiftsTable(IEnumerable<Shift> shiftsResponse)
     {
         if (shiftsResponse is null)
         {
@@ -158,7 +158,7 @@ public class UserInterface
         table.AddColumn("Start Time");
         table.AddColumn("End Time");
         table.AddColumn("Duration");
-        List<Shifts> shiftList = shiftsResponse.ToList();
+        List<Shift> shiftList = shiftsResponse.ToList();
 
         for (int i = 0; i < shiftList.Count; i++)
         {
@@ -187,7 +187,7 @@ public class UserInterface
         return shiftId;
     }
 
-    public Shifts UpdateShiftUi(Shifts existingShift)
+    public Shift UpdateShiftUi(Shift existingShift)
     {
         var startTime = AnsiConsole.Ask<DateTime?>(
             "Enter [green]Start Time[/] (leave blank to keep current):",
@@ -206,7 +206,7 @@ public class UserInterface
             existingShift.WorkerId
         );
 
-        var updatedShift = new Shifts
+        var updatedShift = new Shift
         {
             StartTime = startTime ?? existingShift.StartTime,
             EndTime = endTime ?? existingShift.EndTime,
@@ -280,14 +280,14 @@ public class UserInterface
         }
     }
 
-    public Workers CreateWorkerUi()
+    public Worker CreateWorkerUi()
     {
         // 1. Gather user input (UI Layer)
         AnsiConsole.WriteLine("\nPlease enter the following details for the worker:");
         var name = AnsiConsole.Ask<string>("Enter [green]Name[/]:");
         var email = AnsiConsole.Ask<string>("Enter [green]Email[/]:");
         var phoneNumber = AnsiConsole.Ask<string>("Enter [green]Phone Number[/]:");
-        var createdWorker = new Workers
+        var createdWorker = new Worker
         {
             Name = name,
             Email = email,
@@ -297,7 +297,7 @@ public class UserInterface
         return createdWorker;
     }
 
-    public void DisplayWorkersTable(IEnumerable<Workers> workers)
+    public void DisplayWorkersTable(IEnumerable<Worker> workers)
     {
         Table table = new();
         table.AddColumn("Index #");
@@ -329,7 +329,7 @@ public class UserInterface
         return workerId;
     }
 
-    public Workers UpdateWorkerUi(Workers existingWorker)
+    public Worker UpdateWorkerUi(Worker existingWorker)
     {
         var name = AnsiConsole.Ask<string>(
             "Enter [green]Name[/] (leave blank to keep current):",
@@ -343,7 +343,7 @@ public class UserInterface
             "Enter [green]Phone Number[/] (leave blank to keep current):",
             existingWorker.PhoneNumber
         );
-        var updatedWorker = new Workers
+        var updatedWorker = new Worker
         {
             Name = name,
             Email = email,
@@ -430,7 +430,7 @@ public class UserInterface
         }
     }
 
-    public Locations CreateLocationUi()
+    public Location CreateLocationUi()
     {
         // 1. Gather user input (UI Layer)
         AnsiConsole.WriteLine("\nPlease enter the following details for the worker:");
@@ -440,7 +440,7 @@ public class UserInterface
         var stateOrCounty = AnsiConsole.Ask<string>("Enter [green]State or County[/]:");
         var zipOrPostCode = AnsiConsole.Ask<string>("Enter [green]Zip or Post Code[/]:");
         var country = AnsiConsole.Ask<string>("Enter [green]Country[/]:");
-        var createdLocation = new Locations
+        var createdLocation = new Location
         {
             Name = name,
             Address = address,
@@ -453,7 +453,7 @@ public class UserInterface
         return createdLocation;
     }
 
-    public void DisplayLocationsTable(IEnumerable<Locations> locationResponse)
+    public void DisplayLocationsTable(IEnumerable<Location> locationResponse)
     {
         if (locationResponse is null)
         {
@@ -470,7 +470,7 @@ public class UserInterface
         table.AddColumn("Zip or Post Code");
         table.AddColumn("Country");
         // Convert IEnumerable to List for easier indexing
-        List<Locations> locationsList = locationResponse.ToList();
+        List<Location> locationsList = locationResponse.ToList();
 
         for (int i = 0; i < locationsList.Count; i++)
         {
@@ -498,7 +498,7 @@ public class UserInterface
         return locationId;
     }
 
-    public Locations UpdateLocationUi(Locations existingLocation)
+    public Location UpdateLocationUi(Location existingLocation)
     {
         var name = AnsiConsole.Ask<string>(
             "Enter [green]Name[/] (leave blank to keep current):",
@@ -527,7 +527,7 @@ public class UserInterface
             "Enter [green]Country[/] (leave blank to keep current):",
             existingLocation.Country ?? string.Empty
         );
-        var updatedLocation = new Locations
+        var updatedLocation = new Location
         {
             Name = name,
             Address = address,

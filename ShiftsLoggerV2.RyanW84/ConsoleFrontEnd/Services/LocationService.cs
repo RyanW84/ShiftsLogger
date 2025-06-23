@@ -13,7 +13,7 @@ public class LocationService : ILocationService
         BaseAddress = new Uri("https://localhost:7009/"),
     };
 
-    public async Task<ApiResponseDto<List<Locations>>> GetAllLocations(
+    public async Task<ApiResponseDto<List<Location>>> GetAllLocations(
         LocationFilterOptions locationFilterOptions
     )
     {
@@ -29,7 +29,7 @@ public class LocationService : ILocationService
             if (!response.IsSuccessStatusCode)
             {
                 AnsiConsole.Markup("[red]Locations not retrieved.[/]\n");
-                return new ApiResponseDto<List<Locations>>
+                return new ApiResponseDto<List<Location>>
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase ?? "Unknown error",
@@ -38,12 +38,12 @@ public class LocationService : ILocationService
             }
 
             AnsiConsole.Markup("[green]Locations retrieved successfully.[/]\n");
-            return await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Locations>>>()
-                ?? new ApiResponseDto<List<Locations>>
+            return await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Location>>>()
+                ?? new ApiResponseDto<List<Location>>
                 {
                     ResponseCode = response.StatusCode,
                     Message = "Data obtained",
-                    Data = new List<Locations>(),
+                    Data = new List<Location>(),
                 };
         }
         catch (Exception ex)
@@ -53,7 +53,7 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task<ApiResponseDto<Locations>> GetLocationById(int id)
+    public async Task<ApiResponseDto<Location>> GetLocationById(int id)
     {
         HttpResponseMessage response;
         try
@@ -62,7 +62,7 @@ public class LocationService : ILocationService
 
             if (response.StatusCode is not System.Net.HttpStatusCode.OK)
             {
-                return new ApiResponseDto<Locations>
+                return new ApiResponseDto<Location>
                 {
                     ResponseCode = response.StatusCode,
                     Message = $"Location Error: {response.StatusCode}",
@@ -71,12 +71,12 @@ public class LocationService : ILocationService
             }
             else
             {
-                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Locations>>()
-                    ?? new ApiResponseDto<Locations>
+                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Location>>()
+                    ?? new ApiResponseDto<Location>
                     {
                         ResponseCode = response.StatusCode,
                         Message = "No data returned.",
-                        Data = response.Content.ReadFromJsonAsync<Locations>().Result,
+                        Data = response.Content.ReadFromJsonAsync<Location>().Result,
                         TotalCount = 0,
                     };
             }
@@ -88,7 +88,7 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task<ApiResponseDto<Locations>> CreateLocation(Locations createdLocation)
+    public async Task<ApiResponseDto<Location>> CreateLocation(Location createdLocation)
     {
         try
         {
@@ -96,7 +96,7 @@ public class LocationService : ILocationService
             if (response.StatusCode != System.Net.HttpStatusCode.Created)
             {
                 Console.WriteLine($"Error: Status Code - {response.StatusCode}");
-                return new ApiResponseDto<Locations>
+                return new ApiResponseDto<Location>
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase ?? "Creation failed",
@@ -105,10 +105,10 @@ public class LocationService : ILocationService
             }
 
             Console.WriteLine("Location created successfully.");
-            return new ApiResponseDto<Locations>
+            return new ApiResponseDto<Location>
             {
                 ResponseCode = response.StatusCode,
-                Data = await response.Content.ReadFromJsonAsync<Locations>() ?? createdLocation,
+                Data = await response.Content.ReadFromJsonAsync<Location>() ?? createdLocation,
             };
         }
         catch (Exception ex)
@@ -118,7 +118,7 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task<ApiResponseDto<Locations?>> UpdateLocation(int id, Locations updatedLocation)
+    public async Task<ApiResponseDto<Location?>> UpdateLocation(int id, Location updatedLocation)
     {
         HttpResponseMessage response;
         try
@@ -126,7 +126,7 @@ public class LocationService : ILocationService
             response = await httpClient.PutAsJsonAsync($"api/locations/{id}", updatedLocation);
             if (response.StatusCode is not System.Net.HttpStatusCode.OK)
             {
-                return new ApiResponseDto<Locations>
+                return new ApiResponseDto<Location>
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase,
@@ -135,8 +135,8 @@ public class LocationService : ILocationService
             }
             else
             {
-                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Locations>>()
-                    ?? new ApiResponseDto<Locations>
+                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Location>>()
+                    ?? new ApiResponseDto<Location>
                     {
                         ResponseCode = response.StatusCode,
                         Message = "Update Location succeeded.",

@@ -2,7 +2,7 @@
 
 namespace ShiftsLoggerV2.RyanW84.Models;
 
-public class Locations
+public class Location
 {
     [Key]
     public int LocationId { get; set; }

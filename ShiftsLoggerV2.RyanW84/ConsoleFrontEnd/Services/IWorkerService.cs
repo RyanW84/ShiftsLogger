@@ -5,9 +5,9 @@ using ConsoleFrontEnd.Models.FilterOptions;
 namespace ConsoleFrontEnd.Services;
 public interface IWorkerService
 {
-	public Task<ApiResponseDto<List<Workers>>> GetAllWorkers(WorkerFilterOptions workerOptions);
-	public Task<ApiResponseDto<Workers>> GetWorkerById(int id);
-	public Task<ApiResponseDto<Workers>> CreateWorker(Workers createdWorker);
-	public Task<ApiResponseDto<Workers>> UpdateWorker(int id , Workers updatedWorker);
+	public Task<ApiResponseDto<List<Worker>>> GetAllWorkers(WorkerFilterOptions workerOptions);
+	public Task<ApiResponseDto<Worker>> GetWorkerById(int id);
+	public Task<ApiResponseDto<Worker>> CreateWorker(Worker createdWorker);
+	public Task<ApiResponseDto<Worker>> UpdateWorker(int id , Worker updatedWorker);
 	public Task<ApiResponseDto<string>> DeleteWorker(int id);
 }

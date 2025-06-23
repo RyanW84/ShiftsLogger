@@ -11,11 +11,11 @@ namespace ShiftsLoggerV2.RyanW84.Services;
 
 public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 {
-	public async Task<ApiResponseDto<List<Workers>>> GetAllWorkers(
+	public async Task<ApiResponseDto<List<Worker>>> GetAllWorkers(
 		WorkerFilterOptions workerOptions
 	)
 	{
-		var query = dbContext.Workers.AsQueryable<Workers>();
+		var query = dbContext.Workers.AsQueryable<Worker>();
 
 		// Apply all filters
 		if (workerOptions.WorkerId != null && workerOptions.WorkerId is not 0)
@@ -82,11 +82,11 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 		};
 
 		// Execute query and get results
-		var workers = (await query.ToListAsync()).Cast<Workers?>().ToList();
+		var workers = (await query.ToListAsync()).Cast<Worker?>().ToList();
 
 		if (workers.Count == 0)
 		{
-			return new ApiResponseDto<List<Workers?>>
+			return new ApiResponseDto<List<Worker?>>
 			{
 				RequestFailed = true ,
 				ResponseCode = System.Net.HttpStatusCode.NotFound ,
@@ -95,7 +95,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 			};
 		}
 
-		return new ApiResponseDto<List<Workers?>>
+		return new ApiResponseDto<List<Worker?>>
 		{
 			RequestFailed = false ,
 			ResponseCode = System.Net.HttpStatusCode.OK ,
@@ -104,15 +104,15 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 		};
 	}
 
-	public async Task<ApiResponseDto<Workers>> GetWorkerById(int id)
+	public async Task<ApiResponseDto<Worker>> GetWorkerById(int id)
 	{
-		Workers? worker = await dbContext.Workers.FirstOrDefaultAsync<Workers>(w =>
+		Worker? worker = await dbContext.Workers.FirstOrDefaultAsync<Worker>(w =>
 			w.WorkerId == id
 		);
 
 		if (worker is null)
 		{
-			return new ApiResponseDto<Workers>
+			return new ApiResponseDto<Worker>
 			{
 				RequestFailed = true ,
 				ResponseCode = System.Net.HttpStatusCode.NotFound ,
@@ -122,7 +122,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 		}
 		else
 		{
-			return new ApiResponseDto<Workers>()
+			return new ApiResponseDto<Worker>()
 			{
 				RequestFailed = false ,
 				ResponseCode = System.Net.HttpStatusCode.OK ,
@@ -132,11 +132,11 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 		}
 	}
 
-	public async Task<ApiResponseDto<Workers>> CreateWorker(WorkerApiRequestDto worker)
+	public async Task<ApiResponseDto<Worker>> CreateWorker(WorkerApiRequestDto worker)
 	{
 		try
 		{
-			Workers newWorker = new()
+			Worker newWorker = new()
 			{
 				Name = worker.Name ,
 				PhoneNumber = worker.PhoneNumber ,
@@ -145,7 +145,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 			var savedWorker = await dbContext.Workers.AddAsync(newWorker);
 			await dbContext.SaveChangesAsync();
 
-			return new ApiResponseDto<Workers>
+			return new ApiResponseDto<Worker>
 			{
 				RequestFailed = false ,
 				ResponseCode = System.Net.HttpStatusCode.Created ,
@@ -156,7 +156,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 		catch (Exception ex)
 		{
 			Console.WriteLine($"Back end worker service - {ex}");
-			return new ApiResponseDto<Workers>
+			return new ApiResponseDto<Worker>
 			{
 				RequestFailed = true ,
 				ResponseCode = System.Net.HttpStatusCode.InternalServerError ,
@@ -166,16 +166,16 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 		}
 	}
 
-	public async Task<ApiResponseDto<Workers?>> UpdateWorker(
+	public async Task<ApiResponseDto<Worker?>> UpdateWorker(
 		int id ,
 		WorkerApiRequestDto updatedWorker
 	)
 	{
-		Workers? savedWorker = await dbContext.Workers.FindAsync(id);
+		Worker? savedWorker = await dbContext.Workers.FindAsync(id);
 
 		if (savedWorker is null)
 		{
-			return new ApiResponseDto<Workers?>
+			return new ApiResponseDto<Worker?>
 			{
 				RequestFailed = true ,
 				ResponseCode = System.Net.HttpStatusCode.NotFound ,
@@ -190,7 +190,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 		dbContext.Workers.Update(savedWorker);
 		await dbContext.SaveChangesAsync();
 
-		return new ApiResponseDto<Workers?>
+		return new ApiResponseDto<Worker?>
 		{
 			RequestFailed = false ,
 			ResponseCode = System.Net.HttpStatusCode.OK ,
@@ -201,7 +201,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 
 	public async Task<ApiResponseDto<string?>> DeleteWorker(int id)
 	{
-		Workers? savedWorker = await dbContext.Workers.FindAsync(id);
+		Worker? savedWorker = await dbContext.Workers.FindAsync(id);
 
 		if (savedWorker is null)
 		{

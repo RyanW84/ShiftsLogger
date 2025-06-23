@@ -9,7 +9,7 @@ namespace ShiftsLoggerV2.RyanW84.Services;
 
 public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
 {
-    public async Task<ApiResponseDto<List<Locations>>> GetAllLocations(
+    public async Task<ApiResponseDto<List<Location>>> GetAllLocations(
         LocationFilterOptions locationOptions
     )
     {
@@ -74,7 +74,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         if (locations.Count == 0)
         {
             AnsiConsole.MarkupLine("[red]No locations found with the specified criteria.[/]");
-            return new ApiResponseDto<List<Locations>>
+            return new ApiResponseDto<List<Location>>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
@@ -87,7 +87,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         AnsiConsole.MarkupLine(
             $"[green]Successfully retrieved {locations.Count} locations, sorted by '{locationOptions.SortBy}' in {locationOptions.SortOrder} order.[/]"
         );
-        return new ApiResponseDto<List<Locations>>
+        return new ApiResponseDto<List<Location>>
         {
             RequestFailed = false,
             ResponseCode = System.Net.HttpStatusCode.OK,
@@ -97,13 +97,13 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         };
     }
 
-    public async Task<ApiResponseDto<Locations>> GetLocationById(int id)
+    public async Task<ApiResponseDto<Location>> GetLocationById(int id)
     {
-        Locations? location = await dbContext.Locations.FirstOrDefaultAsync<Locations> (l=> l.LocationId == id);
+        Location? location = await dbContext.Locations.FirstOrDefaultAsync<Location> (l=> l.LocationId == id);
 
 		if (location is null)
         {
-            return new ApiResponseDto<Locations?>
+            return new ApiResponseDto<Location?>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
@@ -116,7 +116,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         AnsiConsole.MarkupLine(
             $"[green]Successfully retrieved location with ID: {location.LocationId}.[/]"
         );
-        return new ApiResponseDto<Locations?>
+        return new ApiResponseDto<Location?>
         {
             RequestFailed = false,
             ResponseCode = System.Net.HttpStatusCode.OK,
@@ -126,7 +126,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         };
     }
 
-    public async Task<ApiResponseDto<Locations>> CreateLocation(LocationApiRequestDto location)
+    public async Task<ApiResponseDto<Location>> CreateLocation(LocationApiRequestDto location)
     {
         // Basic parameter validation
         if (string.IsNullOrWhiteSpace(location.Name) ||
@@ -136,7 +136,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
             string.IsNullOrWhiteSpace(location.ZipOrPostCode) ||
             string.IsNullOrWhiteSpace(location.Country))
         {
-            return new ApiResponseDto<Locations>
+            return new ApiResponseDto<Location>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.BadRequest,
@@ -148,7 +148,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
 
         try
         {
-            Locations newLocation = new()
+            Location newLocation = new()
             {
                 Name = location.Name,
                 Address = location.Address,
@@ -164,7 +164,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
                 $"\n[green]Successfully created location with ID: {savedLocation.Entity.LocationId}[/]"
             );
 
-            return new ApiResponseDto<Locations>
+            return new ApiResponseDto<Location>
             {
                 RequestFailed = false,
                 ResponseCode = System.Net.HttpStatusCode.Created,
@@ -176,7 +176,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         catch (Exception ex)
         {
             Console.WriteLine($"[LocationService][CreateLocation] Exception: {ex}");
-            return new ApiResponseDto<Locations>
+            return new ApiResponseDto<Location>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.InternalServerError,
@@ -187,7 +187,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         }
     }
 
-    public async Task<ApiResponseDto<Locations?>> UpdateLocation(
+    public async Task<ApiResponseDto<Location?>> UpdateLocation(
         int id,
         LocationApiRequestDto updatedLocation
     )
@@ -199,7 +199,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
             string.IsNullOrWhiteSpace(updatedLocation.ZipOrPostCode) ||
             string.IsNullOrWhiteSpace(updatedLocation.Country))
         {
-            return new ApiResponseDto<Locations?>
+            return new ApiResponseDto<Location?>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.BadRequest,
@@ -209,11 +209,11 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
             };
         }
 
-        Locations? savedLocation = await dbContext.Locations.FindAsync(id);
+        Location? savedLocation = await dbContext.Locations.FindAsync(id);
 
         if (savedLocation is null)
         {
-            return new ApiResponseDto<Locations?>
+            return new ApiResponseDto<Location?>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
@@ -233,7 +233,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         dbContext.Locations.Update(savedLocation);
         await dbContext.SaveChangesAsync();
 
-        return new ApiResponseDto<Locations?>
+        return new ApiResponseDto<Location?>
         {
             RequestFailed = false,
             ResponseCode = System.Net.HttpStatusCode.OK,
@@ -245,7 +245,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
 
     public async Task<ApiResponseDto<string?>> DeleteLocation(int id)
     {
-        Locations? savedLocation = await dbContext.Locations.FindAsync(id);
+        Location? savedLocation = await dbContext.Locations.FindAsync(id);
 
         if (savedLocation is null)
         {
@@ -273,7 +273,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
     }
 
     // Private helper for filtering
-    private static void ApplyFilters(ref IQueryable<Locations> query, LocationFilterOptions options)
+    private static void ApplyFilters(ref IQueryable<Location> query, LocationFilterOptions options)
     {
         if (options.LocationId != null && options.LocationId is not 0)
         {
