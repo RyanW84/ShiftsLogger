@@ -297,7 +297,7 @@ public class UserInterface
         return createdWorker;
     }
 
-    public void DisplayWorkersTable(IEnumerable<Workers?> workers)
+    public void DisplayWorkersTable(IEnumerable<Workers> workers)
     {
         Table table = new();
         table.AddColumn("Index #");
@@ -320,7 +320,6 @@ public class UserInterface
             }
         }
         AnsiConsole.Write(table);
-        ContinueAndClearScreen();
     }
 
     public int GetWorkerByIdUi()

@@ -44,15 +44,12 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ApiResponseDto<Workers?>>> GetWorkerById(int id)
+    public async Task<ActionResult<Workers>> GetWorkerById(int id)
     {
         try
         {
             var result = await workerService.GetWorkerById(id);
-            if (
-                result.ResponseCode is HttpStatusCode.NotFound
-                || result.ResponseCode is HttpStatusCode.NoContent
-            )
+            if (result == null)
             {
                 return NotFound(
                     new ApiResponseDto<Workers?>

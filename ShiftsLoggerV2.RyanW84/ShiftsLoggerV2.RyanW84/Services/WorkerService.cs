@@ -9,7 +9,7 @@ namespace ShiftsLoggerV2.RyanW84.Services;
 
 public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 {
-    public async Task<ApiResponseDto<List<Workers?>>> GetAllWorkers(
+    public async Task<ApiResponseDto<List<Workers>>> GetAllWorkers(
         WorkerFilterOptions workerOptions
     )
     {
@@ -26,8 +26,8 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
 
         var query = dbContext.Workers.AsQueryable<Workers>();
 
-		// Apply all filters
-		if (workerOptions.WorkerId != null && workerOptions.WorkerId is not 0)
+        // Apply all filters
+        if (workerOptions.WorkerId != null && workerOptions.WorkerId is not 0)
         {
             query = query.Where(w => w.WorkerId == workerOptions.WorkerId);
         }
@@ -119,18 +119,20 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
         };
     }
 
-    public async Task<ApiResponseDto<List<Workers?>>> GetWorkerById(int id)
+    public async Task<ApiResponseDto<Workers>> GetWorkerById(int id)
     {
-		 Workers? worker = await dbContext.Workers.FirstOrDefaultAsync<Workers>(w => w.WorkerId == id);
+        Workers? worker = await dbContext.Workers.FirstOrDefaultAsync<Workers>(w =>
+            w.WorkerId == id
+        );
 
-		if (worker is null)
+        if (worker is null)
         {
-            return new ApiResponseDto<List<Workers?>>
+            return new ApiResponseDto<Workers>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
                 Message = $"Worker with ID: {id} not found.",
-                Data =null,
+                Data = null,
             };
         }
         else
@@ -138,12 +140,12 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
             AnsiConsole.MarkupLine(
                 $"[green]Successfully retrieved worker with ID: {worker.WorkerId}.[/]"
             );
-            return new ApiResponseDto<List<Workers?>>
+            return new ApiResponseDto<Workers>()
             {
-                RequestFailed = false ,
-                ResponseCode = System.Net.HttpStatusCode.OK ,
-                Message = $"Worker with ID: {id} retrieved successfully." ,
-                Data = new List<Workers?>()
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = $"{worker.WorkerId} retrieved succesfully",
+                Data = worker,
             };
         }
     }
@@ -199,7 +201,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
-                Message = $"Worker with ID: {id} not found.",
+                Message = $"Worker not found",
             };
         }
         savedWorker.WorkerId = id; // Ensure the WorkerId is set to the ID being updated
@@ -214,7 +216,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
         {
             RequestFailed = false,
             ResponseCode = System.Net.HttpStatusCode.OK,
-            Message = $"Worker with ID: {id} updated successfully.",
+            Message = "Worker updated succesfully",
             Data = savedWorker,
         };
     }

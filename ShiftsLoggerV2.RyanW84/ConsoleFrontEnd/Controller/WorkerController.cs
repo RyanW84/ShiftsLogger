@@ -147,19 +147,19 @@ public class WorkerController
             workerFilterOptions = filterOptions;
             var response = await workerService.GetAllWorkers(workerFilterOptions);
 
-            if (response.Data is not null)
-            {
-                userInterface.DisplayWorkersTable(response.Data);
-            }
-            else
+            if (response.Data is null)
             {
                 AnsiConsole.MarkupLine("[red]No workers found.[/]");
                 userInterface.ContinueAndClearScreen();
             }
+            else
+                userInterface.DisplayWorkersTable(response.Data);
+            userInterface.ContinueAndClearScreen();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Exception: {ex.Message}");
+            userInterface.ContinueAndClearScreen();
         }
     }
 
@@ -201,20 +201,12 @@ public class WorkerController
                 new Rule("[bold yellow]Update Worker[/]").RuleStyle("yellow").Centered()
             );
 
-            var workerId = userInterface.GetWorkerByIdUi();
+			ApiResponseDto<int>? workerId = await SelectWorker();
+			ApiResponseDto<Workers> existingWorker = await workerService.GetWorkerById(workerId.Data);
 
-            var existingWorker = await CheckWorkerExists(workerId);
+			var updatedWorker = userInterface.UpdateWorkerUi(existingWorker.Data);
 
-            if (existingWorker.Data is null)
-            {
-                userInterface.DisplayErrorMessage(existingWorker.Message);
-                userInterface.ContinueAndClearScreen();
-                return;
-            }
-
-            var updatedWorker = userInterface.UpdateWorkerUi(existingWorker.Data);
-
-            var updatedWorkerResponse = await workerService.UpdateWorker(workerId, updatedWorker);
+            var updatedWorkerResponse = await workerService.UpdateWorker(workerId.Data, updatedWorker);
             userInterface.DisplaySuccessMessage($"\n{updatedWorkerResponse.Message}");
             userInterface.ContinueAndClearScreen();
         }
@@ -233,10 +225,10 @@ public class WorkerController
                 new Rule("[bold yellow]Delete Worker[/]").RuleStyle("yellow").Centered()
             );
 
-            var workerId = userInterface.GetWorkerByIdUi();
-            var existingWorker = await CheckWorkerExists(workerId);
+			ApiResponseDto<int>? workerId = await SelectWorker();
+			ApiResponseDto<Workers> existingWorker = await workerService.GetWorkerById(workerId.Data);
 
-            if (existingWorker.Data is null)
+			if (existingWorker.Data is null)
             {
                 userInterface.DisplayErrorMessage(existingWorker.Message);
                 userInterface.ContinueAndClearScreen();

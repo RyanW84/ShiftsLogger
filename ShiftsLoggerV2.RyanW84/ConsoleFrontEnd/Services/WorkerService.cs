@@ -124,7 +124,7 @@ public class WorkerService : IWorkerService
         }
     }
 
-    public async Task<ApiResponseDto<Workers?>> UpdateWorker(int id, Workers updatedWorker)
+    public async Task<ApiResponseDto<Workers>> UpdateWorker(int id, Workers updatedWorker)
     {
         HttpResponseMessage response;
         try
@@ -157,7 +157,7 @@ public class WorkerService : IWorkerService
         }
     }
 
-    public async Task<ApiResponseDto<string?>> DeleteWorker(int id)
+    public async Task<ApiResponseDto<string>> DeleteWorker(int id)
     {
         try
         {
@@ -175,7 +175,7 @@ public class WorkerService : IWorkerService
             return new ApiResponseDto<string>
             {
                 ResponseCode = response.StatusCode,
-                Message = $"Worker deleted successfully.",
+                Message = "Worker deleted successfully.",
                 Data = null,
             };
         }
