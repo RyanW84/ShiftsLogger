@@ -8,8 +8,8 @@ public class Location
     public int LocationId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
-    public string TownOrCity { get; set; } = string.Empty;
-    public string StateOrCounty { get; set; } = string.Empty;
-    public string ZipOrPostCode { get; set; } = string.Empty;
+    public string Town { get; set; } = string.Empty;
+    public string County { get; set; } = string.Empty;
+    public string PostCode { get; set; } = string.Empty;
     public string Country { get; set; } = string.Empty;
 }

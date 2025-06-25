@@ -13,156 +13,166 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         LocationFilterOptions locationOptions
     )
     {
-        AnsiConsole.MarkupLine(
-            $"[yellow]Filter options received:[/]\n"
-                + $"  [blue]LocationId:[/] {locationOptions.LocationId ?? null}\n"
-                + $"  [blue]Name:[/] {locationOptions.Name ?? null}\n"
-                + $"  [blue]SortBy:[/] {locationOptions.SortBy ?? "null"}\n"
-                + $"  [blue]SortOrder:[/] {locationOptions.SortOrder ?? "null"}\n"
-                + $"  [blue]Search:[/] '{locationOptions.Search ?? "null"}'"
-        );
+        var query = dbContext.Locations.AsQueryable<Location>();
 
-        var query = dbContext.Locations.AsQueryable();
+        // Apply all filters
+        if (locationOptions.LocationId != null && locationOptions.LocationId is not 0)
+        {
+            query = query.Where(l => l.LocationId == locationOptions.LocationId);
+        }
 
-		ApplyFilters(ref query, locationOptions);
+        if (!string.IsNullOrWhiteSpace(locationOptions.Name))
+        {
+            query = query.Where(l => EF.Functions.Like(l.Name, $"%{locationOptions.Name}%"));
+        }
+        if (!string.IsNullOrWhiteSpace(locationOptions.Address))
+        {
+            query = query.Where(l => EF.Functions.Like(l.Address, $"%{locationOptions.Address}%"));
+        }
+        if (!string.IsNullOrWhiteSpace(locationOptions.TownOrCity))
+        {
+            query = query.Where(l =>
+                EF.Functions.Like(l.Address, $"%{locationOptions.TownOrCity}%")
+            );
+        }
+        if (!string.IsNullOrWhiteSpace(locationOptions.StateOrCounty))
+        {
+            query = query.Where(l =>
+                EF.Functions.Like(l.Country, $"%{locationOptions.StateOrCounty}%")
+            );
+        }
+        if (!string.IsNullOrWhiteSpace(locationOptions.ZipOrPostCode))
+        {
+            query = query.Where(l =>
+                EF.Functions.Like(l.PostCode, $"%{locationOptions.ZipOrPostCode}%")
+            );
+        }
+        if (!string.IsNullOrWhiteSpace(locationOptions.Country))
+        {
+            query = query.Where(l => EF.Functions.Like(l.Country, $"%{locationOptions.Country}%"));
+        }
 
-        // Sorting
+        // Simplified search implementation
+        if (!string.IsNullOrWhiteSpace(locationOptions.Search))
+        {
+            query = query.Where(l =>
+                l.LocationId.ToString().Contains(locationOptions.Search)
+                || EF.Functions.Like(l.Name, $"%{locationOptions.Search}%")
+                || EF.Functions.Like(l.Address, $"%{locationOptions.Search}%")
+                || EF.Functions.Like(l.Town, $"%{locationOptions.Search}%")
+                || EF.Functions.Like(l.Country, $"%{locationOptions.Search}%")
+                || EF.Functions.Like(l.PostCode, $"%{locationOptions.Search}%")
+                || EF.Functions.Like(l.Country, $"%{locationOptions.Search}%")
+            );
+        }
+
         if (!string.IsNullOrWhiteSpace(locationOptions.SortBy))
         {
             locationOptions.SortBy = locationOptions.SortBy.ToLowerInvariant();
-            locationOptions.SortOrder = locationOptions.SortOrder?.ToLowerInvariant();
+            locationOptions.SortOrder = locationOptions.SortOrder?.ToLowerInvariant(); // Normalize sort order to lowercase
         }
         else
         {
-            locationOptions.SortBy = "locationid";
+            locationOptions.SortBy = "locationid"; // Default sort by LocationId if not specified
         }
 
         AnsiConsole.MarkupLine(
             $"[yellow]Applying sorting:[/] SortBy='{locationOptions.SortBy}', SortOrder='{locationOptions.SortOrder}'"
         );
 
+        // Always apply sorting - whether SortBy is specified or not
         query = locationOptions.SortBy switch
         {
-            "locationid" => locationOptions.SortOrder == "desc"
-                ? query.OrderByDescending(l => l.LocationId)
-                : query.OrderBy(l => l.LocationId),
-            "name" => locationOptions.SortOrder == "desc"
-                ? query.OrderByDescending(l => l.Name)
-                : query.OrderBy(l => l.Name),
-            "address" => locationOptions.SortOrder == "desc"
-                ? query.OrderByDescending(l => l.Address)
-                : query.OrderBy(l => l.Address),
-            "townorcity" => locationOptions.SortOrder == "desc"
-                ? query.OrderByDescending(l => l.TownOrCity)
-                : query.OrderBy(l => l.TownOrCity),
-            "stateorcounty" => locationOptions.SortOrder == "desc"
-                ? query.OrderByDescending(l => l.StateOrCounty)
-                : query.OrderBy(l => l.StateOrCounty),
-            "ziporpostcode" => locationOptions.SortOrder == "desc"
-                ? query.OrderByDescending(l => l.ZipOrPostCode)
-                : query.OrderBy(l => l.ZipOrPostCode),
-            "country" => locationOptions.SortOrder == "desc"
-                ? query.OrderByDescending(l => l.Country)
-                : query.OrderBy(l => l.Country),
-            _ => query.OrderBy(l => l.LocationId)
+            "locationid" => locationOptions.SortOrder == "asc"
+                ? query.OrderBy(l => l.LocationId)
+                : query.OrderByDescending(l => l.LocationId),
+            "name" => locationOptions.SortOrder == "asc"
+                ? query.OrderBy(l => l.Name)
+                : query.OrderByDescending(l => l.Name),
+            "address" => locationOptions.SortOrder == "asc"
+                ? query.OrderBy(l => l.Address)
+                : query.OrderByDescending(l => l.Address),
+            "townorcity" => locationOptions.SortOrder == "asc"
+                ? query.OrderBy(l => l.Name)
+                : query.OrderByDescending(l => l.Town),
+            "stateorcounty" => locationOptions.SortOrder == "asc"
+                ? query.OrderBy(l => l.Name)
+                : query.OrderByDescending(l => l.Country),
+            "ziporpostcode" => locationOptions.SortOrder == "asc"
+                ? query.OrderBy(l => l.Name)
+                : query.OrderByDescending(l => l.PostCode),
+            "country" => locationOptions.SortOrder == "asc"
+                ? query.OrderBy(l => l.Name)
+                : query.OrderByDescending(l => l.Country),
+            _ => query.OrderBy(l => l.LocationId), // Default sorting by LocationId
         };
 
-        AnsiConsole.MarkupLine("[yellow]Executing final query...[/]");
-
-        var locations = await query.ToListAsync();
+        // Execute query and get results
+        List<Location> locations = [.. (await query.ToListAsync()).Cast<Location>()];
 
         if (locations.Count == 0)
         {
-            AnsiConsole.MarkupLine("[red]No locations found with the specified criteria.[/]");
             return new ApiResponseDto<List<Location>>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
                 Message = "No locations found with the specified criteria.",
                 Data = locations,
-                TotalCount = 0
             };
         }
 
-        AnsiConsole.MarkupLine(
-            $"[green]Successfully retrieved {locations.Count} locations, sorted by '{locationOptions.SortBy}' in {locationOptions.SortOrder} order.[/]"
-        );
         return new ApiResponseDto<List<Location>>
         {
             RequestFailed = false,
             ResponseCode = System.Net.HttpStatusCode.OK,
             Message = "Locations retrieved successfully.",
             Data = locations,
-            TotalCount = locations.Count
         };
     }
 
     public async Task<ApiResponseDto<Location>> GetLocationById(int id)
     {
-        Location? location = await dbContext.Locations.FirstOrDefaultAsync<Location> (l=> l.LocationId == id);
-
-		if (location is null)
-        {
-            return new ApiResponseDto<Location?>
-            {
-                RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.NotFound,
-                Message = $"Location with ID: {id} not found.",
-                Data = null,
-                TotalCount = 0
-            };
-        }
-
-        AnsiConsole.MarkupLine(
-            $"[green]Successfully retrieved location with ID: {location.LocationId}.[/]"
+        Location? location = await dbContext.Locations.FirstOrDefaultAsync<Location>(w =>
+            w.LocationId == id
         );
-        return new ApiResponseDto<Location?>
-        {
-            RequestFailed = false,
-            ResponseCode = System.Net.HttpStatusCode.OK,
-            Message = $"Location with ID: {id} retrieved successfully",
-            Data = location,
-            TotalCount = 1
-        };
-    }
 
-    public async Task<ApiResponseDto<Location>> CreateLocation(LocationApiRequestDto location)
-    {
-        // Basic parameter validation
-        if (string.IsNullOrWhiteSpace(location.Name) ||
-            string.IsNullOrWhiteSpace(location.Address) ||
-            string.IsNullOrWhiteSpace(location.TownOrCity) ||
-            string.IsNullOrWhiteSpace(location.StateOrCounty) ||
-            string.IsNullOrWhiteSpace(location.ZipOrPostCode) ||
-            string.IsNullOrWhiteSpace(location.Country))
+        if (location is null)
         {
             return new ApiResponseDto<Location>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.BadRequest,
-                Message = "All fields are required.",
+                ResponseCode = System.Net.HttpStatusCode.NotFound,
+                Message = $"Location not found.",
                 Data = null,
-                TotalCount = 0
             };
         }
+        else
+        {
+            return new ApiResponseDto<Location>()
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Location retrieved succesfully",
+                Data = location,
+            };
+        }
+    }
 
+    public async Task<ApiResponseDto<Location>> CreateLocation(LocationApiRequestDto location)
+    {
         try
         {
             Location newLocation = new()
             {
                 Name = location.Name,
                 Address = location.Address,
-                TownOrCity = location.TownOrCity,
-                StateOrCounty = location.StateOrCounty,
-                ZipOrPostCode = location.ZipOrPostCode,
+                Town = location.Town,
+                County = location.State,
+                PostCode = location.PostCode,
                 Country = location.Country,
             };
             var savedLocation = await dbContext.Locations.AddAsync(newLocation);
             await dbContext.SaveChangesAsync();
-
-            AnsiConsole.MarkupLine(
-                $"\n[green]Successfully created location with ID: {savedLocation.Entity.LocationId}[/]"
-            );
 
             return new ApiResponseDto<Location>
             {
@@ -170,19 +180,17 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
                 ResponseCode = System.Net.HttpStatusCode.Created,
                 Message = "Location created successfully.",
                 Data = savedLocation.Entity,
-                TotalCount = 1
             };
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[LocationService][CreateLocation] Exception: {ex}");
+            Console.WriteLine($"Back end location service - {ex}");
             return new ApiResponseDto<Location>
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.InternalServerError,
                 Message = "An error occurred while creating the location.",
                 Data = null,
-                TotalCount = 0
             };
         }
     }
@@ -192,23 +200,6 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         LocationApiRequestDto updatedLocation
     )
     {
-        if (string.IsNullOrWhiteSpace(updatedLocation.Name) ||
-            string.IsNullOrWhiteSpace(updatedLocation.Address) ||
-            string.IsNullOrWhiteSpace(updatedLocation.TownOrCity) ||
-            string.IsNullOrWhiteSpace(updatedLocation.StateOrCounty) ||
-            string.IsNullOrWhiteSpace(updatedLocation.ZipOrPostCode) ||
-            string.IsNullOrWhiteSpace(updatedLocation.Country))
-        {
-            return new ApiResponseDto<Location?>
-            {
-                RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.BadRequest,
-                Message = "All fields are required.",
-                Data = null,
-                TotalCount = 0
-            };
-        }
-
         Location? savedLocation = await dbContext.Locations.FindAsync(id);
 
         if (savedLocation is null)
@@ -217,17 +208,15 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
             {
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
-                Message = $"Location with ID: {id} not found.",
-                Data = null,
-                TotalCount = 0
+                Message = $"Location not found",
             };
         }
-
+        savedLocation.LocationId = id; // Ensure the LocationId is set to the ID being updated
         savedLocation.Name = updatedLocation.Name;
         savedLocation.Address = updatedLocation.Address;
-        savedLocation.TownOrCity = updatedLocation.TownOrCity;
-        savedLocation.StateOrCounty = updatedLocation.StateOrCounty;
-        savedLocation.ZipOrPostCode = updatedLocation.ZipOrPostCode;
+        savedLocation.Town = updatedLocation.Town;
+        savedLocation.Country = updatedLocation.State;
+        savedLocation.PostCode = updatedLocation.PostCode;
         savedLocation.Country = updatedLocation.Country;
 
         dbContext.Locations.Update(savedLocation);
@@ -237,9 +226,8 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         {
             RequestFailed = false,
             ResponseCode = System.Net.HttpStatusCode.OK,
-            Message = $"Location with ID: {id} updated successfully.",
+            Message = "Location updated succesfully",
             Data = savedLocation,
-            TotalCount = 1
         };
     }
 
@@ -255,7 +243,6 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
                 ResponseCode = System.Net.HttpStatusCode.NotFound,
                 Message = $"Location with ID: {id} not found.",
                 Data = null,
-                TotalCount = 0
             };
         }
 
@@ -268,52 +255,6 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
             ResponseCode = System.Net.HttpStatusCode.OK,
             Message = $"Location with ID: {id} deleted successfully.",
             Data = null,
-            TotalCount = 1
         };
-    }
-
-    // Private helper for filtering
-    private static void ApplyFilters(ref IQueryable<Location> query, LocationFilterOptions options)
-    {
-        if (options.LocationId != null && options.LocationId is not 0)
-        {
-            query = query.Where(l => l.LocationId == options.LocationId);
-        }
-        if (!string.IsNullOrWhiteSpace(options.Name))
-        {
-            query = query.Where(l => EF.Functions.Like(l.Name, $"%{options.Name}%"));
-        }
-        if (!string.IsNullOrWhiteSpace(options.Address))
-        {
-            query = query.Where(l => EF.Functions.Like(l.Address, $"%{options.Address}%"));
-        }
-        if (!string.IsNullOrWhiteSpace(options.TownOrCity))
-        {
-            query = query.Where(l => EF.Functions.Like(l.TownOrCity, $"%{options.TownOrCity}%"));
-        }
-        if (!string.IsNullOrWhiteSpace(options.StateOrCounty))
-        {
-            query = query.Where(l => EF.Functions.Like(l.StateOrCounty, $"%{options.StateOrCounty}%"));
-        }
-        if (!string.IsNullOrWhiteSpace(options.ZipOrPostCode))
-        {
-            query = query.Where(l => EF.Functions.Like(l.ZipOrPostCode, $"%{options.ZipOrPostCode}%"));
-        }
-        if (!string.IsNullOrWhiteSpace(options.Country))
-        {
-            query = query.Where(l => EF.Functions.Like(l.Country, $"%{options.Country}%"));
-        }
-        if (!string.IsNullOrWhiteSpace(options.Search))
-        {
-            query = query.Where(l =>
-                l.LocationId.ToString().Contains(options.Search)
-                || EF.Functions.Like(l.Name, $"%{options.Search}%")
-                || EF.Functions.Like(l.Address, $"%{options.Search}%")
-                || EF.Functions.Like(l.TownOrCity, $"%{options.Search}%")
-                || EF.Functions.Like(l.StateOrCounty, $"%{options.Search}%")
-                || EF.Functions.Like(l.ZipOrPostCode, $"%{options.Search}%")
-                || EF.Functions.Like(l.Country, $"%{options.Search}%")
-            );
-        }
     }
 }

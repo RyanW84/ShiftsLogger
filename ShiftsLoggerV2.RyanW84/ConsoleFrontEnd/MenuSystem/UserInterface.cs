@@ -137,7 +137,7 @@ public class UserInterface
         {
             StartTime = startTime,
             EndTime = endTime,
-            LocationId = locationId,
+            //LocationId = locationId,
             WorkerId = workerId,
         };
 
@@ -361,9 +361,9 @@ public class UserInterface
             LocationId = null,
             Name = null,
             Address = null,
-            TownOrCity = null,
-            StateOrCounty = null,
-            ZipOrPostCode = null,
+            Town = null,
+            County = null,
+            PostCode = null,
             Country = null,
             Search = null,
             SortBy = null,
@@ -398,15 +398,15 @@ public class UserInterface
                 "Enter [green]Address[/] (or leave blank):",
                 defaultValue: null
             );
-            filterLocationOptions.TownOrCity = AnsiConsole.Ask<string?>(
+            filterLocationOptions.Town = AnsiConsole.Ask<string?>(
                 "Enter [green]Town or City[/] (or leave blank):",
                 defaultValue: null
             );
-            filterLocationOptions.StateOrCounty = AnsiConsole.Ask<string?>(
+            filterLocationOptions.County = AnsiConsole.Ask<string?>(
                 "Enter [green]State or County[/] (or leave blank):",
                 defaultValue: null
             );
-            filterLocationOptions.ZipOrPostCode = AnsiConsole.Ask<string?>(
+            filterLocationOptions.PostCode = AnsiConsole.Ask<string?>(
                 "Enter [green]Zip or Post Code[/] (or leave blank):",
                 defaultValue: null
             );
@@ -445,9 +445,9 @@ public class UserInterface
         {
             Name = name,
             Address = address,
-            TownOrCity = townOrCity,
-            StateOrCounty = stateOrCounty,
-            ZipOrPostCode = zipOrPostCode,
+            Town = townOrCity,
+            County = stateOrCounty,
+            PostCode = zipOrPostCode,
             Country = country,
         };
 
@@ -482,9 +482,9 @@ public class UserInterface
                     (i + 1).ToString(),
                     location.Name,
                     location.Address,
-                    location.TownOrCity,
-                    location.StateOrCounty,
-                    location.ZipOrPostCode,
+                    location.Town,
+                    location.County,
+                    location.PostCode,
                     location.Country
                 );
             }
@@ -511,17 +511,17 @@ public class UserInterface
         );
         var townOrCity = AnsiConsole.Ask<string>(
             "Enter [green]Phone Number[/] (leave blank to keep current):",
-            existingLocation.TownOrCity ?? string.Empty
+            existingLocation.Town ?? string.Empty
         );
 
         var stateOrCounty = AnsiConsole.Ask<string>(
             "Enter [green]State or County[/] (leave blank to keep current):",
-            existingLocation.StateOrCounty ?? string.Empty
+            existingLocation.County ?? string.Empty
         );
 
         var zipOrPostCode = AnsiConsole.Ask<string>(
             "Enter [green]Zip or Post Code[/] (leave blank to keep current):",
-            existingLocation.ZipOrPostCode ?? string.Empty
+            existingLocation.PostCode ?? string.Empty
         );
 
         var country = AnsiConsole.Ask<string>(
@@ -532,9 +532,9 @@ public class UserInterface
         {
             Name = name,
             Address = address,
-            TownOrCity = townOrCity,
-            StateOrCounty = stateOrCounty,
-            ZipOrPostCode = zipOrPostCode,
+            Town = townOrCity,
+            County = stateOrCounty,
+            PostCode = zipOrPostCode,
             Country = country,
         };
         return updatedLocation;

@@ -46,27 +46,27 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             {
                 Name = "Colchester General Hospital",
                 Address = "Turner Road",
-                TownOrCity = "Colchester",
-                StateOrCounty = "Essex",
-                ZipOrPostCode = "CO4 5JL",
-                Country = "England",
+                Town = "Colchester",
+                Country = "Essex",
+                PostCode = "CO4 5JL",
+                County = "England",
             },
             new Location
             {
                 Name = "The Royal Brisbane and Women's Hospital",
                 Address = "Butterfield Street",
-                TownOrCity = "Herston",
-                StateOrCounty = "Queensland",
-                ZipOrPostCode = "QLD 4006",
+                Town = "Herston",
+                County = "Queensland",
+                PostCode = "QLD 4006",
                 Country = "Australia",
             },
             new Location
             {
                 Name = "Advent Health",
                 Address = "601 E Rollins Street",
-                TownOrCity = "Orlando",
-                StateOrCounty = "Florida",
-                ZipOrPostCode = "FL 32803",
+                Town = "Orlando",
+                County = "Florida",
+                PostCode = "FL 32803",
                 Country = "USA",
             },
         };

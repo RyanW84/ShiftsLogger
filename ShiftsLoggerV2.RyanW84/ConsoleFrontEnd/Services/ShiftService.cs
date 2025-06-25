@@ -2,7 +2,6 @@
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
-using Microsoft.Extensions.Options;
 using Spectre.Console;
 
 namespace ConsoleFrontEnd.Services;
@@ -66,165 +65,164 @@ public class ShiftService : IShiftService
             throw;
         }
     }
-	public async Task<ApiResponseDto<Shift>> GetShiftById(int id)
-	{
-		HttpResponseMessage response;
-		try
-		{
-			response = await httpClient.GetAsync($"api/shifts/{id}");
 
-			if (response.StatusCode == System.Net.HttpStatusCode.OK)
-			{
-				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Shift>>()
-					?? new ApiResponseDto<Shift>
-					{
-						ResponseCode = response.StatusCode ,
-						Message = "No data returned." ,
-						Data = response.Content.ReadFromJsonAsync<Shift>().Result ,
-						TotalCount = 0 ,
-					};
-			}
-			else
-			{
-				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Shift>>()
-					?? new ApiResponseDto<Shift>
-					{
-						ResponseCode = response.StatusCode ,
-						Message = "No data returned." ,
-						Data = null ,
-						TotalCount = 0 ,
-					};
-			}
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Try catch failed for GetShiftById: {ex}");
-			throw;
-		}
-	}
+    public async Task<ApiResponseDto<Shift>> GetShiftById(int id)
+    {
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.GetAsync($"api/shifts/{id}");
 
-	public async Task<ApiResponseDto<Shift>> CreateShift(Shift createdShift)
-	{
-		try
-		{
-			var response = await httpClient.PostAsJsonAsync("api/shifts" , createdShift);
-			if (response.StatusCode != System.Net.HttpStatusCode.Created)
-			{
-				Console.WriteLine($"Error: Status Code - {response.StatusCode}");
-				return new ApiResponseDto<Shift>
-				{
-					ResponseCode = response.StatusCode ,
-					Message = response.ReasonPhrase ?? "Creation failed" ,
-					Data = null ,
-				};
-			}
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Shift>>()
+                    ?? new ApiResponseDto<Shift>
+                    {
+                        ResponseCode = response.StatusCode,
+                        Message = "No data returned.",
+                        Data = response.Content.ReadFromJsonAsync<Shift>().Result,
+                        TotalCount = 0,
+                    };
+            }
+            else
+            {
+                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Shift>>()
+                    ?? new ApiResponseDto<Shift>
+                    {
+                        ResponseCode = response.StatusCode,
+                        Message = "No data returned.",
+                        Data = null,
+                        TotalCount = 0,
+                    };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Try catch failed for GetShiftById: {ex}");
+            throw;
+        }
+    }
 
-			Console.WriteLine("Shift created successfully.");
-			return new ApiResponseDto<Shift>
-			{
-				ResponseCode = response.StatusCode ,
-				Data = await response.Content.ReadFromJsonAsync<Shift>() ?? createdShift ,
-			};
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Try catch failed for CreateShift: {ex}");
-			throw;
-		}
-	}
+    public async Task<ApiResponseDto<Shift>> CreateShift(Shift createdShift)
+    {
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync("api/shifts", createdShift);
+            if (response.StatusCode != System.Net.HttpStatusCode.Created)
+            {
+                Console.WriteLine($"Error: Status Code - {response.StatusCode}");
+                return new ApiResponseDto<Shift>
+                {
+                    ResponseCode = response.StatusCode,
+                    Message = response.ReasonPhrase ?? "Creation failed",
+                    Data = null,
+                };
+            }
 
-	public async Task<ApiResponseDto<Shift>> UpdateShift(int id , Shift updatedShift)
-	{
-		HttpResponseMessage response;
-		try
-		{
-			response = await httpClient.PutAsJsonAsync($"api/shifts/{id}" , updatedShift);
-			if (response.StatusCode is not System.Net.HttpStatusCode.OK)
-			{
-				return new ApiResponseDto<Shift>
-				{
-					ResponseCode = response.StatusCode ,
-					Message = response.ReasonPhrase ,
-					Data = null ,
-				};
-			}
-			else
-			{
-				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Shift>>()
-					?? new ApiResponseDto<Shift>
-					{
-						ResponseCode = response.StatusCode ,
-						Message = "Update Shift succeeded." ,
-						Data = null ,
-					};
-			}
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Try catch failed for UpdateShift: {ex}");
-			throw;
-		}
-	}
+            Console.WriteLine("Shift created successfully.");
+            return new ApiResponseDto<Shift>
+            {
+                ResponseCode = response.StatusCode,
+                Data = await response.Content.ReadFromJsonAsync<Shift>() ?? createdShift,
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Try catch failed for CreateShift: {ex}");
+            throw;
+        }
+    }
 
-	public async Task<ApiResponseDto<string>> DeleteShift(int id)
-	{
-		try
-		{
-			var response = await httpClient.DeleteAsync($"api/shifts/{id}");
-			if (response.StatusCode != System.Net.HttpStatusCode.NoContent)
-			{
-				return new ApiResponseDto<string>
-				{
-					ResponseCode = response.StatusCode ,
-					Message = $"Error deleting Shift - {response.StatusCode}" ,
-					Data = null ,
-				};
-			}
+    public async Task<ApiResponseDto<Shift>> UpdateShift(int id, Shift updatedShift)
+    {
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.PutAsJsonAsync($"api/shifts/{id}", updatedShift);
+            if (response.StatusCode is not System.Net.HttpStatusCode.OK)
+            {
+                return new ApiResponseDto<Shift>
+                {
+                    ResponseCode = response.StatusCode,
+                    Message = response.ReasonPhrase,
+                    Data = null,
+                };
+            }
+            else
+            {
+                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Shift>>()
+                    ?? new ApiResponseDto<Shift>
+                    {
+                        ResponseCode = response.StatusCode,
+                        Message = "Update Shift succeeded.",
+                        Data = null,
+                    };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Try catch failed for UpdateShift: {ex}");
+            throw;
+        }
+    }
 
-			return new ApiResponseDto<string>
-			{
-				ResponseCode = response.StatusCode ,
-				Message = "Shift deleted successfully." ,
-				Data = null ,
-			};
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Try catch failed for DeleteShift: {ex}");
-			throw;
-		}
-	}
+    public async Task<ApiResponseDto<string>> DeleteShift(int id)
+    {
+        try
+        {
+            var response = await httpClient.DeleteAsync($"api/shifts/{id}");
+            if (response.StatusCode != System.Net.HttpStatusCode.NoContent)
+            {
+                return new ApiResponseDto<string>
+                {
+                    ResponseCode = response.StatusCode,
+                    Message = $"Error deleting Shift - {response.StatusCode}",
+                    Data = null,
+                };
+            }
 
-	//Helpers
-	private static string BuildQueryString(string basePath , ShiftFilterOptions options)
-	{
-		var queryParams = new List<string>();
+            return new ApiResponseDto<string>
+            {
+                ResponseCode = response.StatusCode,
+                Message = "Shift deleted successfully.",
+                Data = null,
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Try catch failed for DeleteShift: {ex}");
+            throw;
+        }
+    }
 
-		void AddIfNotNullOrEmpty(string key , object? value)
-		{
-			switch (value)
-			{
-				case int intValue:
-					queryParams.Add($"{key}={intValue}");
-					break;
-				case string strValue when !string.IsNullOrWhiteSpace(strValue):
-					queryParams.Add($"{key}={strValue}");
-					break;
-			}
-		}
+    //Helpers
+    private static string BuildQueryString(string basePath, ShiftFilterOptions options)
+    {
+        var queryParams = new List<string>();
 
-		AddIfNotNullOrEmpty("ShiftId" , options.ShiftId);
-		AddIfNotNullOrEmpty("WorkerId" , options.WorkerId);
-		AddIfNotNullOrEmpty("LocationId" , options.LocationId);
-		AddIfNotNullOrEmpty("StartTime" , options.StartTime);
-		AddIfNotNullOrEmpty("EndTime" , options.EndTime);
-		AddIfNotNullOrEmpty("LocationName" , options.LocationName);
-		AddIfNotNullOrEmpty("Search" , options.Search);
-		AddIfNotNullOrEmpty("SortBy" , options.SortBy);
-		AddIfNotNullOrEmpty("SortOrder" , options.SortOrder);
+        void AddIfNotNullOrEmpty(string key, object? value)
+        {
+            switch (value)
+            {
+                case int intValue:
+                    queryParams.Add($"{key}={intValue}");
+                    break;
+                case string strValue when !string.IsNullOrWhiteSpace(strValue):
+                    queryParams.Add($"{key}={strValue}");
+                    break;
+            }
+        }
 
-		return queryParams.Count > 0 ? $"{basePath}?{string.Join("&" , queryParams)}" : basePath;
-	}
+        AddIfNotNullOrEmpty("ShiftId", options.ShiftId);
+        AddIfNotNullOrEmpty("WorkerId", options.WorkerId);
+        AddIfNotNullOrEmpty("LocationId", options.LocationId);
+        AddIfNotNullOrEmpty("StartTime", options.StartTime);
+        AddIfNotNullOrEmpty("EndTime", options.EndTime);
+        AddIfNotNullOrEmpty("LocationName", options.LocationName);
+        AddIfNotNullOrEmpty("Search", options.Search);
+        AddIfNotNullOrEmpty("SortBy", options.SortBy);
+        AddIfNotNullOrEmpty("SortOrder", options.SortOrder);
 
-
+        return queryParams.Count > 0 ? $"{basePath}?{string.Join("&", queryParams)}" : basePath;
+    }
 }

@@ -1,16 +1,21 @@
 using ConsoleFrontEnd.Controller;
+using ConsoleFrontEnd.Models.FilterOptions;
+
 using Spectre.Console;
 
 namespace ConsoleFrontEnd.MenuSystem;
 
 public class ShiftMenu
 {
+    
     public static async Task DisplayShiftMenu()
     {
+
         Console.Clear();
         while (true)
         {
             ShiftController shiftController = new();
+         
             Console.Clear();
             AnsiConsole.Write(
                 new Rule("[bold yellow]Shift Menu[/]").RuleStyle("yellow").Centered()

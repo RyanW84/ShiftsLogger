@@ -14,16 +14,16 @@ public class LocationFilterOptions
     [FromQuery(Name = "Address")]
     public string Address { get; set; } = string.Empty; // Use string for phone filtering
 
-    [FromQuery(Name = "TownOrCity")]
+    [FromQuery(Name = "Town")]
     public string TownOrCity { get; set; } = string.Empty; // Use string for email filtering
 
-    [FromQuery(Name = "StateOrCounty")]
+    [FromQuery(Name = "County")]
     public string StateOrCounty { get; set; } = string.Empty; // Use string for email filtering
 
-    [FromQuery(Name = "ZipOrPostCode")]
+    [FromQuery(Name = "PostCode")]
     public string ZipOrPostCode { get; set; } = string.Empty; // Use string for email filtering
 
-    [FromQuery(Name = "Country")]
+    [FromQuery(Name = "County")]
     public string Country { get; set; } = string.Empty; // Use string for email filtering
 
     [FromQuery(Name = "SortBy")]

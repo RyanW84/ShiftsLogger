@@ -15,7 +15,7 @@ public class LocationController
     {
         LocationId = null,
         Name = null,
-        TownOrCity = null,
+        Town = null,
         StateOrCounty = null,
         ZipOrPostCode = null,
         Country = null,
@@ -73,6 +73,52 @@ public class LocationController
         }
     }
 
+    public async Task<ApiResponseDto<int>> SelectLocation(
+        LocationFilterOptions? locationFilterOptions = null
+    )
+    {
+        // Use default filter if none provided
+        locationFilterOptions ??= new LocationFilterOptions();
+
+        // Fetch locations
+        var response = await locationService.GetAllLocations(locationFilterOptions);
+
+        if (response.Data == null || response.Data.Count == 0)
+        {
+            userInterface.DisplayErrorMessage(response.Message);
+            return new ApiResponseDto<int>
+            {
+                RequestFailed = true,
+                ResponseCode = response.ResponseCode,
+                Message = "No locations available.",
+                Data = 0,
+            };
+        }
+
+        // Prepare choices for the menu
+        var choices = response
+            .Data.Select(w => new { w.LocationId, Display = $"{w.Name}" })
+            .ToList();
+
+        // Show menu and get selection
+        var selectedDisplay = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("[yellow]Select a location[/]")
+                .AddChoices(choices.Select(c => c.Display))
+        );
+
+        // Find the selected location's ID
+        var selected = choices.First(c => c.Display == selectedDisplay);
+
+        return new ApiResponseDto<int>
+        {
+            RequestFailed = false,
+            ResponseCode = response.ResponseCode,
+            Message = "Location selected.",
+            Data = selected.LocationId,
+        };
+    }
+
     // CRUD
     public async Task CreateLocation()
     {
@@ -105,21 +151,21 @@ public class LocationController
             var filterOptions = userInterface.FilterLocationsUi();
 
             locationFilterOptions = filterOptions;
-            var locations = await locationService.GetAllLocations(locationFilterOptions);
+            var response = await locationService.GetAllLocations(locationFilterOptions);
 
-            if (locations.Data is not null)
-            {
-                userInterface.DisplayLocationsTable(locations.Data);
-            }
-            else
+            if (response.Data is null)
             {
                 AnsiConsole.MarkupLine("[red]No locations found.[/]");
                 userInterface.ContinueAndClearScreen();
             }
+            else
+                userInterface.DisplayLocationsTable(response.Data);
+            userInterface.ContinueAndClearScreen();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Exception: {ex.Message}");
+            userInterface.ContinueAndClearScreen();
         }
     }
 
@@ -132,8 +178,10 @@ public class LocationController
             AnsiConsole.Write(
                 new Rule("[bold yellow]View Location by ID[/]").RuleStyle("yellow").Centered()
             );
-            var locationId = userInterface.GetLocationByIdUi();
-            var location = await CheckLocationExists(locationId);
+            ApiResponseDto<int>? locationId = await SelectLocation();
+            ApiResponseDto<Location> location = await locationService.GetLocationById(
+                locationId.Data
+            );
 
             if (location.Data is not null)
             {
@@ -161,21 +209,15 @@ public class LocationController
                 new Rule("[bold yellow]Update Location[/]").RuleStyle("yellow").Centered()
             );
 
-            var locationId = userInterface.GetLocationByIdUi();
-
-            var existingLocation = await CheckLocationExists(locationId);
-
-            if (existingLocation.Data is null)
-            {
-                userInterface.DisplayErrorMessage(existingLocation.Message);
-                userInterface.ContinueAndClearScreen();
-                return;
-            }
+            ApiResponseDto<int>? locationId = await SelectLocation();
+            ApiResponseDto<Location> existingLocation = await locationService.GetLocationById(
+                locationId.Data
+            );
 
             var updatedLocation = userInterface.UpdateLocationUi(existingLocation.Data);
 
             var updatedLocationResponse = await locationService.UpdateLocation(
-                locationId,
+                locationId.Data,
                 updatedLocation
             );
             userInterface.DisplaySuccessMessage($"\n{updatedLocationResponse.Message}");
@@ -196,8 +238,10 @@ public class LocationController
                 new Rule("[bold yellow]Delete Location[/]").RuleStyle("yellow").Centered()
             );
 
-            var locationId = userInterface.GetLocationByIdUi();
-            var existingLocation = await CheckLocationExists(locationId);
+            ApiResponseDto<int>? locationId = await SelectLocation();
+            ApiResponseDto<Location> existingLocation = await locationService.GetLocationById(
+                locationId.Data
+            );
 
             if (existingLocation.Data is null)
             {

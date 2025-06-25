@@ -4,6 +4,8 @@ using ConsoleFrontEnd.Models.FilterOptions;
 using ConsoleFrontEnd.Services;
 using Spectre.Console;
 
+using System.Net;
+
 namespace ConsoleFrontEnd.Controller
 {
 	public class ShiftController( )
@@ -139,33 +141,38 @@ namespace ConsoleFrontEnd.Controller
 			}
 		}
 
-		public async Task GetAllShifts( )
+		public async Task<ApiResponseDto<List<Shift>>> GetAllShifts()
 		{
 			try
 			{
-				Console.Clear();
-				AnsiConsole.Write(
-					new Rule("[bold yellow]View All Shifts[/]").RuleStyle("yellow").Centered()
-				);
+				shiftFilterOptions = userInterface.FilterShiftsUi();
+				var response = await shiftService.GetAllShifts( shiftFilterOptions);
 
-				var filterOptions = userInterface.FilterShiftsUi();
-
-				shiftFilterOptions = filterOptions;
-				var response = await shiftService.GetAllShifts(shiftFilterOptions);
-
-				if (response.Data is null)
+				if (response.Data is null || response.Data.Count == 0)
 				{
-					AnsiConsole.MarkupLine("[red]No shifts found.[/]");
-					userInterface.ContinueAndClearScreen();
+					userInterface.DisplayErrorMessage(response.Message);
+					return new ApiResponseDto<List<Shift>>
+					{
+						RequestFailed = true ,
+						ResponseCode = response.ResponseCode ,
+						Message = "No shifts found." ,
+						Data = new List<Shift>()
+					};
 				}
-				else
-					userInterface.DisplayShiftsTable(response.Data);
+				userInterface.DisplaySuccessMessage(response.Message);
+				userInterface.DisplayShiftsTable(response.Data);
 				userInterface.ContinueAndClearScreen();
+				return response;
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Exception: {ex.Message}");
-				userInterface.ContinueAndClearScreen();
+				return new ApiResponseDto<List<Shift>>
+				{
+					RequestFailed = true ,
+					ResponseCode = HttpStatusCode.InternalServerError ,
+					Message = $"Exception occurred: {ex.Message}" ,
+					Data = null
+				};
 			}
 		}
 
@@ -273,11 +280,11 @@ namespace ConsoleFrontEnd.Controller
 		public async Task<bool> IsWorkerAvailableForShift(int workerId, DateTime newShiftStart, DateTime newShiftEnd)
 		{
 			// Fetch all shifts for the worker
-			var filterOptions = new ShiftFilterOptions
+			var shiftFilterOptions = new ShiftFilterOptions
 			{
 				WorkerId = workerId
 			};
-			var response = await GetAllShifts(filterOptions);
+			ApiResponseDto<List<Shift>> response = await shiftService.GetAllShifts(shiftFilterOptions);
 
 			if (response.Data == null)
 				return true; // No shifts, so available

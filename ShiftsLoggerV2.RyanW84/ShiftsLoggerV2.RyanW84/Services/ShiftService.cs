@@ -17,15 +17,14 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
             .AsQueryable();
 
         // Apply all filters
-        if (shiftOptions.ShiftId != null && shiftOptions.ShiftId is not 0) // This had to be done this way as Shift ID is not nullable
+        if (shiftOptions.ShiftId != null && shiftOptions.ShiftId is not 0) // Shift ID is not nullable
         {
             query = query.Where(s => s.ShiftId == shiftOptions.ShiftId);
         }
 
         if (shiftOptions.WorkerId is not null and not 0)
         {
-            if (shiftOptions.ShiftId is not 0)
-                query = query.Where(s => s.WorkerId == shiftOptions.WorkerId);
+            query = query.Where(s => s.WorkerId == shiftOptions.WorkerId);
         }
 
         if (shiftOptions.LocationId is not null and not 0)
@@ -58,8 +57,8 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
                 s.WorkerId.ToString().Contains(shiftOptions.Search)
                 || s.LocationId.ToString().Contains(shiftOptions.Search)
                 || EF.Functions.Like(s.Location.Name, $"%{shiftOptions.Search}%")
-                || EF.Functions.Like(s.Location.TownOrCity, $"%{shiftOptions.Search}%")
-                || EF.Functions.Like(s.Location.StateOrCounty, $"%{shiftOptions.Search}%")
+                || EF.Functions.Like(s.Location.Town, $"%{shiftOptions.Search}%")
+                || EF.Functions.Like(s.Location.Country, $"%{shiftOptions.Search}%")
                 || EF.Functions.Like(s.Location.Country, $"%{shiftOptions.Search}%")
                 || s.StartTime.ToString().Contains(shiftOptions.Search)
                 || s.EndTime.ToString().Contains(shiftOptions.Search)
@@ -191,7 +190,6 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
 
         if (savedShift == null)
         {
-       
             return new ApiResponseDto<Shift>
             {
                 RequestFailed = true,
