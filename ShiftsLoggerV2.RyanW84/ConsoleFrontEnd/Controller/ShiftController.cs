@@ -9,7 +9,8 @@ namespace ConsoleFrontEnd.Controller
 	public class ShiftController( )
 	{
 		private readonly MenuSystem.UserInterface userInterface = new();
-		private readonly ShiftService shiftService = new ShiftService();
+		private readonly ShiftService shiftService = new ();
+		private readonly WorkerController workerController = new ();
 
 		private ShiftFilterOptions shiftFilterOptions = new()
 		{
@@ -126,7 +127,8 @@ namespace ConsoleFrontEnd.Controller
 				AnsiConsole.Write(
 					new Rule("[bold yellow]Create Shift[/]").RuleStyle("yellow").Centered()
 				);
-				var shift = userInterface.CreateShiftUi();
+				var workerId = await workerController.SelectWorker();
+				var shift = userInterface.CreateShiftUi(workerId.Data);
 				var createdShift = await shiftService.CreateShift(shift);
 				userInterface.ContinueAndClearScreen();
 			}
@@ -266,6 +268,31 @@ namespace ConsoleFrontEnd.Controller
 				Console.WriteLine($"Try Pass failed in Shift Controller: Delete Shift {ex}");
 				userInterface.ContinueAndClearScreen();
 			}
+		}
+
+		public async Task<bool> IsWorkerAvailableForShift(int workerId, DateTime newShiftStart, DateTime newShiftEnd)
+		{
+			// Fetch all shifts for the worker
+			var filterOptions = new ShiftFilterOptions
+			{
+				WorkerId = workerId
+			};
+			var response = await GetAllShifts(filterOptions);
+
+			if (response.Data == null)
+				return true; // No shifts, so available
+
+			// Check for overlap
+			foreach (var shift in response.Data)
+			{
+				if (shift.StartTime < newShiftEnd && newShiftStart < shift.EndTime)
+				{
+					// Overlap detected
+					return false;
+				}
+			}
+
+			return true; // No overlap, worker is available
 		}
 	}
 }

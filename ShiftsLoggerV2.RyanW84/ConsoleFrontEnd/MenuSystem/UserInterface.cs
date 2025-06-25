@@ -123,14 +123,15 @@ public class UserInterface
         }
     }
 
-    public Shift CreateShiftUi()
+    public Shift CreateShiftUi(int workerId)
     {
         // 1. Gather user input (UI Layer)
         AnsiConsole.WriteLine("\nPlease enter the following details for the shift:");
-        var startTime = AnsiConsole.Ask<DateTime>("Enter [green]Start Time[/]:");
+		
+		var startTime = AnsiConsole.Ask<DateTime>("Enter [green]Start Time[/]:");
         var endTime = AnsiConsole.Ask<DateTime>("Enter [green]End Time[/]:");
-        var locationId = AnsiConsole.Ask<int>("Enter [green]Location ID[/]:");
-        var workerId = AnsiConsole.Ask<int>("Enter [green]Worker ID[/]:");
+      
+      
 
         var createdShift = new Shift
         {
