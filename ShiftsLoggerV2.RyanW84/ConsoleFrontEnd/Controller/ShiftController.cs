@@ -76,9 +76,10 @@ namespace ConsoleFrontEnd.Controller
 				};
 			}
 		}
+
 		public async Task<ApiResponseDto<int>> SelectShift(
-	  ShiftFilterOptions? shiftFilterOptions = null
-  )
+		  ShiftFilterOptions? shiftFilterOptions = null
+		)
 		{
 			// Use default filter if none provided
 			shiftFilterOptions ??= new ShiftFilterOptions();
@@ -99,7 +100,7 @@ namespace ConsoleFrontEnd.Controller
 			}
 
 			// Prepare choices for the menu
-			var choices = response.Data.Select(s => new { s.ShiftId, Display = $"{s.StartTime} {s.Location.Name}" }).ToList();
+			var choices = response.Data.Select(s => new { s.ShiftId, Display = $"{s.StartTime} {s.Location?.Name ?? "Unknown Location"}" }).ToList();
 
 			// Show menu and get selection
 			var selectedDisplay = AnsiConsole.Prompt(
@@ -300,6 +301,207 @@ namespace ConsoleFrontEnd.Controller
 			}
 
 			return true; // No overlap, worker is available
+		}
+
+		// NEW METHODS FOR SEPARATION OF CONCERNS
+
+		// Method to get shift input for creation
+		public async Task<(int workerId, Shift shift)> GetShiftInputAsync()
+		{
+			try
+			{
+				Console.Clear();
+				AnsiConsole.Write(
+					new Rule("[bold yellow]Create Shift - Input[/]").RuleStyle("yellow").Centered()
+				);
+				
+				var workerIdResponse = await workerController.SelectWorker();
+				if (workerIdResponse.RequestFailed)
+				{
+					throw new InvalidOperationException(workerIdResponse.Message);
+				}
+
+				var shift = userInterface.CreateShiftUi(workerIdResponse.Data);
+				return (workerIdResponse.Data, shift);
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Failed to get shift input: {ex.Message}", ex);
+			}
+		}
+
+		// Method to create shift with provided data (no UI interaction)
+		public async Task CreateShiftWithData(int workerId, Shift shift)
+		{
+			try
+			{
+				var response = await shiftService.CreateShift(shift);
+				
+				if (response.RequestFailed)
+				{
+					throw new InvalidOperationException(response.Message);
+				}
+				
+				// Log success but don't display UI here - that's handled in the menu
+				Console.WriteLine($"Shift created successfully: {response.Message}");
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Failed to create shift: {ex.Message}", ex);
+			}
+		}
+
+		// Method to make SelectShift async
+		public async Task<ApiResponseDto<int>> SelectShiftAsync(ShiftFilterOptions? shiftFilterOptions = null)
+		{
+			return await Task.FromResult(await SelectShift(shiftFilterOptions));
+		}
+
+		// Method to get shift by ID with provided data (no UI interaction)
+		public async Task GetShiftByIdWithData(int shiftId)
+		{
+			try
+			{
+				Console.Clear();
+				AnsiConsole.Write(
+					new Rule("[bold yellow]View Shift by ID - Results[/]").RuleStyle("yellow").Centered()
+				);
+				
+				var shift = await shiftService.GetShiftById(shiftId);
+
+				if (shift.Data is not null)
+				{
+					userInterface.DisplayShiftsTable([shift.Data]);
+				}
+				else
+				{
+					throw new InvalidOperationException(shift.Message);
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Failed to get shift by ID: {ex.Message}", ex);
+			}
+		}
+
+		// Method to get update input for shift
+		public async Task<(int shiftId, Shift updatedShift)> GetShiftUpdateInputAsync()
+		{
+			try
+			{
+				Console.Clear();
+				AnsiConsole.Write(
+					new Rule("[bold yellow]Update Shift - Input[/]").RuleStyle("yellow").Centered()
+				);
+
+				// First, select the shift to update
+				var shiftIdResponse = await SelectShift();
+				if (shiftIdResponse.RequestFailed)
+				{
+					throw new InvalidOperationException(shiftIdResponse.Message);
+				}
+
+				// Get the existing shift data
+				var existingShift = await shiftService.GetShiftById(shiftIdResponse.Data);
+				if (existingShift.Data is null)
+				{
+					throw new InvalidOperationException(existingShift.Message);
+				}
+
+				// Get the updated shift data from user
+				var updatedShift = userInterface.UpdateShiftUi(existingShift.Data);
+
+				return (shiftIdResponse.Data, updatedShift);
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Failed to get shift update input: {ex.Message}", ex);
+			}
+		}
+
+		// Method to update shift with provided data (no UI interaction)
+		public async Task UpdateShiftWithData(int shiftId, Shift updatedShift)
+		{
+			try
+			{
+				var response = await shiftService.UpdateShift(shiftId, updatedShift);
+				
+				if (response.RequestFailed)
+				{
+					throw new InvalidOperationException(response.Message);
+				}
+				
+				// Log success but don't display UI here - that's handled in the menu
+				Console.WriteLine($"Shift updated successfully: {response.Message}");
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Failed to update shift: {ex.Message}", ex);
+			}
+		}
+
+		// Method to delete shift with provided data (no UI interaction)
+		public async Task DeleteShiftWithData(int shiftId)
+		{
+			try
+			{
+				Console.Clear();
+				AnsiConsole.Write(
+					new Rule("[bold yellow]Delete Shift - Processing[/]").RuleStyle("yellow").Centered()
+				);
+
+				// Get shift details first to verify it exists
+				var existingShift = await shiftService.GetShiftById(shiftId);
+				if (existingShift.Data is null)
+				{
+					throw new InvalidOperationException(existingShift.Message);
+				}
+
+				var response = await shiftService.DeleteShift(existingShift.Data.ShiftId);
+				
+				if (response.RequestFailed)
+				{
+					throw new InvalidOperationException(response.Message);
+				}
+				
+				// Log success but don't display UI here - that's handled in the menu
+				Console.WriteLine($"Shift deleted successfully: {response.Message}");
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Failed to delete shift: {ex.Message}", ex);
+			}
+		}
+
+		public async Task<ShiftFilterOptions> GetShiftFilterInputAsync()
+		{
+			return await Task.FromResult(userInterface.FilterShiftsUi());
+		}
+
+		public async Task GetAllShiftsWithData(ShiftFilterOptions filterOptions)
+		{
+			try
+			{
+				Console.Clear();
+				AnsiConsole.Write(
+					new Rule("[bold yellow]View All Shifts - Results[/]").RuleStyle("yellow").Centered()
+				);
+
+				var response = await shiftService.GetAllShifts(filterOptions);
+
+				if (response.Data is null || response.Data.Count == 0)
+				{
+					throw new InvalidOperationException("No shifts found.");
+				}
+				else
+				{
+					userInterface.DisplayShiftsTable(response.Data);
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Failed to get all shifts: {ex.Message}", ex);
+			}
 		}
 	}
 }

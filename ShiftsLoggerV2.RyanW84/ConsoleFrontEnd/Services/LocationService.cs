@@ -58,7 +58,7 @@ public class LocationService : ILocationService
 		HttpResponseMessage response;
 		try
 		{
-			response = await httpClient.GetAsync($"api/locaitons/{id}");
+			response = await httpClient.GetAsync($"api/locations/{id}");
 
 			if (response.StatusCode == System.Net.HttpStatusCode.OK)
 			{
@@ -203,8 +203,8 @@ public class LocationService : ILocationService
         AddIfNotNullOrEmpty("name", options.Name);
         AddIfNotNullOrEmpty("address", options.Address);
         AddIfNotNullOrEmpty("townOrCity", options.Town);
-        AddIfNotNullOrEmpty("stateOrCounty", options.StateOrCounty);
-        AddIfNotNullOrEmpty("zipOrPostCode", options.ZipOrPostCode);
+        AddIfNotNullOrEmpty("stateOrCounty", options.County);
+        AddIfNotNullOrEmpty("zipOrPostCode", options.PostCode);
         AddIfNotNullOrEmpty("country", options.Country);
         AddIfNotNullOrEmpty("search", options.Search);
         AddIfNotNullOrEmpty("sortBy", options.SortBy);

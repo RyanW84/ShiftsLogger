@@ -16,8 +16,8 @@ public class LocationController
         LocationId = null,
         Name = null,
         Town = null,
-        StateOrCounty = null,
-        ZipOrPostCode = null,
+        County = null,
+        PostCode = null,
         Country = null,
         Search = null,
         SortBy = "Name", // Default sorting by name
@@ -269,6 +269,201 @@ public class LocationController
         {
             Console.WriteLine($"Try Pass failed in Location Controller: Delete Location {ex}");
             userInterface.ContinueAndClearScreen();
+        }
+    }
+
+    // NEW METHODS FOR SEPARATION OF CONCERNS
+
+    // Method to get location input for creation
+    public async Task<Location> GetLocationInputAsync()
+    {
+        try
+        {
+            Console.Clear();
+            AnsiConsole.Write(
+                new Rule("[bold yellow]Create Location - Input[/]").RuleStyle("yellow").Centered()
+            );
+
+            var location = userInterface.CreateLocationUi();
+            return location;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to get location input: {ex.Message}", ex);
+        }
+    }
+
+    // Method to create location with provided data (no UI interaction)
+    public async Task CreateLocationWithData(Location location)
+    {
+        try
+        {
+            var response = await locationService.CreateLocation(location);
+
+            if (response.RequestFailed)
+            {
+                throw new InvalidOperationException(response.Message);
+            }
+
+            // Log success but don't display UI here - that's handled in the menu
+            Console.WriteLine($"Location created successfully: {response.Message}");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to create location: {ex.Message}", ex);
+        }
+    }
+
+    // Method to make SelectLocation async
+    public async Task<ApiResponseDto<int>> SelectLocationAsync(LocationFilterOptions? locationFilterOptions = null)
+    {
+        return await Task.FromResult(await SelectLocation(locationFilterOptions));
+    }
+
+    // Method to get location by ID with provided data (no UI interaction)
+    public async Task GetLocationByIdWithData(int locationId)
+    {
+        try
+        {
+            Console.Clear();
+            AnsiConsole.Write(
+                new Rule("[bold yellow]View Location by ID - Results[/]").RuleStyle("yellow").Centered()
+            );
+
+            var location = await locationService.GetLocationById(locationId);
+
+            if (location.Data is not null)
+            {
+                userInterface.DisplayLocationsTable([location.Data]);
+            }
+            else
+            {
+                throw new InvalidOperationException(location.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to get location by ID: {ex.Message}", ex);
+        }
+    }
+
+    // Method to get update input for location
+    public async Task<(int locationId, Location updatedLocation)> GetLocationUpdateInputAsync()
+    {
+        try
+        {
+            Console.Clear();
+            AnsiConsole.Write(
+                new Rule("[bold yellow]Update Location - Input[/]").RuleStyle("yellow").Centered()
+            );
+
+            // First, select the location to update
+            var locationIdResponse = await SelectLocation();
+            if (locationIdResponse.RequestFailed)
+            {
+                throw new InvalidOperationException(locationIdResponse.Message);
+            }
+
+            // Get the existing location data
+            var existingLocation = await locationService.GetLocationById(locationIdResponse.Data);
+            if (existingLocation.Data is null)
+            {
+                throw new InvalidOperationException(existingLocation.Message);
+            }
+
+            // Get the updated location data from user
+            var updatedLocation = userInterface.UpdateLocationUi(existingLocation.Data);
+
+            return (locationIdResponse.Data, updatedLocation);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to get location update input: {ex.Message}", ex);
+        }
+    }
+
+    // Method to update location with provided data (no UI interaction)
+    public async Task UpdateLocationWithData(int locationId, Location updatedLocation)
+    {
+        try
+        {
+            var response = await locationService.UpdateLocation(locationId, updatedLocation);
+
+            if (response.RequestFailed)
+            {
+                throw new InvalidOperationException(response.Message);
+            }
+
+            // Log success but don't display UI here - that's handled in the menu
+            Console.WriteLine($"Location updated successfully: {response.Message}");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to update location: {ex.Message}", ex);
+        }
+    }
+
+    // Method to delete location with provided data (no UI interaction)
+    public async Task DeleteLocationWithData(int locationId)
+    {
+        try
+        {
+            Console.Clear();
+            AnsiConsole.Write(
+                new Rule("[bold yellow]Delete Location - Processing[/]").RuleStyle("yellow").Centered()
+            );
+
+            // Get location details first to verify it exists
+            var existingLocation = await locationService.GetLocationById(locationId);
+            if (existingLocation.Data is null)
+            {
+                throw new InvalidOperationException(existingLocation.Message);
+            }
+
+            var response = await locationService.DeleteLocation(existingLocation.Data.LocationId);
+
+            if (response.RequestFailed)
+            {
+                throw new InvalidOperationException(response.Message);
+            }
+
+            // Log success but don't display UI here - that's handled in the menu
+            Console.WriteLine($"Location deleted successfully: {response.Message}");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to delete location: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<LocationFilterOptions> GetLocationFilterInputAsync()
+    {
+        return await Task.FromResult(userInterface.FilterLocationsUi());
+    }
+
+    public async Task GetAllLocationsWithData(LocationFilterOptions filterOptions)
+    {
+        try
+        {
+            Console.Clear();
+            AnsiConsole.Write(
+                new Rule("[bold yellow]View All Locations - Results[/]").RuleStyle("yellow").Centered()
+            );
+
+            var response = await locationService.GetAllLocations(filterOptions);
+
+            if (response.Data is null || response.Data.Count == 0)
+            {
+                throw new InvalidOperationException("No locations found.");
+            }
+            else
+            {
+                userInterface.DisplayLocationsTable(response.Data);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to get all locations: {ex.Message}", ex);
         }
     }
 }

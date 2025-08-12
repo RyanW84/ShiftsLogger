@@ -264,4 +264,200 @@ public class WorkerController
             userInterface.ContinueAndClearScreen();
         }
     }
+
+    // New Methods
+    // Method to get worker input for creation
+    public async Task<Worker> GetWorkerInputAsync()
+    {
+        try
+        {
+            Console.Clear();
+            AnsiConsole.Write(
+                new Rule("[bold yellow]Create Worker - Input[/]").RuleStyle("yellow").Centered()
+            );
+            
+            var worker = userInterface.CreateWorkerUi();
+            return worker;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to get worker input: {ex.Message}", ex);
+        }
+    }
+
+    // Method to create worker with provided data (no UI interaction)
+    public async Task CreateWorkerWithData(Worker worker)
+    {
+        try
+        {
+            var response = await workerService.CreateWorker(worker);
+            
+            if (response.RequestFailed)
+            {
+                throw new InvalidOperationException(response.Message);
+            }
+            
+            // Log success but don't display UI here - that's handled in the menu
+            Console.WriteLine($"Worker created successfully: {response.Message}");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to create worker: {ex.Message}", ex);
+        }
+    }
+
+    // Method to make SelectWorker async (your existing method is already good, just make it async)
+    public async Task<ApiResponseDto<int>> SelectWorkerAsync(WorkerFilterOptions? workerFilterOptions = null)
+    {
+        // This method can remain the same as your existing SelectWorker method
+        // Just make sure it's async and rename it
+        return await Task.FromResult(await SelectWorker(workerFilterOptions));
+    }
+
+    // Method to get worker by ID with provided data (no UI interaction)
+    public async Task GetWorkerByIdWithData(int workerId)
+    {
+        try
+        {
+            Console.Clear();
+            AnsiConsole.Write(
+                new Rule("[bold yellow]View Worker by ID - Results[/]").RuleStyle("yellow").Centered()
+            );
+            
+            var worker = await workerService.GetWorkerById(workerId);
+
+            if (worker.Data is not null)
+            {
+                userInterface.DisplayWorkersTable([worker.Data]);
+            }
+            else
+            {
+                throw new InvalidOperationException(worker.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to get worker by ID: {ex.Message}", ex);
+        }
+    }
+
+    // Method to get update input for worker
+    public async Task<(int workerId, Worker updatedWorker)> GetWorkerUpdateInputAsync()
+    {
+        try
+        {
+            Console.Clear();
+            AnsiConsole.Write(
+                new Rule("[bold yellow]Update Worker - Input[/]").RuleStyle("yellow").Centered()
+            );
+
+            // First, select the worker to update
+            var workerIdResponse = await SelectWorker();
+            if (workerIdResponse.RequestFailed)
+            {
+                throw new InvalidOperationException(workerIdResponse.Message);
+            }
+
+            // Get the existing worker data
+            var existingWorker = await workerService.GetWorkerById(workerIdResponse.Data);
+            if (existingWorker.Data is null)
+            {
+                throw new InvalidOperationException(existingWorker.Message);
+            }
+
+            // Get the updated worker data from user
+            var updatedWorker = userInterface.UpdateWorkerUi(existingWorker.Data);
+
+            return (workerIdResponse.Data, updatedWorker);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to get worker update input: {ex.Message}", ex);
+        }
+    }
+
+    // Method to update worker with provided data (no UI interaction)
+    public async Task UpdateWorkerWithData(int workerId, Worker updatedWorker)
+    {
+        try
+        {
+            var response = await workerService.UpdateWorker(workerId, updatedWorker);
+            
+            if (response.RequestFailed)
+            {
+                throw new InvalidOperationException(response.Message);
+            }
+            
+            // Log success but don't display UI here - that's handled in the menu
+            Console.WriteLine($"Worker updated successfully: {response.Message}");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to update worker: {ex.Message}", ex);
+        }
+    }
+
+    // Method to delete worker with provided data (no UI interaction)
+    public async Task DeleteWorkerWithData(int workerId)
+    {
+        try
+        {
+            Console.Clear();
+            AnsiConsole.Write(
+                new Rule("[bold yellow]Delete Worker - Processing[/]").RuleStyle("yellow").Centered()
+            );
+
+            // Get worker details first to verify it exists
+            var existingWorker = await workerService.GetWorkerById(workerId);
+            if (existingWorker.Data is null)
+            {
+                throw new InvalidOperationException(existingWorker.Message);
+            }
+
+            var response = await workerService.DeleteWorker(existingWorker.Data.WorkerId);
+            
+            if (response.RequestFailed)
+            {
+                throw new InvalidOperationException(response.Message);
+            }
+            
+            // Log success but don't display UI here - that's handled in the menu
+            Console.WriteLine($"Worker deleted successfully: {response.Message}");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to delete worker: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<WorkerFilterOptions> GetWorkerFilterInputAsync()
+    {
+        return await Task.FromResult(userInterface.FilterWorkersUi());
+    }
+
+    public async Task GetAllWorkersWithData(WorkerFilterOptions filterOptions)
+    {
+        try
+        {
+            Console.Clear();
+            AnsiConsole.Write(
+                new Rule("[bold yellow]View All Workers - Results[/]").RuleStyle("yellow").Centered()
+            );
+
+            var response = await workerService.GetAllWorkers(filterOptions);
+
+            if (response.Data is null)
+            {
+                throw new InvalidOperationException("No workers found.");
+            }
+            else
+            {
+                userInterface.DisplayWorkersTable(response.Data);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to get all workers: {ex.Message}", ex);
+        }
+    }
 }

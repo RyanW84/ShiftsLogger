@@ -159,7 +159,7 @@ public class UserInterface
         table.AddColumn("Start Time");
         table.AddColumn("End Time");
         table.AddColumn("Duration");
-        List<Shift> shiftList = shiftsResponse.ToList();
+        List<Shift> shiftList = [.. shiftsResponse];
 
         for (int i = 0; i < shiftList.Count; i++)
         {
@@ -399,15 +399,15 @@ public class UserInterface
                 defaultValue: null
             );
             filterLocationOptions.Town = AnsiConsole.Ask<string?>(
-                "Enter [green]Town or City[/] (or leave blank):",
+                "Enter [green]Town[/] (or leave blank):",
                 defaultValue: null
             );
             filterLocationOptions.County = AnsiConsole.Ask<string?>(
-                "Enter [green]State or County[/] (or leave blank):",
+                "Enter [green]County[/] (or leave blank):",
                 defaultValue: null
             );
             filterLocationOptions.PostCode = AnsiConsole.Ask<string?>(
-                "Enter [green]Zip or Post Code[/] (or leave blank):",
+                "Enter [green]postcode[/] (or leave blank):",
                 defaultValue: null
             );
             filterLocationOptions.Country = AnsiConsole.Ask<string?>(
@@ -437,17 +437,17 @@ public class UserInterface
         AnsiConsole.WriteLine("\nPlease enter the following details for the worker:");
         var name = AnsiConsole.Ask<string>("Enter [green]Name[/]:");
         var address = AnsiConsole.Ask<string>("Enter [green]Address[/]:");
-        var townOrCity = AnsiConsole.Ask<string>("Enter [green]Town or City[/]:");
-        var stateOrCounty = AnsiConsole.Ask<string>("Enter [green]State or County[/]:");
-        var zipOrPostCode = AnsiConsole.Ask<string>("Enter [green]Zip or Post Code[/]:");
+        var town = AnsiConsole.Ask<string>("Enter [green]Town[/]:");
+        var county = AnsiConsole.Ask<string>("Enter [green]County[/]:");
+        var postcode = AnsiConsole.Ask<string>("Enter [green]Postcode[/]:");
         var country = AnsiConsole.Ask<string>("Enter [green]Country[/]:");
         var createdLocation = new Location
         {
             Name = name,
             Address = address,
-            Town = townOrCity,
-            County = stateOrCounty,
-            PostCode = zipOrPostCode,
+            Town = town,
+            County = county,
+            PostCode = postcode,
             Country = country,
         };
 
@@ -466,12 +466,12 @@ public class UserInterface
         table.AddColumn("Index #");
         table.AddColumn("Name");
         table.AddColumn("Address");
-        table.AddColumn("Town or City");
-        table.AddColumn("State or County");
-        table.AddColumn("Zip or Post Code");
+        table.AddColumn("Town");
+        table.AddColumn("County");
+        table.AddColumn("postcode");
         table.AddColumn("Country");
         // Convert IEnumerable to List for easier indexing
-        List<Location> locationsList = locationResponse.ToList();
+        List<Location> locationsList = [.. locationResponse];
 
         for (int i = 0; i < locationsList.Count; i++)
         {
@@ -515,12 +515,12 @@ public class UserInterface
         );
 
         var stateOrCounty = AnsiConsole.Ask<string>(
-            "Enter [green]State or County[/] (leave blank to keep current):",
+            "Enter [green]County[/] (leave blank to keep current):",
             existingLocation.County ?? string.Empty
         );
 
         var zipOrPostCode = AnsiConsole.Ask<string>(
-            "Enter [green]Zip or Post Code[/] (leave blank to keep current):",
+            "Enter [green]postcode[/] (leave blank to keep current):",
             existingLocation.PostCode ?? string.Empty
         );
 
