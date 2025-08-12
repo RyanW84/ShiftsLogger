@@ -10,18 +10,14 @@ namespace ConsoleFrontEnd.MenuSystem;
 public class UserInterface
 {
     private readonly ShiftService shiftService;
+    private readonly LocationService locationService;
 
-    // UI method: Handles user interaction
-    // and displays the results of the operations
-
-    // Helpers
+    // Existing helper methods...
     public void ContinueAndClearScreen()
     {
-        {
-            Console.WriteLine("\nPress any key to continue");
-            Console.ReadKey();
-            Console.Clear();
-        }
+        Console.WriteLine("\nPress any key to continue");
+        Console.ReadKey();
+        Console.Clear();
     }
 
     public void DisplayErrorMessage(string message)
@@ -34,170 +30,203 @@ public class UserInterface
         AnsiConsole.MarkupLine($"[green]{message}[/]");
     }
 
-    // Constructor
     public UserInterface()
     {
         shiftService = new ShiftService();
+        locationService = new LocationService();
     }
 
-    // Shifts
-    public ShiftFilterOptions FilterShiftsUi()
+    // SHIFT-SPECIFIC UI BUSINESS LOGIC
+    /// <summary>
+    /// Gets validated shift start and end times with business rules
+    /// </summary>
+    private (DateTime startTime, DateTime endTime) GetShiftDateTimeRange(string contextMessage = "shift")
     {
-        var filterOptions = new ShiftFilterOptions
-        {
-            ShiftId = null,
-            WorkerId = null,
-            LocationId = null,
-            StartTime = null,
-            EndTime = null,
-            Search = null,
-            LocationName = null,
-            StartDate = null,
-            EndDate = null,
-            SortBy = null,
-            SortOrder = null,
-        };
-        // 1. Gather user input (UI Layer)
-        AnsiConsole.WriteLine("\nPlease enter filter criteria (leave blank to skip):");
-        var filterCriteria = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-                .Title("[yellow]Dp you wish to apply any Filters?:[/]")
-                .AddChoices("Yes", "No")
-        );
+        AnsiConsole.MarkupLine($"[yellow]Enter {contextMessage} start and end times:[/]");
+        AnsiConsole.MarkupLine("[dim]Supported format: dd/MM/yyyy HH:mm (e.g., 25/12/2024 13:24)[/]");
+        AnsiConsole.WriteLine();
 
-        if (filterCriteria == "No")
+        // Get start time first
+        var startTime = InputValidator.GetFlexibleDateTime("Enter Start Time:");
+        
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine($"[dim]Start time set: {startTime:dd/MM/yyyy HH:mm}[/]");
+        AnsiConsole.MarkupLine("[dim]End time must be after start time...[/]");
+        AnsiConsole.WriteLine();
+
+        // Get end time with validation that it's after start time
+        var endTime = InputValidator.GetFlexibleDateTime("Enter End Time:", startTime.AddMinutes(1));
+
+        // Show summary
+        AnsiConsole.WriteLine();
+        var duration = endTime - startTime;
+        AnsiConsole.MarkupLine($"[green]✓ Start: {startTime:dd/MM/yyyy HH:mm}[/]");
+        AnsiConsole.MarkupLine($"[green]✓ End: {endTime:dd/MM/yyyy HH:mm}[/]");
+        AnsiConsole.MarkupLine($"[green]✓ Duration: {duration.Hours:D2}:{duration.Minutes:D2}[/]");
+        AnsiConsole.WriteLine();
+
+        return (startTime, endTime);
+    }
+
+    /// <summary>
+    /// Gets validated shift start and end times for updates with existing values
+    /// </summary>
+    private (DateTime startTime, DateTime endTime) GetShiftDateTimeRangeForUpdate(DateTime existingStart, DateTime existingEnd)
+    {
+        AnsiConsole.MarkupLine("[yellow]Update shift times (leave blank to keep current):[/]");
+        AnsiConsole.MarkupLine($"[dim]Current start: {existingStart:dd/MM/yyyy HH:mm}[/]");
+        AnsiConsole.MarkupLine($"[dim]Current end: {existingEnd:dd/MM/yyyy HH:mm}[/]");
+        AnsiConsole.MarkupLine($"[dim]Current duration: {(existingEnd - existingStart).Hours:D2}:{(existingEnd - existingStart).Minutes:D2}[/]");
+        AnsiConsole.WriteLine();
+
+        // Ask for new start time (optional)
+        var startTimeInput = AnsiConsole.Ask<string>("[green]Enter Start Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
+        DateTime startTime = existingStart;
+        
+        if (!string.IsNullOrWhiteSpace(startTimeInput))
         {
-            AnsiConsole.MarkupLine("[green]No filters applied.[/]");
-            return filterOptions; // Return default filter options with null values
+            // Use a simple validation loop instead of InputValidator for optional input
+            while (true)
+            {
+                if (DateTime.TryParseExact(startTimeInput, "dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsed))
+                {
+                    startTime = parsed;
+                    break;
+                }
+                AnsiConsole.MarkupLine("[red]Invalid format. Please use dd/MM/yyyy HH:mm or leave blank.[/]");
+                startTimeInput = AnsiConsole.Ask<string>("[green]Enter Start Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
+                if (string.IsNullOrWhiteSpace(startTimeInput))
+                {
+                    startTime = existingStart;
+                    break;
+                }
+            }
         }
-        else
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine($"[dim]Start time: {startTime:dd/MM/yyyy HH:mm}[/]");
+        
+        // Ask for new end time (optional, but must be after start time)
+        var endTimeInput = AnsiConsole.Ask<string>("[green]Enter End Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
+        DateTime endTime = existingEnd;
+
+        if (!string.IsNullOrWhiteSpace(endTimeInput))
         {
-            AnsiConsole.MarkupLine("[yellow]Choose which filters...[/]");
-            filterOptions.ShiftId = AnsiConsole.Ask<int?>(
-                "Enter [green]Shift #[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.WorkerId = AnsiConsole.Ask<int?>(
-                "Enter [green]Worker #[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.LocationId = AnsiConsole.Ask<int?>(
-                "Enter [green]Location #[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.StartDate = AnsiConsole.Ask<DateTime?>(
-                "Enter [green]Start Date[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.EndDate = AnsiConsole.Ask<DateTime?>(
-                "Enter [green]End Date[/] (or leave blank):",
-                defaultValue: null
+            while (true)
+            {
+                if (DateTime.TryParseExact(endTimeInput, "dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsed))
+                {
+                    if (parsed > startTime)
+                    {
+                        endTime = parsed;
+                        break;
+                    }
+                    AnsiConsole.MarkupLine($"[red]End time must be after start time ({startTime:dd/MM/yyyy HH:mm}).[/]");
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("[red]Invalid format. Please use dd/MM/yyyy HH:mm or leave blank.[/]");
+                }
+                endTimeInput = AnsiConsole.Ask<string>("[green]Enter End Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
+                if (string.IsNullOrWhiteSpace(endTimeInput))
+                {
+                    endTime = existingEnd;
+                    break;
+                }
+            }
+        }
+
+        // Ensure end time is still after start time (in case user only changed start time)
+        if (endTime <= startTime)
+        {
+            AnsiConsole.MarkupLine("[yellow]End time needs to be adjusted as it's now before/equal to start time.[/]");
+            endTime = InputValidator.GetFlexibleDateTime("Enter new End Time:", startTime.AddMinutes(1));
+        }
+
+        // Show final summary
+        AnsiConsole.WriteLine();
+        var duration = endTime - startTime;
+        AnsiConsole.MarkupLine($"[green]✓ Updated Start: {startTime:dd/MM/yyyy HH:mm}[/]");
+        AnsiConsole.MarkupLine($"[green]✓ Updated End: {endTime:dd/MM/yyyy HH:mm}[/]");
+        AnsiConsole.MarkupLine($"[green]✓ New Duration: {duration.Hours:D2}:{duration.Minutes:D2}[/]");
+        AnsiConsole.WriteLine();
+
+        return (startTime, endTime);
+    }
+
+    /// <summary>
+    /// Gets a location selection from existing locations
+    /// </summary>
+    private int GetLocationSelection()
+    {
+        try
+        {
+            // Fetch all locations synchronously (following existing pattern)
+            var locationResponse = locationService.GetAllLocations(new LocationFilterOptions()).GetAwaiter().GetResult();
+            
+            if (locationResponse.Data == null || locationResponse.Data.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[red]No locations available. Please create locations first.[/]");
+                throw new InvalidOperationException("No locations available for selection.");
+            }
+
+            // Create selection choices with location display information
+            var locationChoices = locationResponse.Data
+                .Select(location => new { 
+                    location.LocationId, 
+                    Display = $"ID: {location.LocationId} | {location.Name} - {location.Town}, {location.County}" 
+                })
+                .ToList();
+
+            // Show selection prompt
+            var selectedDisplay = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("[yellow]Select a location:[/]")
+                    .AddChoices(locationChoices.Select(choice => choice.Display))
             );
 
-            filterOptions.StartTime = AnsiConsole.Ask<DateTime?>(
-                "Enter [green]Start Time[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.EndTime = AnsiConsole.Ask<DateTime?>(
-                "Enter [green]End Time[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.Search = AnsiConsole.Ask<string?>(
-                "Enter [green]Search criteria[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.LocationName = AnsiConsole.Ask<string?>(
-                "Enter [green]Location Name[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.SortBy = AnsiConsole.Ask<string?>(
-                "Enter [green]Sort By[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.SortOrder = AnsiConsole.Ask<string?>(
-                "Enter [green]Sort Order[/] (or leave blank):",
-                defaultValue: null
-            );
-
-            return filterOptions;
+            // Find the selected location's ID
+            var selectedLocation = locationChoices.First(choice => choice.Display == selectedDisplay);
+            
+            AnsiConsole.MarkupLine($"[green]✓ Selected location: {selectedDisplay}[/]");
+            return selectedLocation.LocationId;
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLine($"[red]Error loading locations: {ex.Message}[/]");
+            throw;
         }
     }
 
     public Shift CreateShiftUi(int workerId)
     {
-        // 1. Gather user input (UI Layer)
         AnsiConsole.WriteLine("\nPlease enter the following details for the shift:");
-		
-		var startTime = AnsiConsole.Ask<DateTime>("Enter [green]Start Time[/]:");
-        var endTime = AnsiConsole.Ask<DateTime>("Enter [green]End Time[/]:");
-      
-      
-
+        
+        // Use the business-specific date range method
+        var (startTime, endTime) = GetShiftDateTimeRange("new shift");
+        
+        // Get location selection from existing locations instead of manual ID input
+        var locationId = GetLocationSelection();
+        
         var createdShift = new Shift
         {
             StartTime = startTime,
             EndTime = endTime,
-            //LocationId = locationId,
+            LocationId = locationId,
             WorkerId = workerId,
         };
 
         return createdShift;
     }
 
-    public void DisplayShiftsTable(IEnumerable<Shift> shiftsResponse)
-    {
-        if (shiftsResponse is null)
-        {
-            AnsiConsole.MarkupLine("[red]No shifts found.[/]");
-            ContinueAndClearScreen();
-            return;
-        }
-        Table table = new();
-        table.AddColumn("Index #");
-        table.AddColumn("Worker #");
-        table.AddColumn("Location #");
-        table.AddColumn("Start Time");
-        table.AddColumn("End Time");
-        table.AddColumn("Duration");
-        List<Shift> shiftList = [.. shiftsResponse];
-
-        for (int i = 0; i < shiftList.Count; i++)
-        {
-            var shift = shiftList[i];
-            if (shift != null)
-            {
-                table.AddRow(
-                    (i + 1).ToString(),
-                    shift.WorkerId.ToString(),
-                    shift.LocationId.ToString(),
-                    shift.StartTime.ToString("g"), // Format DateTimeOffset to a readable string
-                    shift.EndTime.ToString("g"), // Format DateTimeOffset to a readable string
-                    (shift.EndTime - shift.StartTime).ToString(@"hh\:mm") // Calculate duration and format as hours and minutes
-                );
-            }
-        }
-        AnsiConsole.Write(table);
-    }
-
-    public int GetShiftByIdUi()
-    {
-        // 1. Gather user input (UI Layer)
-        Console.WriteLine();
-        var shiftId = AnsiConsole.Ask<int>($"Enter [green]Shift ID:[/] ");
-
-        return shiftId;
-    }
-
     public Shift UpdateShiftUi(Shift existingShift)
     {
-        var startTime = AnsiConsole.Ask<DateTime?>(
-            "Enter [green]Start Time[/] (leave blank to keep current):",
-            existingShift.StartTime.DateTime
-        );
-        var endTime = AnsiConsole.Ask<DateTime?>(
-            "Enter [green]End Time[/] (leave blank to keep current):",
+        // Use the business-specific update method
+        var (startTime, endTime) = GetShiftDateTimeRangeForUpdate(
+            existingShift.StartTime.DateTime,
             existingShift.EndTime.DateTime
         );
+
         var locationId = AnsiConsole.Ask<int?>(
             "Enter [green]Location ID[/] (leave blank to keep current):",
             existingShift.LocationId
@@ -209,13 +238,147 @@ public class UserInterface
 
         var updatedShift = new Shift
         {
-            StartTime = startTime ?? existingShift.StartTime,
-            EndTime = endTime ?? existingShift.EndTime,
+            StartTime = startTime,
+            EndTime = endTime,
             LocationId = locationId ?? existingShift.LocationId,
             WorkerId = workerId ?? existingShift.WorkerId,
         };
 
         return updatedShift;
+    }
+
+    // SHIFT FILTER AND DISPLAY METHODS
+    public ShiftFilterOptions FilterShiftsUi()
+    {
+        var filterOptions = new ShiftFilterOptions
+        {
+            ShiftId = null,
+            WorkerId = null,
+            StartTime = null,
+            EndTime = null,
+            StartDate = null,
+            EndDate = null,
+            LocationName = null,
+            Search = null,
+            SortBy = null,
+            SortOrder = null,
+        };
+
+        AnsiConsole.WriteLine("\nPlease enter filter criteria for Shifts (leave blank to skip):");
+        var filterCriteria = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("[yellow]Do you wish to apply any Filters?:[/]")
+                .AddChoices("Yes", "No")
+        );
+
+        if (filterCriteria == "No")
+        {
+            AnsiConsole.MarkupLine("[green]No filters applied.[/]");
+            return filterOptions;
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[yellow]Choose which filters...[/]");
+            filterOptions.ShiftId = AnsiConsole.Ask<int?>(
+                "Enter [green]Shift ID[/] (or leave blank):",
+                defaultValue: null
+            );
+            filterOptions.WorkerId = AnsiConsole.Ask<int?>(
+                "Enter [green]Worker ID[/] (or leave blank):",
+                defaultValue: null
+            );
+            filterOptions.LocationName = AnsiConsole.Ask<string?>(
+                "Enter [green]Location Name[/] (or leave blank):",
+                defaultValue: null
+            );
+            filterOptions.Search = AnsiConsole.Ask<string?>(
+                "Enter [green]Search criteria[/] (or leave blank):",
+                defaultValue: null
+            );
+            filterOptions.SortBy = AnsiConsole.Ask<string?>(
+                "Enter [green]Sort By[/] (or leave blank):",
+                defaultValue: null
+            );
+            filterOptions.SortOrder = AnsiConsole.Ask<string?>(
+                "Enter [green]Sort Order[/] (ASC or DESC...or leave blank):",
+                defaultValue: null
+            );
+
+            return filterOptions;
+        }
+    }
+
+    public void DisplayShiftsTable(IEnumerable<Shift> shifts)
+    {
+        if (shifts is null || !shifts.Any())
+        {
+            AnsiConsole.MarkupLine("[red]No shifts found.[/]");
+            return;
+        }
+
+        Table table = new();
+        table.AddColumn("Shift ID");
+        table.AddColumn("Worker");
+        table.AddColumn("Location");
+        table.AddColumn("Start Time");
+        table.AddColumn("End Time");
+        table.AddColumn("Duration");
+
+        foreach (var shift in shifts)
+        {
+            var duration = shift.EndTime - shift.StartTime;
+            table.AddRow(
+                shift.ShiftId.ToString(),
+                shift.Worker?.Name ?? "Unknown Worker",
+                shift.Location?.Name ?? "Unknown Location",
+                shift.StartTime.ToString("dd/MM/yyyy HH:mm"),
+                shift.EndTime.ToString("dd/MM/yyyy HH:mm"),
+                $"{duration.Hours:D2}:{duration.Minutes:D2}"
+            );
+        }
+
+        AnsiConsole.Write(table);
+    }
+
+    public int GetShiftByIdUi()
+    {
+        try
+        {
+            // Fetch all shifts synchronously (following existing pattern)
+            var shiftResponse = shiftService.GetAllShifts(new ShiftFilterOptions()).GetAwaiter().GetResult();
+            
+            if (shiftResponse.Data == null || shiftResponse.Data.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[red]No shifts available. Please create shifts first.[/]");
+                throw new InvalidOperationException("No shifts available for selection.");
+            }
+
+            // Create selection choices with shift display information
+            var shiftChoices = shiftResponse.Data
+                .Select(shift => new { 
+                    shift.ShiftId, 
+                    Display = $"ID: {shift.ShiftId} | {shift.Worker?.Name ?? "Unknown Worker"} - {shift.Location?.Name ?? "Unknown Location"} | {shift.StartTime:dd/MM/yyyy HH:mm} to {shift.EndTime:HH:mm}" 
+                })
+                .ToList();
+
+            // Show selection prompt
+            var selectedDisplay = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("[yellow]Select a shift:[/]")
+                    .AddChoices(shiftChoices.Select(choice => choice.Display))
+            );
+
+            // Find the selected shift's ID
+            var selectedShift = shiftChoices.First(choice => choice.Display == selectedDisplay);
+            
+            AnsiConsole.MarkupLine($"[green]✓ Selected shift: {selectedDisplay}[/]");
+            return selectedShift.ShiftId;
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLine($"[red]Error loading shifts: {ex.Message}[/]");
+            throw;
+        }
     }
 
     // Workers
@@ -334,15 +497,15 @@ public class UserInterface
     {
         var name = AnsiConsole.Ask<string>(
             "Enter [green]Name[/] (leave blank to keep current):",
-            existingWorker.Name
+            existingWorker.Name ?? string.Empty
         );
         var email = AnsiConsole.Ask<string>(
             "Enter [green]Email[/] (leave blank to keep current):",
-            existingWorker.Email
+            existingWorker.Email ?? string.Empty
         );
         var phoneNumber = AnsiConsole.Ask<string>(
             "Enter [green]Phone Number[/] (leave blank to keep current):",
-            existingWorker.PhoneNumber
+            existingWorker.PhoneNumber ?? string.Empty
         );
         var updatedWorker = new Worker
         {

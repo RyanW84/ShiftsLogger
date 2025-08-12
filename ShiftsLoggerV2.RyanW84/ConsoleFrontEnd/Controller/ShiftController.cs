@@ -3,7 +3,6 @@ using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
 using ConsoleFrontEnd.Services;
 using Spectre.Console;
-
 using System.Net;
 
 namespace ConsoleFrontEnd.Controller

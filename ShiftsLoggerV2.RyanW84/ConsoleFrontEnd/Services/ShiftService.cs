@@ -107,23 +107,38 @@ public class ShiftService : IShiftService
     {
         try
         {
-            var response = await httpClient.PostAsJsonAsync("api/shifts", createdShift);
+            // Convert Shift to ShiftApiRequestDto
+            var shiftDto = new ShiftApiRequestDto
+            {
+                WorkerId = createdShift.WorkerId,
+                LocationId = createdShift.LocationId,
+                StartTime = createdShift.StartTime,
+                EndTime = createdShift.EndTime
+            };
+            
+            var response = await httpClient.PostAsJsonAsync("api/shifts", shiftDto);
+            
             if (response.StatusCode != System.Net.HttpStatusCode.Created)
             {
                 Console.WriteLine($"Error: Status Code - {response.StatusCode}");
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error Content: {errorContent}");
                 return new ApiResponseDto<Shift>
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase ?? "Creation failed",
                     Data = null,
+                    RequestFailed = true
                 };
             }
 
             Console.WriteLine("Shift created successfully.");
-            return new ApiResponseDto<Shift>
+            var responseData = await response.Content.ReadFromJsonAsync<ApiResponseDto<Shift>>();
+            return responseData ?? new ApiResponseDto<Shift>
             {
                 ResponseCode = response.StatusCode,
-                Data = await response.Content.ReadFromJsonAsync<Shift>() ?? createdShift,
+                Data = createdShift,
+                RequestFailed = false
             };
         }
         catch (Exception ex)
