@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using ShiftsLoggerV2.RyanW84.Data;
-using ShiftsLoggerV2.RyanW84.Services;
+using ShiftsLoggerV2.RyanW84.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,11 +18,12 @@ builder
     );
 
 builder.Services.AddDbContext<ShiftsLoggerDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
-builder.Services.AddScoped<IShiftService, ShiftService>(); //Implementing the service in the DI container
-builder.Services.AddScoped<IWorkerService, WorkerService>();
-builder.Services.AddScoped<ILocationService, LocationService>();
+
+// Register all application services following SOLID principles
+builder.Services.AddApplicationServices();
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();

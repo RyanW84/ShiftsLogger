@@ -1,8 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using ShiftsLoggerV2.RyanW84.Core.Interfaces;
 
 namespace ShiftsLoggerV2.RyanW84.Models;
 
-public class Location
+public class Location : IEntity
 {
     [Key] public int LocationId { get; set; }
 
@@ -12,4 +13,7 @@ public class Location
     public string County { get; set; } = string.Empty;
     public string PostCode { get; set; } = string.Empty;
     public string Country { get; set; } = string.Empty;
+
+    // IEntity implementation
+    public int Id => LocationId;
 }

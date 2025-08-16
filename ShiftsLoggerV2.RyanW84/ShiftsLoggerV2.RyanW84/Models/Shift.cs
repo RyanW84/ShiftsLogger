@@ -1,8 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using ShiftsLoggerV2.RyanW84.Core.Interfaces;
 
 namespace ShiftsLoggerV2.RyanW84.Models;
 
-public class Shift
+public class Shift : IEntity
 {
     [Key] public int ShiftId { get; set; }
 
@@ -16,4 +17,7 @@ public class Shift
 
     // Navigation property to the Worker entity
     public virtual Worker? Worker { get; set; }
+
+    // IEntity implementation
+    public int Id => ShiftId;
 }
