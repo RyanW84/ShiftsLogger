@@ -23,7 +23,7 @@ public class WorkersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Worker>>> GetAllWorkers([FromQuery] WorkerFilterOptions workerOptions)
+    public async Task<ActionResult<ApiResponseDto<List<Worker>>>> GetAllWorkers([FromQuery] WorkerFilterOptions workerOptions)
     {
         try
         {
@@ -32,21 +32,40 @@ public class WorkersController : ControllerBase
             if (!result.IsSuccess)
             {
                 AnsiConsole.MarkupLine($"[Red]Error retrieving all workers: {result.Message}[/]");
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Worker>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
             AnsiConsole.MarkupLine("[green]Successfully retrieved workers[/]");
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<List<Worker>>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Workers retrieved successfully",
+                Data = result.Data,
+                TotalCount = result.Data?.Count ?? 0
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get all workers failed, see Exception {ex}");
-            return StatusCode(500, $"Internal server error: {ex.Message}");
+            return StatusCode(500, new ApiResponseDto<List<Worker>>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = $"Internal server error: {ex.Message}",
+                Data = null
+            });
         }
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Worker>> GetWorkerById(int id)
+    public async Task<ActionResult<ApiResponseDto<Worker>>> GetWorkerById(int id)
     {
         try
         {
@@ -57,23 +76,48 @@ public class WorkersController : ControllerBase
                 if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
                     AnsiConsole.MarkupLine($"[red]Worker: {id} Not Found![/]");
-                    return NotFound(result.Message);
+                    return NotFound(new ApiResponseDto<Worker>
+                    {
+                        RequestFailed = true,
+                        ResponseCode = System.Net.HttpStatusCode.NotFound,
+                        Message = result.Message,
+                        Data = null
+                    });
                 }
 
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<Worker>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<Worker>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Worker retrieved successfully",
+                Data = result.Data,
+                TotalCount = 1
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get worker by ID failed, see Exception {ex}");
-            return StatusCode(500, $"Internal server error: {ex.Message}");
+            return StatusCode(500, new ApiResponseDto<Worker>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = $"Internal server error: {ex.Message}",
+                Data = null
+            });
         }
     }
 
     [HttpPost]
-    public async Task<ActionResult<Worker>> CreateWorker([FromBody] WorkerApiRequestDto worker)
+    public async Task<ActionResult<ApiResponseDto<Worker>>> CreateWorker([FromBody] WorkerApiRequestDto worker)
     {
         try
         {
@@ -83,20 +127,39 @@ public class WorkersController : ControllerBase
             var result = await _businessService.CreateAsync(worker);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<Worker>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return StatusCode(201, result.Data);
+            return StatusCode(201, new ApiResponseDto<Worker>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.Created,
+                Message = "Worker created successfully",
+                Data = result.Data,
+                TotalCount = 1
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Create worker failed, see Exception {ex}");
-            return StatusCode(500, $"Internal server error: {ex.Message}");
+            return StatusCode(500, new ApiResponseDto<Worker>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = $"Internal server error: {ex.Message}",
+                Data = null
+            });
         }
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<Worker>> UpdateWorker(int id, [FromBody] WorkerApiRequestDto updatedWorker)
+    public async Task<ActionResult<ApiResponseDto<Worker>>> UpdateWorker(int id, [FromBody] WorkerApiRequestDto updatedWorker)
     {
         try
         {
@@ -104,20 +167,39 @@ public class WorkersController : ControllerBase
             var result = await _businessService.UpdateAsync(id, updatedWorker);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<Worker>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<Worker>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Worker updated successfully",
+                Data = result.Data,
+                TotalCount = 1
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Update worker failed, see Exception {ex}");
-            return StatusCode(500, $"Internal server error: {ex.Message}");
+            return StatusCode(500, new ApiResponseDto<Worker>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = $"Internal server error: {ex.Message}",
+                Data = null
+            });
         }
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteWorker(int id)
+    public async Task<ActionResult<ApiResponseDto<object>>> DeleteWorker(int id)
     {
         try
         {
@@ -125,23 +207,42 @@ public class WorkersController : ControllerBase
             var result = await _businessService.DeleteAsync(id);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<object>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
             Console.WriteLine($"Worker with ID {id} deleted successfully.");
-            return NoContent();
+            return Ok(new ApiResponseDto<object>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Worker deleted successfully",
+                Data = null,
+                TotalCount = 0
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Delete worker failed, see Exception {ex}");
-            return StatusCode(500, $"Internal server error: {ex.Message}");
+            return StatusCode(500, new ApiResponseDto<object>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = $"Internal server error: {ex.Message}",
+                Data = null
+            });
         }
     }
 
     // Additional V2 endpoints - Enhanced functionality from SOLID implementation
     
     [HttpGet("by-email-domain")]
-    public async Task<IActionResult> GetWorkersByEmailDomain([FromQuery] string domain)
+    public async Task<ActionResult<ApiResponseDto<List<Worker>>>> GetWorkersByEmailDomain([FromQuery] string domain)
     {
         try
         {
@@ -151,22 +252,41 @@ public class WorkersController : ControllerBase
             var result = await _businessService.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Worker>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
             // Filter results to only those with the specified domain
-            var filteredWorkers = result.Data?.Where(w => !string.IsNullOrEmpty(w.Email) && w.Email.Contains($"@{domain}")) ?? new List<Worker>();
-            return Ok(filteredWorkers);
+            var filteredWorkers = result.Data?.Where(w => !string.IsNullOrEmpty(w.Email) && w.Email.Contains($"@{domain}")).ToList() ?? new List<Worker>();
+            return Ok(new ApiResponseDto<List<Worker>>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Workers retrieved successfully",
+                Data = filteredWorkers,
+                TotalCount = filteredWorkers.Count
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get workers by email domain failed: {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<List<Worker>>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     [HttpGet("by-phone-area-code")]
-    public async Task<IActionResult> GetWorkersByPhoneAreaCode([FromQuery] string areaCode)
+    public async Task<ActionResult<ApiResponseDto<List<Worker>>>> GetWorkersByPhoneAreaCode([FromQuery] string areaCode)
     {
         try
         {
@@ -176,15 +296,34 @@ public class WorkersController : ControllerBase
             var result = await _businessService.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Worker>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<List<Worker>>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Workers retrieved successfully",
+                Data = result.Data,
+                TotalCount = result.Data?.Count ?? 0
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get workers by phone area code failed: {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<List<Worker>>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 }

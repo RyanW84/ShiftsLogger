@@ -25,7 +25,7 @@ public class ShiftsController : ControllerBase
 
     // This is the route for getting all shifts
     [HttpGet(Name = "Get All Shifts")]
-    public async Task<ActionResult<List<Shift>>> GetAllShifts([FromQuery] ShiftFilterOptions shiftOptions)
+    public async Task<ActionResult<ApiResponseDto<List<Shift>>>> GetAllShifts([FromQuery] ShiftFilterOptions shiftOptions)
     {
         try
         {
@@ -33,21 +33,40 @@ public class ShiftsController : ControllerBase
             var result = await _businessService.GetAllAsync(shiftOptions);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Shift>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<List<Shift>>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Shifts retrieved successfully",
+                Data = result.Data?.ToList(),
+                TotalCount = result.Data?.Count() ?? 0
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get All Shifts failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<List<Shift>>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     // This is the route for getting a createdShift by ID
     [HttpGet("{id}")] // This will be added to the API URI (send some data during the request
-    public async Task<ActionResult<Shift>> GetShiftById(int id)
+    public async Task<ActionResult<ApiResponseDto<Shift>>> GetShiftById(int id)
     {
         try
         {
@@ -59,24 +78,49 @@ public class ShiftsController : ControllerBase
                 if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
                     AnsiConsole.MarkupLine($"[red]Shift: {id} Not Found![/]");
-                    return NotFound(result.Message);
+                    return NotFound(new ApiResponseDto<Shift>
+                    {
+                        RequestFailed = true,
+                        ResponseCode = System.Net.HttpStatusCode.NotFound,
+                        Message = result.Message,
+                        Data = null
+                    });
                 }
 
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<Shift>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
             AnsiConsole.MarkupLine($"[Green]Shift: {id} returned successfully[/]");
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<Shift>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Shift retrieved successfully",
+                Data = result.Data,
+                TotalCount = 1
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get by ID failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<Shift>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
     // This is the route for creating a createdShift
     [HttpPost]
-    public async Task<ActionResult<Shift>> CreateShift([FromBody] ShiftApiRequestDto shift)
+    public async Task<ActionResult<ApiResponseDto<Shift>>> CreateShift([FromBody] ShiftApiRequestDto shift)
     {
         try
         {
@@ -87,69 +131,127 @@ public class ShiftsController : ControllerBase
             
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<Shift>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return StatusCode(201, result.Data); //201 is the status code for Created
+            return StatusCode(201, new ApiResponseDto<Shift>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.Created,
+                Message = "Shift created successfully",
+                Data = result.Data,
+                TotalCount = 1
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Create shift failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<Shift>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     // This is the route for updating a createdShift
-    [HttpPut("{id}")]
-    public async Task<ActionResult<Shift>> UpdateShift(int id, [FromBody] ShiftApiRequestDto updatedShift)
+        [HttpPut("{id}")]
+    public async Task<ActionResult<ApiResponseDto<Shift>>> UpdateShift([FromRoute] int id, [FromBody] ShiftApiRequestDto shift)
     {
         try
         {
-            // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.UpdateAsync(id, updatedShift);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            // Use the new SOLID business service for enhanced functionality
+            var result = await _businessService.UpdateAsync(id, shift);
+            
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<Shift>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<Shift>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Shift updated successfully",
+                Data = result.Data,
+                TotalCount = 1
+            });
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Update shift failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            Console.WriteLine($"Update shift failed, see exception {ex}");
+            return StatusCode(500, new ApiResponseDto<Shift>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     // Fix for CS0019 and CS1525 errors in the DeleteShift method
-    [HttpDelete("{id}")]
-    public async Task<ActionResult<string>> DeleteShift(int id)
+        [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponseDto<object>>> DeleteShift([FromRoute] int id)
     {
         try
         {
             // Use the new SOLID business service for enhanced functionality
             var result = await _businessService.DeleteAsync(id);
-
+            
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<object>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            Console.WriteLine($"Shift with ID {id} deleted successfully.");
-            return NoContent(); // Equivalent to 204
+            return Ok(new ApiResponseDto<object>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Shift deleted successfully",
+                Data = null,
+                TotalCount = 0
+            });
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Delete Shifts failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            Console.WriteLine($"Delete shift failed, see exception {ex}");
+            return StatusCode(500, new ApiResponseDto<object>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     // Additional V2 endpoints - Enhanced functionality from SOLID implementation
     
     [HttpGet("by-date-range")]
-    public async Task<IActionResult> GetShiftsByDateRange([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+    public async Task<ActionResult<ApiResponseDto<List<Shift>>>> GetShiftsByDateRange([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
     {
         try
         {
@@ -162,20 +264,39 @@ public class ShiftsController : ControllerBase
             var result = await _businessService.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Shift>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<List<Shift>>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Shifts retrieved successfully",
+                Data = result.Data,
+                TotalCount = result.Data?.Count ?? 0
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get shifts by date range failed: {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<List<Shift>>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     [HttpGet("worker/{workerId}")]
-    public async Task<IActionResult> GetShiftsByWorker(int workerId)
+    public async Task<ActionResult<ApiResponseDto<List<Shift>>>> GetShiftsByWorker(int workerId)
     {
         try
         {
@@ -184,15 +305,34 @@ public class ShiftsController : ControllerBase
             var result = await _businessService.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Shift>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<List<Shift>>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Shifts retrieved successfully",
+                Data = result.Data,
+                TotalCount = result.Data?.Count ?? 0
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get shifts by worker failed: {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<List<Shift>>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 }

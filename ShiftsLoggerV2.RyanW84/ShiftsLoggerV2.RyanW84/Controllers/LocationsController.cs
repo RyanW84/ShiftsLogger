@@ -23,7 +23,7 @@ public class LocationsController : ControllerBase
 
     // GET: api/Location
     [HttpGet(Name = "Get All Locations")]
-    public async Task<ActionResult<List<Location>>> GetAllLocations([FromQuery] LocationFilterOptions locationOptions)
+    public async Task<ActionResult<ApiResponseDto<List<Location>>>> GetAllLocations([FromQuery] LocationFilterOptions locationOptions)
     {
         try
         {
@@ -33,21 +33,40 @@ public class LocationsController : ControllerBase
             var result = await _businessService.GetAllAsync(locationOptions);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Location>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<List<Location>>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Locations retrieved successfully",
+                Data = result.Data,
+                TotalCount = result.Data?.Count ?? 0
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get All Locations failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<List<Location>>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     // GET: api/Location/{id}
     [HttpGet("{id}")]
-    public async Task<ActionResult<Location>> GetLocationById(int id)
+    public async Task<ActionResult<ApiResponseDto<Location>>> GetLocationById(int id)
     {
         try
         {
@@ -57,24 +76,49 @@ public class LocationsController : ControllerBase
             {
                 if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    return NotFound(result.Message);
+                    return NotFound(new ApiResponseDto<Location>
+                    {
+                        RequestFailed = true,
+                        ResponseCode = System.Net.HttpStatusCode.NotFound,
+                        Message = result.Message,
+                        Data = null
+                    });
                 }
 
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<Location>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<Location>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Location retrieved successfully",
+                Data = result.Data,
+                TotalCount = 1
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get location by ID failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<Location>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     // POST: api/Location
     [HttpPost]
-    public async Task<ActionResult<Location>> CreateLocation([FromBody] LocationApiRequestDto location)
+    public async Task<ActionResult<ApiResponseDto<Location>>> CreateLocation([FromBody] LocationApiRequestDto location)
     {
         try
         {
@@ -84,21 +128,40 @@ public class LocationsController : ControllerBase
             var result = await _businessService.CreateAsync(location);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<Location>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return StatusCode(201, result.Data);
+            return StatusCode(201, new ApiResponseDto<Location>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.Created,
+                Message = "Location created successfully",
+                Data = result.Data,
+                TotalCount = 1
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Create location failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<Location>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     // PUT: api/Location/{id}
     [HttpPut("{id}")]
-    public async Task<ActionResult<Location>> UpdateLocation(int id, [FromBody] LocationApiRequestDto updatedLocation)
+    public async Task<ActionResult<ApiResponseDto<Location>>> UpdateLocation(int id, [FromBody] LocationApiRequestDto updatedLocation)
     {
         try
         {
@@ -106,21 +169,40 @@ public class LocationsController : ControllerBase
             var result = await _businessService.UpdateAsync(id, updatedLocation);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<Location>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<Location>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Location updated successfully",
+                Data = result.Data,
+                TotalCount = 1
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Update location failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<Location>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     // DELETE: api/Location/{id}
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteLocation(int id)
+    public async Task<ActionResult<ApiResponseDto<object>>> DeleteLocation(int id)
     {
         try
         {
@@ -128,23 +210,42 @@ public class LocationsController : ControllerBase
             var result = await _businessService.DeleteAsync(id);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<object>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
             Console.WriteLine($"Location with ID {id} deleted successfully.");
-            return NoContent();
+            return Ok(new ApiResponseDto<object>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Location deleted successfully",
+                Data = null,
+                TotalCount = 0
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Delete location failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<object>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     // Additional V2 endpoints - Enhanced functionality from SOLID implementation
     
     [HttpGet("by-country/{country}")]
-    public async Task<IActionResult> GetLocationsByCountry(string country)
+    public async Task<ActionResult<ApiResponseDto<List<Location>>>> GetLocationsByCountry(string country)
     {
         try
         {
@@ -153,20 +254,39 @@ public class LocationsController : ControllerBase
             var result = await _businessService.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Location>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<List<Location>>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Locations retrieved successfully",
+                Data = result.Data,
+                TotalCount = result.Data?.Count ?? 0
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get locations by country failed: {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<List<Location>>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 
     [HttpGet("by-county/{county}")]
-    public async Task<IActionResult> GetLocationsByCounty(string county)
+    public async Task<ActionResult<ApiResponseDto<List<Location>>>> GetLocationsByCounty(string county)
     {
         try
         {
@@ -175,15 +295,34 @@ public class LocationsController : ControllerBase
             var result = await _businessService.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, result.Message);
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Location>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = result.StatusCode,
+                    Message = result.Message,
+                    Data = null
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(new ApiResponseDto<List<Location>>
+            {
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                Message = "Locations retrieved successfully",
+                Data = result.Data,
+                TotalCount = result.Data?.Count ?? 0
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get locations by county failed: {ex}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new ApiResponseDto<List<Location>>
+            {
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                Message = "Internal server error",
+                Data = null
+            });
         }
     }
 }
