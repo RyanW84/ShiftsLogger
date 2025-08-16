@@ -9,7 +9,7 @@ namespace ShiftsLoggerV2.RyanW84.Services;
 
 public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
 {
-    public async Task<ApiResponseDto<List<Shift>>> GetAllShifts(ShiftFilterOptions shiftOptions)
+    public async Task<ApiResponseDto<List<Shift?>>> GetAllShifts(ShiftFilterOptions shiftOptions)
     {
         var query = dbContext
             .Shifts.Include(s => s.Location)
@@ -17,7 +17,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
             .AsQueryable();
 
         // Apply all filters
-        if (shiftOptions.ShiftId != null && shiftOptions.ShiftId is not 0) // Shift ID is not nullable
+        if (shiftOptions.ShiftId is not 0) // Shift ID is not nullable, just check for non-zero
             query = query.Where(s => s.ShiftId == shiftOptions.ShiftId);
 
         if (shiftOptions.WorkerId is not null and not 0) query = query.Where(s => s.WorkerId == shiftOptions.WorkerId);
@@ -27,7 +27,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
 
         if (!string.IsNullOrEmpty(shiftOptions.LocationName))
             query = query.Where(s =>
-                EF.Functions.Like(s.Location.Name, $"%{shiftOptions.LocationName}%")
+                s.Location != null && EF.Functions.Like(s.Location.Name, $"%{shiftOptions.LocationName}%")
             );
 
         // Date filters
@@ -42,10 +42,9 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
             query = query.Where(s =>
                 s.WorkerId.ToString().Contains(shiftOptions.Search)
                 || s.LocationId.ToString().Contains(shiftOptions.Search)
-                || EF.Functions.Like(s.Location.Name, $"%{shiftOptions.Search}%")
-                || EF.Functions.Like(s.Location.Town, $"%{shiftOptions.Search}%")
-                || EF.Functions.Like(s.Location.Country, $"%{shiftOptions.Search}%")
-                || EF.Functions.Like(s.Location.Country, $"%{shiftOptions.Search}%")
+                || (s.Location != null && EF.Functions.Like(s.Location.Name, $"%{shiftOptions.Search}%"))
+                || (s.Location != null && EF.Functions.Like(s.Location.Town, $"%{shiftOptions.Search}%"))
+                || (s.Location != null && EF.Functions.Like(s.Location.Country, $"%{shiftOptions.Search}%"))
                 || s.StartTime.ToString().Contains(shiftOptions.Search)
                 || s.EndTime.ToString().Contains(shiftOptions.Search)
             );
@@ -77,8 +76,8 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
                     ? query.OrderBy(s => s.LocationId)
                     : query.OrderByDescending(s => s.LocationId),
                 "locationname" => sortOrder == "asc"
-                    ? query.OrderBy(s => s.Location.Name)
-                    : query.OrderByDescending(s => s.Location.Name),
+                    ? query.OrderBy(s => s.Location != null ? s.Location.Name : "")
+                    : query.OrderByDescending(s => s.Location != null ? s.Location.Name : ""),
                 _ => sortOrder == "asc"
                     ? query.OrderBy(s => s.ShiftId)
                     : query.OrderByDescending(s => s.ShiftId)
@@ -89,20 +88,20 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         var shifts = await query.ToListAsync();
 
         if (shifts.Count == 0)
-            return new ApiResponseDto<List<Shift>>
+            return new ApiResponseDto<List<Shift?>>
             {
                 RequestFailed = true,
                 ResponseCode = HttpStatusCode.NotFound,
                 Message = "No shifts found with the specified criteria.",
-                Data = shifts
+                Data = shifts.Cast<Shift?>().ToList()
             };
 
-        return new ApiResponseDto<List<Shift>>
+        return new ApiResponseDto<List<Shift?>>
         {
             RequestFailed = false,
             ResponseCode = HttpStatusCode.OK,
             Message = "Shifts retrieved successfully.",
-            Data = shifts
+            Data = shifts.Cast<Shift?>().ToList()
         };
     }
 
@@ -183,7 +182,7 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         dbContext.Shifts.Update(savedShift);
         await dbContext.SaveChangesAsync();
 
-        return new ApiResponseDto<Shift?>
+        return new ApiResponseDto<Shift>
         {
             RequestFailed = false,
             ResponseCode = HttpStatusCode.OK,
@@ -197,23 +196,23 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         var savedShift = await dbContext.Shifts.FindAsync(id);
 
         if (savedShift is null)
-            return new ApiResponseDto<string?>
+            return new ApiResponseDto<string>
             {
                 RequestFailed = true,
                 ResponseCode = HttpStatusCode.NotFound,
                 Message = $"Shift with ID: {id} not found.",
-                Data = null
+                Data = string.Empty
             };
 
         dbContext.Shifts.Remove(savedShift);
         await dbContext.SaveChangesAsync();
 
-        return new ApiResponseDto<string?>
+        return new ApiResponseDto<string>
         {
             RequestFailed = false,
             ResponseCode = HttpStatusCode.OK,
             Message = $"Shift with ID: {id} deleted successfully.",
-            Data = null
+            Data = string.Empty
         };
     }
 }

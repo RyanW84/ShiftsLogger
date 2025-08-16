@@ -60,14 +60,14 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
             if (result == null)
             {
                 AnsiConsole.MarkupLine(
-                    $"[Red]Error retrieving worker: {result.Data.WorkerId}.[/]"
+                    $"[Red]Error retrieving worker: {id}.[/]"
                 );
                 return NotFound(
                     new ApiResponseDto<Worker?>
                     {
                         RequestFailed = true,
                         ResponseCode = HttpStatusCode.NotFound,
-                        Message = $"Failed to retrieve worker by Id {result.ResponseCode}",
+                        Message = $"Failed to retrieve worker by Id {id}",
                         Data = null
                     }
                 );
@@ -92,7 +92,7 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
             var result = await workerService.CreateWorker(worker);
             return CreatedAtAction(
                 nameof(GetWorkerById),
-                new { id = result.Data.WorkerId },
+                new { id = result.Data?.WorkerId },
                 result
             );
         }
@@ -115,7 +115,7 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
             if (result == null || result.Data == null)
             {
                 AnsiConsole.MarkupLine(
-                    $"[red]Worker not found {result.Data.WorkerId}.[/]"
+                    $"[red]Worker not found with ID: {id}.[/]"
                 );
                 return NotFound(
                     new ApiResponseDto<Worker?>

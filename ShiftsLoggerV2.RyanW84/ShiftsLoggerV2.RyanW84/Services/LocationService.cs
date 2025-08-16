@@ -55,7 +55,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         {
             locationOptions.SortBy = locationOptions.SortBy.ToLowerInvariant();
             locationOptions.SortOrder =
-                locationOptions.SortOrder?.ToLowerInvariant(); // Normalize sort order to lowercase
+                locationOptions.SortOrder?.ToLowerInvariant() ?? "asc"; // Normalize sort order to lowercase with default
         }
         else
         {
@@ -175,7 +175,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         }
     }
 
-    public async Task<ApiResponseDto<Location?>> UpdateLocation(
+    public async Task<ApiResponseDto<Location>> UpdateLocation(
         int id,
         LocationApiRequestDto updatedLocation
     )
@@ -183,11 +183,12 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         var savedLocation = await dbContext.Locations.FindAsync(id);
 
         if (savedLocation is null)
-            return new ApiResponseDto<Location?>
+            return new ApiResponseDto<Location>
             {
                 RequestFailed = true,
                 ResponseCode = HttpStatusCode.NotFound,
-                Message = "Location not found"
+                Message = "Location not found",
+                Data = null!
             };
         savedLocation.LocationId = id; // Ensure the LocationId is set to the ID being updated
         savedLocation.Name = updatedLocation.Name;
@@ -200,7 +201,7 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         dbContext.Locations.Update(savedLocation);
         await dbContext.SaveChangesAsync();
 
-        return new ApiResponseDto<Location?>
+        return new ApiResponseDto<Location>
         {
             RequestFailed = false,
             ResponseCode = HttpStatusCode.OK,

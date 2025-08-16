@@ -41,7 +41,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
         if (!string.IsNullOrWhiteSpace(workerOptions.SortBy))
         {
             workerOptions.SortBy = workerOptions.SortBy.ToLowerInvariant();
-            workerOptions.SortOrder = workerOptions.SortOrder?.ToLowerInvariant(); // Normalize sort order to lowercase
+            workerOptions.SortOrder = workerOptions.SortOrder?.ToLowerInvariant() ?? "asc"; // Normalize sort order to lowercase with default
         }
         else
         {
@@ -71,10 +71,10 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
         };
 
         // Execute query and get results
-        var workers = (await query.ToListAsync()).Cast<Worker?>().ToList();
+        var workers = await query.ToListAsync();
 
         if (workers.Count == 0)
-            return new ApiResponseDto<List<Worker?>>
+            return new ApiResponseDto<List<Worker>>
             {
                 RequestFailed = true,
                 ResponseCode = HttpStatusCode.NotFound,
@@ -82,7 +82,7 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
                 Data = workers
             };
 
-        return new ApiResponseDto<List<Worker?>>
+        return new ApiResponseDto<List<Worker>>
         {
             RequestFailed = false,
             ResponseCode = HttpStatusCode.OK,
