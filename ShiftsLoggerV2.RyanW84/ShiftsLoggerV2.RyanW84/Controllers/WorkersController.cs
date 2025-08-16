@@ -1,48 +1,42 @@
-﻿using System.Net;
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
 using ShiftsLoggerV2.RyanW84.Services;
+using ShiftsLoggerV2.RyanW84.Common;
 using Spectre.Console;
 
 namespace ShiftsLoggerV2.RyanW84.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class WorkersController(IWorkerService workerService) : ControllerBase
+public class WorkersController : ControllerBase
 {
+    private readonly IWorkerService _workerService;
+    private readonly WorkerBusinessService _businessService;
+
+    public WorkersController(IWorkerService workerService, WorkerBusinessService businessService)
+    {
+        _workerService = workerService;
+        _businessService = businessService;
+    }
+
     [HttpGet]
-    public async Task<ActionResult<ApiResponseDto<List<Worker>>>> GetAllWorkers(
-        WorkerFilterOptions workerOptions
-    )
+    public async Task<ActionResult<List<Worker>>> GetAllWorkers([FromQuery] WorkerFilterOptions workerOptions)
     {
         try
         {
-            var result = await workerService.GetAllWorkers(workerOptions);
-            if (
-                result.ResponseCode is HttpStatusCode.NotFound
-                || result.ResponseCode is HttpStatusCode.NoContent
-            )
+            // Use the new SOLID business service for enhanced functionality
+            var result = await _businessService.GetAllAsync(workerOptions);
+            if (!result.IsSuccess)
             {
-                AnsiConsole.MarkupLine(
-                    $"[Red]Error retrieving all workers {result.ResponseCode}.[/]"
-                );
-                return NotFound(
-                    new ApiResponseDto<Worker?>
-                    {
-                        RequestFailed = true,
-                        ResponseCode = HttpStatusCode.NotFound,
-                        Message = "Error retieving Workers",
-                        Data = null
-                    }
-                );
+                AnsiConsole.MarkupLine($"[Red]Error retrieving all workers: {result.Message}[/]");
+                return StatusCode((int)result.StatusCode, result.Message);
             }
 
-            AnsiConsole.MarkupLine(
-                "[green]Successfully retrieved workers[/]"
-            );
-            return Ok(result);
+            AnsiConsole.MarkupLine("[green]Successfully retrieved workers[/]");
+            return Ok(result.Data);
         }
         catch (Exception ex)
         {
@@ -56,45 +50,43 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
     {
         try
         {
-            var result = await workerService.GetWorkerById(id);
-            if (result == null)
+            // Use the new SOLID business service for enhanced functionality
+            var result = await _businessService.GetByIdAsync(id);
+            if (!result.IsSuccess)
             {
-                AnsiConsole.MarkupLine(
-                    $"[Red]Error retrieving worker: {id}.[/]"
-                );
-                return NotFound(
-                    new ApiResponseDto<Worker?>
-                    {
-                        RequestFailed = true,
-                        ResponseCode = HttpStatusCode.NotFound,
-                        Message = $"Failed to retrieve worker by Id {id}",
-                        Data = null
-                    }
-                );
+                if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    AnsiConsole.MarkupLine($"[red]Worker: {id} Not Found![/]");
+                    return NotFound(result.Message);
+                }
+
+                return StatusCode((int)result.StatusCode, result.Message);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get by ID failed, see Exception {ex}");
+            Console.WriteLine($"Get worker by ID failed, see Exception {ex}");
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiResponseDto<Worker>>> CreateWorker(
-        WorkerApiRequestDto worker
-    )
+    public async Task<ActionResult<Worker>> CreateWorker([FromBody] WorkerApiRequestDto worker)
     {
         try
         {
-            var result = await workerService.CreateWorker(worker);
-            return CreatedAtAction(
-                nameof(GetWorkerById),
-                new { id = result.Data?.WorkerId },
-                result
-            );
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            // Use the new SOLID business service for enhanced functionality
+            var result = await _businessService.CreateAsync(worker);
+            if (!result.IsSuccess)
+            {
+                return StatusCode((int)result.StatusCode, result.Message);
+            }
+
+            return StatusCode(201, result.Data);
         }
         catch (Exception ex)
         {
@@ -104,34 +96,18 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponseDto<Worker?>>> UpdateWorker(
-        int id,
-        WorkerApiRequestDto updatedWorker
-    )
+    public async Task<ActionResult<Worker>> UpdateWorker(int id, [FromBody] WorkerApiRequestDto updatedWorker)
     {
         try
         {
-            var result = await workerService.UpdateWorker(id, updatedWorker);
-            if (result == null || result.Data == null)
+            // Use the new SOLID business service for enhanced functionality
+            var result = await _businessService.UpdateAsync(id, updatedWorker);
+            if (!result.IsSuccess)
             {
-                AnsiConsole.MarkupLine(
-                    $"[red]Worker not found with ID: {id}.[/]"
-                );
-                return NotFound(
-                    new ApiResponseDto<Worker?>
-                    {
-                        RequestFailed = true,
-                        ResponseCode = HttpStatusCode.NotFound,
-                        Message = "Worker not found",
-                        Data = null
-                    }
-                );
+                return StatusCode((int)result.StatusCode, result.Message);
             }
 
-            AnsiConsole.MarkupLine(
-                $"[green]Successfully retrieved worker with ID: {result.Data.WorkerId}.[/]"
-            );
-            return Ok(result);
+            return Ok(result.Data);
         }
         catch (Exception ex)
         {
@@ -141,33 +117,74 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult<string>> DeleteWorker(int id)
+    public async Task<ActionResult> DeleteWorker(int id)
     {
         try
         {
-            var result = await workerService.DeleteWorker(id);
-            if (result.ResponseCode is HttpStatusCode.NotFound)
+            // Use the new SOLID business service for enhanced functionality
+            var result = await _businessService.DeleteAsync(id);
+            if (!result.IsSuccess)
             {
-                AnsiConsole.MarkupLine(
-                    $"[red]Worker record not found: {id}[/]"
-                );
-                return NotFound();
+                return StatusCode((int)result.StatusCode, result.Message);
             }
 
-            if (result.ResponseCode is HttpStatusCode.NoContent)
-            {
-                AnsiConsole.MarkupLine(
-                    $"[green]Successfully deleted worker with ID: {id}.[/]"
-                );
-                return NoContent();
-            }
-
-            return Ok(result);
+            Console.WriteLine($"Worker with ID {id} deleted successfully.");
+            return NoContent();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Delete worker failed, see Exception {ex}");
             return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
+    // Additional V2 endpoints - Enhanced functionality from SOLID implementation
+    
+    [HttpGet("by-email-domain")]
+    public async Task<IActionResult> GetWorkersByEmailDomain([FromQuery] string domain)
+    {
+        try
+        {
+            // Use search to filter by email domain
+            var filterOptions = new WorkerFilterOptions { Search = domain };
+
+            var result = await _businessService.GetAllAsync(filterOptions);
+            if (!result.IsSuccess)
+            {
+                return StatusCode((int)result.StatusCode, result.Message);
+            }
+
+            // Filter results to only those with the specified domain
+            var filteredWorkers = result.Data?.Where(w => !string.IsNullOrEmpty(w.Email) && w.Email.Contains($"@{domain}")) ?? new List<Worker>();
+            return Ok(filteredWorkers);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Get workers by email domain failed: {ex}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("by-phone-area-code")]
+    public async Task<IActionResult> GetWorkersByPhoneAreaCode([FromQuery] string areaCode)
+    {
+        try
+        {
+            // Use phone number filter 
+            var filterOptions = new WorkerFilterOptions { PhoneNumber = areaCode };
+
+            var result = await _businessService.GetAllAsync(filterOptions);
+            if (!result.IsSuccess)
+            {
+                return StatusCode((int)result.StatusCode, result.Message);
+            }
+
+            return Ok(result.Data);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Get workers by phone area code failed: {ex}");
+            return StatusCode(500, "Internal server error");
         }
     }
 }

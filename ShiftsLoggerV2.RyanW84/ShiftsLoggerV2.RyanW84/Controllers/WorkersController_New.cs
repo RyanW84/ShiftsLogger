@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
@@ -10,104 +10,98 @@ using Spectre.Console;
 namespace ShiftsLoggerV2.RyanW84.Controllers;
 
 [ApiController]
-//http://localhost:5009/api/shifts/ this is what the route will look like
 [Route("api/[controller]")]
-public class ShiftsController : ControllerBase
+public class WorkersController : ControllerBase
 {
-    private readonly IShiftService _shiftService;
-    private readonly ShiftBusinessService _businessService;
+    private readonly IWorkerService _workerService;
+    private readonly WorkerBusinessService _businessService;
 
-    public ShiftsController(IShiftService shiftService, ShiftBusinessService businessService)
+    public WorkersController(IWorkerService workerService, WorkerBusinessService businessService)
     {
-        _shiftService = shiftService;
+        _workerService = workerService;
         _businessService = businessService;
     }
 
-    // This is the route for getting all shifts
-    [HttpGet(Name = "Get All Shifts")]
-    public async Task<ActionResult<List<Shift>>> GetAllShifts([FromQuery] ShiftFilterOptions shiftOptions)
+    [HttpGet]
+    public async Task<ActionResult<List<Worker>>> GetAllWorkers([FromQuery] WorkerFilterOptions workerOptions)
     {
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.GetAllAsync(shiftOptions);
+            var result = await _businessService.GetAllAsync(workerOptions);
             if (!result.IsSuccess)
             {
+                AnsiConsole.MarkupLine($"[Red]Error retrieving all workers: {result.Message}[/]");
                 return StatusCode((int)result.StatusCode, result.Message);
             }
 
+            AnsiConsole.MarkupLine("[green]Successfully retrieved workers[/]");
             return Ok(result.Data);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get All Shifts failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            Console.WriteLine($"Get all workers failed, see Exception {ex}");
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
 
-    // This is the route for getting a createdShift by ID
-    [HttpGet("{id}")] // This will be added to the API URI (send some data during the request
-    public async Task<ActionResult<Shift>> GetShiftById(int id)
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Worker>> GetWorkerById(int id)
     {
         try
         {
             // Use the new SOLID business service for enhanced functionality
             var result = await _businessService.GetByIdAsync(id);
-
             if (!result.IsSuccess)
             {
                 if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    AnsiConsole.MarkupLine($"[red]Shift: {id} Not Found![/]");
+                    AnsiConsole.MarkupLine($"[red]Worker: {id} Not Found![/]");
                     return NotFound(result.Message);
                 }
 
                 return StatusCode((int)result.StatusCode, result.Message);
             }
 
-            AnsiConsole.MarkupLine($"[Green]Shift: {id} returned successfully[/]");
             return Ok(result.Data);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get by ID failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            Console.WriteLine($"Get worker by ID failed, see Exception {ex}");
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
-    // This is the route for creating a createdShift
+
     [HttpPost]
-    public async Task<ActionResult<Shift>> CreateShift([FromBody] ShiftApiRequestDto shift)
+    public async Task<ActionResult<Worker>> CreateWorker([FromBody] WorkerApiRequestDto worker)
     {
         try
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.CreateAsync(shift);
-            
+            var result = await _businessService.CreateAsync(worker);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, result.Message);
             }
 
-            return StatusCode(201, result.Data); //201 is the status code for Created
+            return StatusCode(201, result.Data);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Create shift failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            Console.WriteLine($"Create worker failed, see Exception {ex}");
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
 
-    // This is the route for updating a createdShift
     [HttpPut("{id}")]
-    public async Task<ActionResult<Shift>> UpdateShift(int id, [FromBody] ShiftApiRequestDto updatedShift)
+    public async Task<ActionResult<Worker>> UpdateWorker(int id, [FromBody] WorkerApiRequestDto updatedWorker)
     {
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.UpdateAsync(id, updatedShift);
-
+            var result = await _businessService.UpdateAsync(id, updatedWorker);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, result.Message);
@@ -117,47 +111,41 @@ public class ShiftsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Update shift failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            Console.WriteLine($"Update worker failed, see Exception {ex}");
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
 
-    // Fix for CS0019 and CS1525 errors in the DeleteShift method
     [HttpDelete("{id}")]
-    public async Task<ActionResult<string>> DeleteShift(int id)
+    public async Task<ActionResult> DeleteWorker(int id)
     {
         try
         {
             // Use the new SOLID business service for enhanced functionality
             var result = await _businessService.DeleteAsync(id);
-
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, result.Message);
             }
 
-            Console.WriteLine($"Shift with ID {id} deleted successfully.");
-            return NoContent(); // Equivalent to 204
+            Console.WriteLine($"Worker with ID {id} deleted successfully.");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Delete Shifts failed, see Exception {ex}");
-            return StatusCode(500, "Internal server error");
+            Console.WriteLine($"Delete worker failed, see Exception {ex}");
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
 
     // Additional V2 endpoints - Enhanced functionality from SOLID implementation
     
-    [HttpGet("by-date-range")]
-    public async Task<IActionResult> GetShiftsByDateRange([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+    [HttpGet("by-email-domain")]
+    public async Task<IActionResult> GetWorkersByEmailDomain([FromQuery] string domain)
     {
         try
         {
-            var filterOptions = new ShiftFilterOptions
-            {
-                StartDate = startDate,
-                EndDate = endDate
-            };
+            var filterOptions = new WorkerFilterOptions { EmailDomain = domain };
 
             var result = await _businessService.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
@@ -169,17 +157,17 @@ public class ShiftsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get shifts by date range failed: {ex}");
+            Console.WriteLine($"Get workers by email domain failed: {ex}");
             return StatusCode(500, "Internal server error");
         }
     }
 
-    [HttpGet("worker/{workerId}")]
-    public async Task<IActionResult> GetShiftsByWorker(int workerId)
+    [HttpGet("by-phone-area-code")]
+    public async Task<IActionResult> GetWorkersByPhoneAreaCode([FromQuery] string areaCode)
     {
         try
         {
-            var filterOptions = new ShiftFilterOptions { WorkerId = workerId };
+            var filterOptions = new WorkerFilterOptions { PhonePrefix = areaCode };
 
             var result = await _businessService.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
@@ -191,7 +179,7 @@ public class ShiftsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get shifts by worker failed: {ex}");
+            Console.WriteLine($"Get workers by phone area code failed: {ex}");
             return StatusCode(500, "Internal server error");
         }
     }
