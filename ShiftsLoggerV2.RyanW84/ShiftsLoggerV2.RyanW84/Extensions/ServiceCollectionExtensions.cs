@@ -2,6 +2,10 @@ using ShiftsLoggerV2.RyanW84.Repositories;
 using ShiftsLoggerV2.RyanW84.Repositories.Interfaces;
 using ShiftsLoggerV2.RyanW84.Services;
 using ShiftsLoggerV2.RyanW84.Services.Interfaces;
+using ShiftsLoggerV2.RyanW84.Models;
+using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
+using ShiftsLoggerV2.RyanW84.Dtos;
+using ShiftsLoggerV2.RyanW84.Core.Interfaces;
 
 namespace ShiftsLoggerV2.RyanW84.Extensions;
 
@@ -16,9 +20,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
         services.AddScoped<IShiftRepository, ShiftRepository>();
-        // TODO: Add other repositories when implemented
-        // services.AddScoped<IWorkerRepository, WorkerRepository>();
-        // services.AddScoped<ILocationRepository, LocationRepository>();
+        services.AddScoped<IWorkerRepository, WorkerRepository>();
+        services.AddScoped<ILocationRepository, LocationRepository>();
         
         return services;
     }
@@ -28,10 +31,9 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddBusinessServices(this IServiceCollection services)
     {
-        services.AddScoped<IShiftBusinessService, ShiftBusinessService>();
-        // TODO: Add other business services when implemented
-        // services.AddScoped<IWorkerBusinessService, WorkerBusinessService>();
-        // services.AddScoped<ILocationBusinessService, LocationBusinessService>();
+        services.AddScoped<ShiftBusinessService>();
+        services.AddScoped<WorkerBusinessService>();
+        services.AddScoped<LocationBusinessService>();
         
         return services;
     }

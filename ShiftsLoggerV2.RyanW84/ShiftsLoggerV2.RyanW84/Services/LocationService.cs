@@ -24,17 +24,21 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
             query = query.Where(l => EF.Functions.Like(l.Name, $"%{locationOptions.Name}%"));
         if (!string.IsNullOrWhiteSpace(locationOptions.Address))
             query = query.Where(l => EF.Functions.Like(l.Address, $"%{locationOptions.Address}%"));
-        if (!string.IsNullOrWhiteSpace(locationOptions.TownOrCity))
+        if (!string.IsNullOrWhiteSpace(locationOptions.Town))
             query = query.Where(l =>
-                EF.Functions.Like(l.Address, $"%{locationOptions.TownOrCity}%")
+                EF.Functions.Like(l.Town, $"%{locationOptions.Town}%")
             );
-        if (!string.IsNullOrWhiteSpace(locationOptions.StateOrCounty))
+        if (!string.IsNullOrWhiteSpace(locationOptions.County))
             query = query.Where(l =>
-                EF.Functions.Like(l.Country, $"%{locationOptions.StateOrCounty}%")
+                EF.Functions.Like(l.County, $"%{locationOptions.County}%")
             );
-        if (!string.IsNullOrWhiteSpace(locationOptions.ZipOrPostCode))
+        if (!string.IsNullOrWhiteSpace(locationOptions.State))
             query = query.Where(l =>
-                EF.Functions.Like(l.PostCode, $"%{locationOptions.ZipOrPostCode}%")
+                EF.Functions.Like(l.County, $"%{locationOptions.State}%")
+            );
+        if (!string.IsNullOrWhiteSpace(locationOptions.PostCode))
+            query = query.Where(l =>
+                EF.Functions.Like(l.PostCode, $"%{locationOptions.PostCode}%")
             );
         if (!string.IsNullOrWhiteSpace(locationOptions.Country))
             query = query.Where(l => EF.Functions.Like(l.Country, $"%{locationOptions.Country}%"));
