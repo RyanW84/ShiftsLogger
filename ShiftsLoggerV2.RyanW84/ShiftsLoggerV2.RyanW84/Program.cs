@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using ShiftsLoggerV2.RyanW84.Data;
@@ -12,11 +13,7 @@ builder.Services.AddOpenApi();
 builder
     .Services.AddControllers()
     .AddJsonOptions(opts =>
-        opts.JsonSerializerOptions.ReferenceHandler = System
-            .Text
-            .Json
-            .Serialization
-            .ReferenceHandler
+        opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler
             .IgnoreCycles
     );
 
@@ -35,7 +32,7 @@ if (app.Environment.IsDevelopment())
     Console.WriteLine("Development Mode");
 
     using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<ShiftsLoggerV2.RyanW84.Data.ShiftsLoggerDbContext>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ShiftsLoggerDbContext>();
     dbContext.Database.EnsureDeleted();
     dbContext.Database.EnsureCreated();
     dbContext.SeedData();
@@ -49,7 +46,7 @@ app.MapScalarApiReference(options =>
         .WithTitle("Shifts Logger API")
         .WithTheme(ScalarTheme.BluePlanet)
         .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
-        .WithModels(true)
+        .WithModels()
         .WithLayout(ScalarLayout.Classic);
 });
 

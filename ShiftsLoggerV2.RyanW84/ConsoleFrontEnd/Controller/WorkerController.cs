@@ -1,4 +1,5 @@
-﻿using ConsoleFrontEnd.Models;
+﻿using System.Net;
+using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
 using ConsoleFrontEnd.Services;
@@ -10,6 +11,7 @@ public class WorkerController
 {
     private readonly MenuSystem.UserInterface userInterface = new();
     private readonly WorkerService workerService = new();
+
     private WorkerFilterOptions workerFilterOptions = new()
     {
         WorkerId = null,
@@ -18,7 +20,7 @@ public class WorkerController
         Email = null,
         Search = null,
         SortBy = "Name", // Default sorting by name
-        SortOrder = "asc", // Default sorting order is ascending
+        SortOrder = "asc" // Default sorting order is ascending
     };
 
     // Helpers
@@ -28,26 +30,25 @@ public class WorkerController
         {
             var response = await workerService.GetWorkerById(workerId);
 
-            while (response.ResponseCode is not System.Net.HttpStatusCode.OK)
+            while (response.ResponseCode is not HttpStatusCode.OK)
             {
                 userInterface.DisplayErrorMessage(response.Message);
                 Console.WriteLine();
                 var exitSelection = AnsiConsole.Prompt(
                     new SelectionPrompt<string>()
                         .Title("Try again or exit?")
-                        .AddChoices(new[] { "Try Again", "Exit" })
+                        .AddChoices("Try Again", "Exit")
                 );
                 if (exitSelection is "Exit")
-                {
                     return new ApiResponseDto<Worker>
                     {
                         RequestFailed = true,
-                        ResponseCode = System.Net.HttpStatusCode.NotFound,
+                        ResponseCode = HttpStatusCode.NotFound,
                         Message = "User exited the operation.",
-                        Data = null,
+                        Data = null
                     };
-                }
-                else if (exitSelection is "Try Again")
+
+                if (exitSelection is "Try Again")
                 {
                     AnsiConsole.Markup("[Yellow]Please enter a correct ID: [/]");
                     workerId = userInterface.GetWorkerByIdUi();
@@ -63,9 +64,9 @@ public class WorkerController
             return new ApiResponseDto<Worker>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                ResponseCode = HttpStatusCode.InternalServerError,
                 Message = $"Exception occurred: {ex.Message}",
-                Data = null,
+                Data = null
             };
         }
     }
@@ -88,7 +89,7 @@ public class WorkerController
                 RequestFailed = true,
                 ResponseCode = response.ResponseCode,
                 Message = "No workers available.",
-                Data = 0,
+                Data = 0
             };
         }
 
@@ -110,7 +111,7 @@ public class WorkerController
             RequestFailed = false,
             ResponseCode = response.ResponseCode,
             Message = "Worker selected.",
-            Data = selected.WorkerId,
+            Data = selected.WorkerId
         };
     }
 
@@ -154,7 +155,10 @@ public class WorkerController
                 userInterface.ContinueAndClearScreen();
             }
             else
+            {
                 userInterface.DisplayWorkersTable(response.Data);
+            }
+
             userInterface.ContinueAndClearScreen();
         }
         catch (Exception ex)
@@ -173,8 +177,8 @@ public class WorkerController
             AnsiConsole.Write(
                 new Rule("[bold yellow]View Worker by ID[/]").RuleStyle("yellow").Centered()
             );
-            ApiResponseDto<int>? workerId = await SelectWorker();
-            ApiResponseDto<Worker> worker = await workerService.GetWorkerById(workerId.Data);
+            var workerId = await SelectWorker();
+            var worker = await workerService.GetWorkerById(workerId.Data);
 
             if (worker.Data is not null)
             {
@@ -202,8 +206,8 @@ public class WorkerController
                 new Rule("[bold yellow]Update Worker[/]").RuleStyle("yellow").Centered()
             );
 
-            ApiResponseDto<int>? workerId = await SelectWorker();
-            ApiResponseDto<Worker> existingWorker = await workerService.GetWorkerById(
+            var workerId = await SelectWorker();
+            var existingWorker = await workerService.GetWorkerById(
                 workerId.Data
             );
 
@@ -231,8 +235,8 @@ public class WorkerController
                 new Rule("[bold yellow]Delete Worker[/]").RuleStyle("yellow").Centered()
             );
 
-            ApiResponseDto<int>? workerId = await SelectWorker();
-            ApiResponseDto<Worker> existingWorker = await workerService.GetWorkerById(
+            var workerId = await SelectWorker();
+            var existingWorker = await workerService.GetWorkerById(
                 workerId.Data
             );
 
@@ -248,13 +252,9 @@ public class WorkerController
             );
 
             if (deletedWorkerResponse.RequestFailed)
-            {
                 userInterface.DisplayErrorMessage(deletedWorkerResponse.Message);
-            }
             else
-            {
                 userInterface.DisplaySuccessMessage($"\n{deletedWorkerResponse.Message}");
-            }
 
             userInterface.ContinueAndClearScreen();
         }
@@ -275,7 +275,7 @@ public class WorkerController
             AnsiConsole.Write(
                 new Rule("[bold yellow]Create Worker - Input[/]").RuleStyle("yellow").Centered()
             );
-            
+
             var worker = userInterface.CreateWorkerUi();
             return worker;
         }
@@ -291,12 +291,9 @@ public class WorkerController
         try
         {
             var response = await workerService.CreateWorker(worker);
-            
-            if (response.RequestFailed)
-            {
-                throw new InvalidOperationException(response.Message);
-            }
-            
+
+            if (response.RequestFailed) throw new InvalidOperationException(response.Message);
+
             // Log success but don't display UI here - that's handled in the menu
             Console.WriteLine($"Worker created successfully: {response.Message}");
         }
@@ -323,17 +320,13 @@ public class WorkerController
             AnsiConsole.Write(
                 new Rule("[bold yellow]View Worker by ID - Results[/]").RuleStyle("yellow").Centered()
             );
-            
+
             var worker = await workerService.GetWorkerById(workerId);
 
             if (worker.Data is not null)
-            {
                 userInterface.DisplayWorkersTable([worker.Data]);
-            }
             else
-            {
                 throw new InvalidOperationException(worker.Message);
-            }
         }
         catch (Exception ex)
         {
@@ -353,17 +346,11 @@ public class WorkerController
 
             // First, select the worker to update
             var workerIdResponse = await SelectWorker();
-            if (workerIdResponse.RequestFailed)
-            {
-                throw new InvalidOperationException(workerIdResponse.Message);
-            }
+            if (workerIdResponse.RequestFailed) throw new InvalidOperationException(workerIdResponse.Message);
 
             // Get the existing worker data
             var existingWorker = await workerService.GetWorkerById(workerIdResponse.Data);
-            if (existingWorker.Data is null)
-            {
-                throw new InvalidOperationException(existingWorker.Message);
-            }
+            if (existingWorker.Data is null) throw new InvalidOperationException(existingWorker.Message);
 
             // Get the updated worker data from user
             var updatedWorker = userInterface.UpdateWorkerUi(existingWorker.Data);
@@ -382,12 +369,9 @@ public class WorkerController
         try
         {
             var response = await workerService.UpdateWorker(workerId, updatedWorker);
-            
-            if (response.RequestFailed)
-            {
-                throw new InvalidOperationException(response.Message);
-            }
-            
+
+            if (response.RequestFailed) throw new InvalidOperationException(response.Message);
+
             // Log success but don't display UI here - that's handled in the menu
             Console.WriteLine($"Worker updated successfully: {response.Message}");
         }
@@ -409,18 +393,12 @@ public class WorkerController
 
             // Get worker details first to verify it exists
             var existingWorker = await workerService.GetWorkerById(workerId);
-            if (existingWorker.Data is null)
-            {
-                throw new InvalidOperationException(existingWorker.Message);
-            }
+            if (existingWorker.Data is null) throw new InvalidOperationException(existingWorker.Message);
 
             var response = await workerService.DeleteWorker(existingWorker.Data.WorkerId);
-            
-            if (response.RequestFailed)
-            {
-                throw new InvalidOperationException(response.Message);
-            }
-            
+
+            if (response.RequestFailed) throw new InvalidOperationException(response.Message);
+
             // Log success but don't display UI here - that's handled in the menu
             Console.WriteLine($"Worker deleted successfully: {response.Message}");
         }
@@ -446,14 +424,9 @@ public class WorkerController
 
             var response = await workerService.GetAllWorkers(filterOptions);
 
-            if (response.Data is null)
-            {
-                throw new InvalidOperationException("No workers found.");
-            }
-            else
-            {
-                userInterface.DisplayWorkersTable(response.Data);
-            }
+            if (response.Data is null) throw new InvalidOperationException("No workers found.");
+
+            userInterface.DisplayWorkersTable(response.Data);
         }
         catch (Exception ex)
         {

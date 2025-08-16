@@ -4,8 +4,8 @@ namespace ConsoleFrontEnd.Models;
 
 public class Location
 {
-    [Key]
-    public int LocationId { get; set; }
+    [Key] public int LocationId { get; set; }
+
     public required string Name { get; set; }
     public required string Address { get; set; }
     public required string Town { get; set; }

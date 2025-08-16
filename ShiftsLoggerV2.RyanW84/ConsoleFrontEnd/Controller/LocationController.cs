@@ -1,16 +1,17 @@
-﻿using ConsoleFrontEnd.Models;
+﻿using System.Net;
+using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
 using ConsoleFrontEnd.Services;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Spectre.Console;
 
 namespace ConsoleFrontEnd.Controller;
 
 public class LocationController
 {
-    private readonly MenuSystem.UserInterface userInterface = new();
     private readonly LocationService locationService = new();
+    private readonly MenuSystem.UserInterface userInterface = new();
+
     private LocationFilterOptions locationFilterOptions = new()
     {
         LocationId = null,
@@ -21,7 +22,7 @@ public class LocationController
         Country = null,
         Search = null,
         SortBy = "Name", // Default sorting by name
-        SortOrder = "asc", // Default sorting order is ascending
+        SortOrder = "asc" // Default sorting order is ascending
     };
 
     // Helpers
@@ -31,26 +32,25 @@ public class LocationController
         {
             var response = await locationService.GetLocationById(locationId);
 
-            while (response.ResponseCode is not System.Net.HttpStatusCode.OK)
+            while (response.ResponseCode is not HttpStatusCode.OK)
             {
                 userInterface.DisplayErrorMessage(response.Message);
                 Console.WriteLine();
                 var exitSelection = AnsiConsole.Prompt(
                     new SelectionPrompt<string>()
                         .Title("Try again or exit?")
-                        .AddChoices(new[] { "Try Again", "Exit" })
+                        .AddChoices("Try Again", "Exit")
                 );
                 if (exitSelection is "Exit")
-                {
                     return new ApiResponseDto<Location>
                     {
                         RequestFailed = true,
-                        ResponseCode = System.Net.HttpStatusCode.NotFound,
+                        ResponseCode = HttpStatusCode.NotFound,
                         Message = "User exited the operation.",
-                        Data = null,
+                        Data = null
                     };
-                }
-                else if (exitSelection is "Try Again")
+
+                if (exitSelection is "Try Again")
                 {
                     AnsiConsole.Markup("[Yellow]Please enter a correct ID: [/]");
                     locationId = userInterface.GetLocationByIdUi();
@@ -66,9 +66,9 @@ public class LocationController
             return new ApiResponseDto<Location>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
+                ResponseCode = HttpStatusCode.InternalServerError,
                 Message = $"Exception occurred: {ex.Message}",
-                Data = null,
+                Data = null
             };
         }
     }
@@ -91,7 +91,7 @@ public class LocationController
                 RequestFailed = true,
                 ResponseCode = response.ResponseCode,
                 Message = "No locations available.",
-                Data = 0,
+                Data = 0
             };
         }
 
@@ -115,7 +115,7 @@ public class LocationController
             RequestFailed = false,
             ResponseCode = response.ResponseCode,
             Message = "Location selected.",
-            Data = selected.LocationId,
+            Data = selected.LocationId
         };
     }
 
@@ -159,7 +159,10 @@ public class LocationController
                 userInterface.ContinueAndClearScreen();
             }
             else
+            {
                 userInterface.DisplayLocationsTable(response.Data);
+            }
+
             userInterface.ContinueAndClearScreen();
         }
         catch (Exception ex)
@@ -178,8 +181,8 @@ public class LocationController
             AnsiConsole.Write(
                 new Rule("[bold yellow]View Location by ID[/]").RuleStyle("yellow").Centered()
             );
-            ApiResponseDto<int>? locationId = await SelectLocation();
-            ApiResponseDto<Location> location = await locationService.GetLocationById(
+            var locationId = await SelectLocation();
+            var location = await locationService.GetLocationById(
                 locationId.Data
             );
 
@@ -209,8 +212,8 @@ public class LocationController
                 new Rule("[bold yellow]Update Location[/]").RuleStyle("yellow").Centered()
             );
 
-            ApiResponseDto<int>? locationId = await SelectLocation();
-            ApiResponseDto<Location> existingLocation = await locationService.GetLocationById(
+            var locationId = await SelectLocation();
+            var existingLocation = await locationService.GetLocationById(
                 locationId.Data
             );
 
@@ -238,8 +241,8 @@ public class LocationController
                 new Rule("[bold yellow]Delete Location[/]").RuleStyle("yellow").Centered()
             );
 
-            ApiResponseDto<int>? locationId = await SelectLocation();
-            ApiResponseDto<Location> existingLocation = await locationService.GetLocationById(
+            var locationId = await SelectLocation();
+            var existingLocation = await locationService.GetLocationById(
                 locationId.Data
             );
 
@@ -255,13 +258,9 @@ public class LocationController
             );
 
             if (deletedLocationResponse.RequestFailed)
-            {
                 userInterface.DisplayErrorMessage(deletedLocationResponse.Message);
-            }
             else
-            {
                 userInterface.DisplaySuccessMessage($"\n{deletedLocationResponse.Message}");
-            }
 
             userInterface.ContinueAndClearScreen();
         }
@@ -300,10 +299,7 @@ public class LocationController
         {
             var response = await locationService.CreateLocation(location);
 
-            if (response.RequestFailed)
-            {
-                throw new InvalidOperationException(response.Message);
-            }
+            if (response.RequestFailed) throw new InvalidOperationException(response.Message);
 
             // Log success but don't display UI here - that's handled in the menu
             Console.WriteLine($"Location created successfully: {response.Message}");
@@ -333,13 +329,9 @@ public class LocationController
             var location = await locationService.GetLocationById(locationId);
 
             if (location.Data is not null)
-            {
                 userInterface.DisplayLocationsTable([location.Data]);
-            }
             else
-            {
                 throw new InvalidOperationException(location.Message);
-            }
         }
         catch (Exception ex)
         {
@@ -359,17 +351,11 @@ public class LocationController
 
             // First, select the location to update
             var locationIdResponse = await SelectLocation();
-            if (locationIdResponse.RequestFailed)
-            {
-                throw new InvalidOperationException(locationIdResponse.Message);
-            }
+            if (locationIdResponse.RequestFailed) throw new InvalidOperationException(locationIdResponse.Message);
 
             // Get the existing location data
             var existingLocation = await locationService.GetLocationById(locationIdResponse.Data);
-            if (existingLocation.Data is null)
-            {
-                throw new InvalidOperationException(existingLocation.Message);
-            }
+            if (existingLocation.Data is null) throw new InvalidOperationException(existingLocation.Message);
 
             // Get the updated location data from user
             var updatedLocation = userInterface.UpdateLocationUi(existingLocation.Data);
@@ -389,10 +375,7 @@ public class LocationController
         {
             var response = await locationService.UpdateLocation(locationId, updatedLocation);
 
-            if (response.RequestFailed)
-            {
-                throw new InvalidOperationException(response.Message);
-            }
+            if (response.RequestFailed) throw new InvalidOperationException(response.Message);
 
             // Log success but don't display UI here - that's handled in the menu
             Console.WriteLine($"Location updated successfully: {response.Message}");
@@ -415,17 +398,11 @@ public class LocationController
 
             // Get location details first to verify it exists
             var existingLocation = await locationService.GetLocationById(locationId);
-            if (existingLocation.Data is null)
-            {
-                throw new InvalidOperationException(existingLocation.Message);
-            }
+            if (existingLocation.Data is null) throw new InvalidOperationException(existingLocation.Message);
 
             var response = await locationService.DeleteLocation(existingLocation.Data.LocationId);
 
-            if (response.RequestFailed)
-            {
-                throw new InvalidOperationException(response.Message);
-            }
+            if (response.RequestFailed) throw new InvalidOperationException(response.Message);
 
             // Log success but don't display UI here - that's handled in the menu
             Console.WriteLine($"Location deleted successfully: {response.Message}");
@@ -453,13 +430,9 @@ public class LocationController
             var response = await locationService.GetAllLocations(filterOptions);
 
             if (response.Data is null || response.Data.Count == 0)
-            {
                 throw new InvalidOperationException("No locations found.");
-            }
-            else
-            {
-                userInterface.DisplayLocationsTable(response.Data);
-            }
+
+            userInterface.DisplayLocationsTable(response.Data);
         }
         catch (Exception ex)
         {

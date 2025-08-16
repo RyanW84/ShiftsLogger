@@ -1,12 +1,9 @@
-﻿using Azure;
-
+﻿using System.Net;
+using System.Net.Http.Json;
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
-
 using Spectre.Console;
-
-using System.Net.Http.Json;
 
 namespace ConsoleFrontEnd.Services;
 
@@ -14,7 +11,7 @@ public class WorkerService : IWorkerService
 {
     private readonly HttpClient httpClient = new()
     {
-        BaseAddress = new Uri("https://localhost:7009/"),
+        BaseAddress = new Uri("https://localhost:7009/")
     };
 
     public async Task<ApiResponseDto<List<Worker>>> GetAllWorkers(
@@ -37,18 +34,18 @@ public class WorkerService : IWorkerService
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase ?? "Unknown error",
-                    Data = null,
+                    Data = null
                 };
             }
 
             AnsiConsole.Markup("[green]Workers retrieved successfully.[/]\n");
             return await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Worker>>>()
-                ?? new ApiResponseDto<List<Worker>>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = "Data obtained",
-                    Data = new List<Worker>(),
-                };
+                   ?? new ApiResponseDto<List<Worker>>
+                   {
+                       ResponseCode = response.StatusCode,
+                       Message = "Data obtained",
+                       Data = new List<Worker>()
+                   };
         }
         catch (Exception ex)
         {
@@ -57,56 +54,52 @@ public class WorkerService : IWorkerService
         }
     }
 
-	public async Task<ApiResponseDto<Worker>> GetWorkerById(int id)
-	{
-		HttpResponseMessage response;
-		try
-		{
-			response = await httpClient.GetAsync($"api/workers/{id}");
+    public async Task<ApiResponseDto<Worker>> GetWorkerById(int id)
+    {
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.GetAsync($"api/workers/{id}");
 
-			if (response.StatusCode == System.Net.HttpStatusCode.OK)
-			{
-				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
-					?? new ApiResponseDto<Worker>
-					{
-						ResponseCode = response.StatusCode ,
-						Message = "No data returned." ,
-						Data = response.Content.ReadFromJsonAsync<Worker>().Result,
-						TotalCount = 0 ,
-					};
-			}
-			else
-			{
-				return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
-					?? new ApiResponseDto<Worker>
-					{
-						ResponseCode = response.StatusCode ,
-						Message = "No data returned." ,
-						Data = null ,
-						TotalCount = 0 ,
-					};
-			}
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Try catch failed for GetWorkerById: {ex}");
-			throw;
-		}
-	}
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
+                       ?? new ApiResponseDto<Worker>
+                       {
+                           ResponseCode = response.StatusCode,
+                           Message = "No data returned.",
+                           Data = response.Content.ReadFromJsonAsync<Worker>().Result,
+                           TotalCount = 0
+                       };
+
+            return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
+                   ?? new ApiResponseDto<Worker>
+                   {
+                       ResponseCode = response.StatusCode,
+                       Message = "No data returned.",
+                       Data = null,
+                       TotalCount = 0
+                   };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Try catch failed for GetWorkerById: {ex}");
+            throw;
+        }
+    }
 
     public async Task<ApiResponseDto<Worker>> CreateWorker(Worker createdWorker)
     {
         try
         {
             var response = await httpClient.PostAsJsonAsync("api/workers", createdWorker);
-            if (response.StatusCode != System.Net.HttpStatusCode.Created)
+            if (response.StatusCode != HttpStatusCode.Created)
             {
                 Console.WriteLine($"Error: Status Code - {response.StatusCode}");
                 return new ApiResponseDto<Worker>
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase ?? "Creation failed",
-                    Data = null,
+                    Data = null
                 };
             }
 
@@ -114,7 +107,7 @@ public class WorkerService : IWorkerService
             return new ApiResponseDto<Worker>
             {
                 ResponseCode = response.StatusCode,
-                Data = await response.Content.ReadFromJsonAsync<Worker>() ?? createdWorker,
+                Data = await response.Content.ReadFromJsonAsync<Worker>() ?? createdWorker
             };
         }
         catch (Exception ex)
@@ -130,25 +123,21 @@ public class WorkerService : IWorkerService
         try
         {
             response = await httpClient.PutAsJsonAsync($"api/workers/{id}", updatedWorker);
-            if (response.StatusCode is not System.Net.HttpStatusCode.OK)
-            {
+            if (response.StatusCode is not HttpStatusCode.OK)
                 return new ApiResponseDto<Worker>
                 {
                     ResponseCode = response.StatusCode,
                     Message = response.ReasonPhrase,
-                    Data = null,
+                    Data = null
                 };
-            }
-            else
-            {
-                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
-                    ?? new ApiResponseDto<Worker>
-                    {
-                        ResponseCode = response.StatusCode,
-                        Message = "Update Worker succeeded.",
-                        Data = null,
-                    };
-            }
+
+            return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
+                   ?? new ApiResponseDto<Worker>
+                   {
+                       ResponseCode = response.StatusCode,
+                       Message = "Update Worker succeeded.",
+                       Data = null
+                   };
         }
         catch (Exception ex)
         {
@@ -162,21 +151,19 @@ public class WorkerService : IWorkerService
         try
         {
             var response = await httpClient.DeleteAsync($"api/workers/{id}");
-            if (response.StatusCode != System.Net.HttpStatusCode.NoContent)
-            {
+            if (response.StatusCode != HttpStatusCode.NoContent)
                 return new ApiResponseDto<string>
                 {
                     ResponseCode = response.StatusCode,
                     Message = $"Error deleting Worker - {response.StatusCode}",
-                    Data = null,
+                    Data = null
                 };
-            }
 
             return new ApiResponseDto<string>
             {
                 ResponseCode = response.StatusCode,
                 Message = "Worker deleted successfully.",
-                Data = null,
+                Data = null
             };
         }
         catch (Exception ex)
@@ -214,6 +201,4 @@ public class WorkerService : IWorkerService
 
         return queryParams.Count > 0 ? $"{basePath}?{string.Join("&", queryParams)}" : basePath;
     }
-
-	
 }

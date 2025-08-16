@@ -1,6 +1,6 @@
 using ConsoleFrontEnd.MenuSystem;
 
-namespace ConsoleFrontEnd;
+namespace ConsoleFrontEnd.Interfaces;
 
 public interface IUserInterfaceFacade
 {

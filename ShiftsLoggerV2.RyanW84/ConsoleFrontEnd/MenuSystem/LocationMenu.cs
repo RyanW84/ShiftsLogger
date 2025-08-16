@@ -1,5 +1,4 @@
 ﻿using ConsoleFrontEnd.Controller;
-using Spectre.Console;
 
 namespace ConsoleFrontEnd.MenuSystem;
 
@@ -9,10 +8,9 @@ public class LocationMenu : BaseMenu
 
     public static async Task DisplayLocationMenu()
     {
-        bool continueLoop = true;
+        var continueLoop = true;
 
         while (continueLoop)
-        {
             try
             {
                 // Ensure clean state before displaying menu
@@ -39,7 +37,6 @@ public class LocationMenu : BaseMenu
                 DisplayErrorMessage($"An error occurred in Location Menu: {ex.Message}");
                 PauseForUserInput();
             }
-        }
     }
 
     private static async Task<bool> HandleLocationMenuChoice(string choice)
@@ -92,11 +89,9 @@ public class LocationMenu : BaseMenu
         {
             // Get all user input BEFORE starting the spinner
             var location = await _locationController.GetLocationInputAsync();
-            
-            await ShowLoadingSpinnerAsync("Processing location creation...", async () =>
-            {
-                await _locationController.CreateLocationWithData(location);
-            });
+
+            await ShowLoadingSpinnerAsync("Processing location creation...",
+                async () => { await _locationController.CreateLocationWithData(location); });
 
             // Ensure clean state before success message
             ClearConsoleState();
@@ -123,10 +118,8 @@ public class LocationMenu : BaseMenu
             // Get filter options BEFORE starting the spinner
             var filterOptions = await _locationController.GetLocationFilterInputAsync();
 
-            await ShowLoadingSpinnerAsync("Loading locations...", async () =>
-            {
-                await _locationController.GetAllLocationsWithData(filterOptions);
-            });
+            await ShowLoadingSpinnerAsync("Loading locations...",
+                async () => { await _locationController.GetAllLocationsWithData(filterOptions); });
 
             // Success state is handled by the controller, no need to clear
         }
@@ -144,7 +137,7 @@ public class LocationMenu : BaseMenu
     private static async Task ViewLocationByIdWithFeedback()
     {
         DisplayHeader("View Location by ID", "blue");
-        
+
         try
         {
             // Get location selection BEFORE starting the spinner
@@ -156,10 +149,8 @@ public class LocationMenu : BaseMenu
                 return;
             }
 
-            await ShowLoadingSpinnerAsync("Loading location details...", async () =>
-            {
-                await _locationController.GetLocationByIdWithData(selectedLocationId.Data);
-            });
+            await ShowLoadingSpinnerAsync("Loading location details...",
+                async () => { await _locationController.GetLocationByIdWithData(selectedLocationId.Data); });
 
             // Success state is handled by the controller, no need to clear
         }
@@ -189,11 +180,9 @@ public class LocationMenu : BaseMenu
         {
             // Get all user input BEFORE starting the spinner
             var (locationId, updatedLocation) = await _locationController.GetLocationUpdateInputAsync();
-            
-            await ShowLoadingSpinnerAsync("Processing location update...", async () =>
-            {
-                await _locationController.UpdateLocationWithData(locationId, updatedLocation);
-            });
+
+            await ShowLoadingSpinnerAsync("Processing location update...",
+                async () => { await _locationController.UpdateLocationWithData(locationId, updatedLocation); });
 
             // Ensure clean state before success message
             ClearConsoleState();
@@ -235,10 +224,8 @@ public class LocationMenu : BaseMenu
                 return;
             }
 
-            await ShowLoadingSpinnerAsync("Processing location deletion...", async () =>
-            {
-                await _locationController.DeleteLocationWithData(selectedLocationId.Data);
-            });
+            await ShowLoadingSpinnerAsync("Processing location deletion...",
+                async () => { await _locationController.DeleteLocationWithData(selectedLocationId.Data); });
 
             // Ensure clean state before success message
             ClearConsoleState();

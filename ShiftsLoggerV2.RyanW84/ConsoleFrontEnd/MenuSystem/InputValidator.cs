@@ -79,7 +79,6 @@ public static class InputValidator
     public static int GetValidatedInteger(string prompt, int? min = null, int? max = null)
     {
         while (true)
-        {
             try
             {
                 var value = AnsiConsole.Ask<int>($"[green]{prompt}[/]");
@@ -102,11 +101,10 @@ public static class InputValidator
             {
                 AnsiConsole.MarkupLine("[red]Please enter a valid number.[/]");
             }
-        }
     }
 
     /// <summary>
-    /// Simple flexible DateTime parser - utility function only
+    ///     Simple flexible DateTime parser - utility function only
     /// </summary>
     public static DateTime GetFlexibleDateTime(string prompt, DateTime? minDate = null, DateTime? maxDate = null)
     {
@@ -121,7 +119,7 @@ public static class InputValidator
             }
 
             DateTime parsedDateTime = default;
-            bool isValid = false;
+            var isValid = false;
 
             // Try multiple date formats with explicit culture
             string[] acceptedFormats =
@@ -131,22 +129,18 @@ public static class InputValidator
             ];
 
             foreach (var format in acceptedFormats)
-            {
-                if (DateTime.TryParseExact(input, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDateTime))
+                if (DateTime.TryParseExact(input, format, CultureInfo.InvariantCulture, DateTimeStyles.None,
+                        out parsedDateTime))
                 {
                     isValid = true;
                     break;
                 }
-            }
 
             // Fallback to UK culture
             if (!isValid)
             {
                 var ukCulture = new CultureInfo("en-GB");
-                if (DateTime.TryParse(input, ukCulture, DateTimeStyles.None, out parsedDateTime))
-                {
-                    isValid = true;
-                }
+                if (DateTime.TryParse(input, ukCulture, DateTimeStyles.None, out parsedDateTime)) isValid = true;
             }
 
             if (!isValid)

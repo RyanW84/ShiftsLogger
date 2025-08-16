@@ -17,7 +17,6 @@ public class MainMenu : BaseMenu
         }
 
         while (_continueLoop)
-        {
             try
             {
                 // Ensure clean state before displaying menu
@@ -28,7 +27,7 @@ public class MainMenu : BaseMenu
                 var choice = MenuHelpers.GetMenuChoice(
                     "Select an option:",
                     "Shift Management",
-                    "Location Management", 
+                    "Location Management",
                     "Worker Management",
                     "System Information",
                     "Exit Application"
@@ -43,7 +42,6 @@ public class MainMenu : BaseMenu
                 DisplayErrorMessage($"An unexpected error occurred: {ex.Message}");
                 PauseForUserInput();
             }
-        }
     }
 
     private static async Task HandleMenuChoice(string choice)
@@ -75,23 +73,23 @@ public class MainMenu : BaseMenu
     private static void ShowSystemInformation()
     {
         DisplayHeader("System Information", "cyan");
-        
+
         var table = new Table()
             .Border(TableBorder.Rounded)
             .BorderColor(Color.Cyan1);
-        
+
         table.AddColumn("[bold]Property[/]");
         table.AddColumn("[bold]Value[/]");
-        
+
         table.AddRow("Application", "Shifts Logger Console");
         table.AddRow("Version", "2.0");
         table.AddRow(".NET Version", ".NET 9");
         table.AddRow("Last Updated", DateTime.Now.ToString("yyyy-MM-dd"));
         table.AddRow("Features", "Shift, Worker, and Location Management");
-        
+
         AnsiConsole.Write(table);
         AnsiConsole.WriteLine();
-        
+
         PauseForUserInput();
     }
 
@@ -100,14 +98,14 @@ public class MainMenu : BaseMenu
         if (ConfirmAction("exit the application"))
         {
             DisplayHeader("Goodbye!", "green");
-            
+
             var farewell = new Panel(
-                new Markup("[green]Thank you for using Shifts Logger![/]\n[dim]Have a great day![/]"))
+                    new Markup("[green]Thank you for using Shifts Logger![/]\n[dim]Have a great day![/]"))
                 .Border(BoxBorder.Rounded)
                 .BorderColor(Color.Green);
-            
+
             AnsiConsole.Write(farewell);
-            
+
             // Add a small delay for better UX
             await Task.Delay(1500);
             _continueLoop = false;

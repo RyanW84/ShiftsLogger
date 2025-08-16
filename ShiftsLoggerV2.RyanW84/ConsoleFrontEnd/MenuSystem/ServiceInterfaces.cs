@@ -1,3 +1,8 @@
+using ConsoleFrontEnd.Models;
+using ConsoleFrontEnd.Models.FilterOptions;
+
+namespace ConsoleFrontEnd.MenuSystem;
+
 public interface IShiftService
 {
     Task<ApiResponse<List<Shift>>> GetAllShifts(ShiftFilterOptions options);

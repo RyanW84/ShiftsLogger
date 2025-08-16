@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net;
+using Microsoft.AspNetCore.Mvc;
 using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
@@ -36,24 +37,23 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
         {
             var result = await shiftService.GetShiftById(id);
 
-            if (result.ResponseCode is System.Net.HttpStatusCode.NotFound)
+            if (result.ResponseCode is HttpStatusCode.NotFound)
             {
                 AnsiConsole.MarkupLine($"[red]Shift: {id} Not Found![/]");
                 return NotFound(); // Equivalent to 404
             }
-            else if (result.ResponseCode is System.Net.HttpStatusCode.NoContent)
+
+            if (result.ResponseCode is HttpStatusCode.NoContent)
             {
                 AnsiConsole.MarkupLine($"[red]Shift: {id} {result.ResponseCode}[/]");
                 return NoContent(); // Equivalent to 204
             }
-            else if (result.ResponseCode is System.Net.HttpStatusCode.BadRequest)
-            {
+
+            if (result.ResponseCode is HttpStatusCode.BadRequest)
                 return BadRequest(result.Message); // Equivalent to 400
-            }
-            else if (result.RequestFailed)
-            {
+
+            if (result.RequestFailed)
                 return StatusCode((int)result.ResponseCode, result.Message); // Return the response code and message
-            }
 
             AnsiConsole.MarkupLine($"[Green]Shift: {id} returned {result.ResponseCode}[/]");
             // Return the shift data with a 200 OK status code
@@ -72,14 +72,10 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     {
         try
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            else
-            {
-                return new ObjectResult(await shiftService.CreateShift(shift)) { StatusCode = 201 }; //201 is the status code for Created
-            }
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            return new ObjectResult(await shiftService.CreateShift(shift))
+                { StatusCode = 201 }; //201 is the status code for Created
         }
         catch (Exception ex)
         {
@@ -96,10 +92,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
         {
             var result = await shiftService.UpdateShift(id, updatedShift);
 
-            if (result is null)
-            {
-                return NotFound(); // Equivalent to 404
-            }
+            if (result is null) return NotFound(); // Equivalent to 404
 
             return Ok(result);
         }
@@ -118,18 +111,11 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
         {
             var result = await shiftService.DeleteShift(id);
 
-            if (result.ResponseCode is System.Net.HttpStatusCode.NotFound)
-            {
-                return NotFound();
-            }
-            else if (result.ResponseCode is System.Net.HttpStatusCode.BadRequest)
-            {
-                return BadRequest(result.Message);
-            }
-            else if (result.RequestFailed)
-            {
-                return StatusCode((int)result.ResponseCode, result.Message);
-            }
+            if (result.ResponseCode is HttpStatusCode.NotFound) return NotFound();
+
+            if (result.ResponseCode is HttpStatusCode.BadRequest) return BadRequest(result.Message);
+
+            if (result.RequestFailed) return StatusCode((int)result.ResponseCode, result.Message);
 
             Console.WriteLine($"Shift with ID {id} deleted successfully.");
             return NoContent(); // Equivalent to 204

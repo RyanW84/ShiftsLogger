@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Net;
+﻿using System.Net;
 
 namespace ShiftsLoggerV2.RyanW84.Dtos;
 

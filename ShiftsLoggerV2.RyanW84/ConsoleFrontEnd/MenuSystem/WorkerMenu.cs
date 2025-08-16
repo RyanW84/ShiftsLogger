@@ -1,6 +1,5 @@
 using ConsoleFrontEnd.Controller;
 using ConsoleFrontEnd.MenuSystem;
-using Spectre.Console;
 
 namespace ConsoleFrontEnd.UserInterface;
 
@@ -10,10 +9,9 @@ public class WorkerMenu : BaseMenu
 
     public static async Task DisplayWorkerMenu()
     {
-        bool continueLoop = true;
+        var continueLoop = true;
 
         while (continueLoop)
-        {
             try
             {
                 // Ensure clean state before displaying menu
@@ -40,7 +38,6 @@ public class WorkerMenu : BaseMenu
                 DisplayErrorMessage($"An error occurred in Worker Menu: {ex.Message}");
                 PauseForUserInput();
             }
-        }
     }
 
     private static async Task<bool> HandleWorkerMenuChoice(string choice)
@@ -93,11 +90,9 @@ public class WorkerMenu : BaseMenu
         {
             // Get all user input BEFORE starting the spinner
             var worker = await _workerController.GetWorkerInputAsync();
-            
-            await ShowLoadingSpinnerAsync("Processing worker creation...", async () =>
-            {
-                await _workerController.CreateWorkerWithData(worker);
-            });
+
+            await ShowLoadingSpinnerAsync("Processing worker creation...",
+                async () => { await _workerController.CreateWorkerWithData(worker); });
 
             // Ensure clean state before success message
             ClearConsoleState();
@@ -111,23 +106,21 @@ public class WorkerMenu : BaseMenu
             DisplayHeader("Create New Worker", "green");
             DisplayErrorMessage($"Worker creation failed: {ex.Message}");
         }
-        
+
         PauseForUserInput();
     }
 
     private static async Task ViewAllWorkersWithFeedback()
     {
         DisplayHeader("View All Workers", "blue");
-        
+
         try
         {
             // Get filter options BEFORE starting the spinner
             var filterOptions = await _workerController.GetWorkerFilterInputAsync();
 
-            await ShowLoadingSpinnerAsync("Loading workers...", async () =>
-            {
-                await _workerController.GetAllWorkersWithData(filterOptions);
-            });
+            await ShowLoadingSpinnerAsync("Loading workers...",
+                async () => { await _workerController.GetAllWorkersWithData(filterOptions); });
 
             // Success state is handled by the controller, no need to clear
         }
@@ -145,7 +138,7 @@ public class WorkerMenu : BaseMenu
     private static async Task ViewWorkerByIdWithFeedback()
     {
         DisplayHeader("View Worker by ID", "blue");
-        
+
         try
         {
             // Get worker selection BEFORE starting the spinner
@@ -157,10 +150,8 @@ public class WorkerMenu : BaseMenu
                 return;
             }
 
-            await ShowLoadingSpinnerAsync("Loading worker details...", async () =>
-            {
-                await _workerController.GetWorkerByIdWithData(selectedWorkerId.Data);
-            });
+            await ShowLoadingSpinnerAsync("Loading worker details...",
+                async () => { await _workerController.GetWorkerByIdWithData(selectedWorkerId.Data); });
 
             // Success state is handled by the controller, no need to clear
         }
@@ -190,11 +181,9 @@ public class WorkerMenu : BaseMenu
         {
             // Get all user input BEFORE starting the spinner
             var (workerId, updatedWorker) = await _workerController.GetWorkerUpdateInputAsync();
-            
-            await ShowLoadingSpinnerAsync("Processing worker update...", async () =>
-            {
-                await _workerController.UpdateWorkerWithData(workerId, updatedWorker);
-            });
+
+            await ShowLoadingSpinnerAsync("Processing worker update...",
+                async () => { await _workerController.UpdateWorkerWithData(workerId, updatedWorker); });
 
             // Ensure clean state before success message
             ClearConsoleState();
@@ -235,10 +224,8 @@ public class WorkerMenu : BaseMenu
                 return;
             }
 
-            await ShowLoadingSpinnerAsync("Processing worker deletion...", async () =>
-            {
-                await _workerController.DeleteWorkerWithData(selectedWorkerId.Data);
-            });
+            await ShowLoadingSpinnerAsync("Processing worker deletion...",
+                async () => { await _workerController.DeleteWorkerWithData(selectedWorkerId.Data); });
 
             // Ensure clean state before success message
             ClearConsoleState();

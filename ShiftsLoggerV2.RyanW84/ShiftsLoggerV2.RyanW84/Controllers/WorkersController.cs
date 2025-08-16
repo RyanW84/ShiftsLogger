@@ -1,13 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
+﻿using System.Net;
+using Microsoft.AspNetCore.Mvc;
 using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
 using ShiftsLoggerV2.RyanW84.Services;
-
 using Spectre.Console;
-
-using System.Net;
 
 namespace ShiftsLoggerV2.RyanW84.Controllers;
 
@@ -29,22 +26,23 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
             )
             {
                 AnsiConsole.MarkupLine(
-                $"[Red]Error retrieving all workers {result.ResponseCode}.[/]"
-            );
-				return NotFound(
+                    $"[Red]Error retrieving all workers {result.ResponseCode}.[/]"
+                );
+                return NotFound(
                     new ApiResponseDto<Worker?>
                     {
                         RequestFailed = true,
                         ResponseCode = HttpStatusCode.NotFound,
-                        Message = $"Error retieving Workers",
-                        Data = null,
+                        Message = "Error retieving Workers",
+                        Data = null
                     }
                 );
             }
-			AnsiConsole.MarkupLine(
-				$"[green]Successfully retrieved workers[/]"
-			);
-			return Ok(result);
+
+            AnsiConsole.MarkupLine(
+                "[green]Successfully retrieved workers[/]"
+            );
+            return Ok(result);
         }
         catch (Exception ex)
         {
@@ -61,19 +59,20 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
             var result = await workerService.GetWorkerById(id);
             if (result == null)
             {
-				AnsiConsole.MarkupLine(
-				$"[Red]Error retrieving worker: {result.Data.WorkerId}.[/]"
-			);
-				return NotFound(
+                AnsiConsole.MarkupLine(
+                    $"[Red]Error retrieving worker: {result.Data.WorkerId}.[/]"
+                );
+                return NotFound(
                     new ApiResponseDto<Worker?>
                     {
                         RequestFailed = true,
                         ResponseCode = HttpStatusCode.NotFound,
                         Message = $"Failed to retrieve worker by Id {result.ResponseCode}",
-                        Data = null,
+                        Data = null
                     }
                 );
             }
+
             return Ok(result);
         }
         catch (Exception ex)
@@ -115,23 +114,24 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
             var result = await workerService.UpdateWorker(id, updatedWorker);
             if (result == null || result.Data == null)
             {
-				AnsiConsole.MarkupLine(
-				$"[red]Worker not found {result.Data.WorkerId}.[/]"
-			);
-				return NotFound(
+                AnsiConsole.MarkupLine(
+                    $"[red]Worker not found {result.Data.WorkerId}.[/]"
+                );
+                return NotFound(
                     new ApiResponseDto<Worker?>
                     {
                         RequestFailed = true,
                         ResponseCode = HttpStatusCode.NotFound,
-                        Message = $"Worker not found",
-                        Data = null,
+                        Message = "Worker not found",
+                        Data = null
                     }
                 );
             }
-			AnsiConsole.MarkupLine(
-				$"[green]Successfully retrieved worker with ID: {result.Data.WorkerId}.[/]"
-			);
-			return Ok(result);
+
+            AnsiConsole.MarkupLine(
+                $"[green]Successfully retrieved worker with ID: {result.Data.WorkerId}.[/]"
+            );
+            return Ok(result);
         }
         catch (Exception ex)
         {
@@ -148,18 +148,20 @@ public class WorkersController(IWorkerService workerService) : ControllerBase
             var result = await workerService.DeleteWorker(id);
             if (result.ResponseCode is HttpStatusCode.NotFound)
             {
-				AnsiConsole.MarkupLine(
-				$"[red]Worker record not found: {id}[/]"
-			);
-				return NotFound();
+                AnsiConsole.MarkupLine(
+                    $"[red]Worker record not found: {id}[/]"
+                );
+                return NotFound();
             }
-            else if (result.ResponseCode is HttpStatusCode.NoContent)
+
+            if (result.ResponseCode is HttpStatusCode.NoContent)
             {
-				AnsiConsole.MarkupLine(
-				$"[green]Successfully deleted worker with ID: {id}.[/]"
-			);
-				return NoContent();
+                AnsiConsole.MarkupLine(
+                    $"[green]Successfully deleted worker with ID: {id}.[/]"
+                );
+                return NoContent();
             }
+
             return Ok(result);
         }
         catch (Exception ex)

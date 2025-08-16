@@ -1,16 +1,21 @@
-﻿using ConsoleFrontEnd.Models;
-using ConsoleFrontEnd.Models.Dtos;
+﻿using System.Globalization;
+using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.FilterOptions;
 using ConsoleFrontEnd.Services;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Spectre.Console;
 
 namespace ConsoleFrontEnd.MenuSystem;
 
 public class UserInterface
 {
-    private readonly ShiftService shiftService;
     private readonly LocationService locationService;
+    private readonly ShiftService shiftService;
+
+    public UserInterface()
+    {
+        shiftService = new ShiftService();
+        locationService = new LocationService();
+    }
 
     // Existing helper methods...
     public void ContinueAndClearScreen()
@@ -30,15 +35,9 @@ public class UserInterface
         AnsiConsole.MarkupLine($"[green]{message}[/]");
     }
 
-    public UserInterface()
-    {
-        shiftService = new ShiftService();
-        locationService = new LocationService();
-    }
-
     // SHIFT-SPECIFIC UI BUSINESS LOGIC
     /// <summary>
-    /// Gets validated shift start and end times with business rules
+    ///     Gets validated shift start and end times with business rules
     /// </summary>
     private (DateTime startTime, DateTime endTime) GetShiftDateTimeRange(string contextMessage = "shift")
     {
@@ -48,7 +47,7 @@ public class UserInterface
 
         // Get start time first
         var startTime = InputValidator.GetFlexibleDateTime("Enter Start Time:");
-        
+
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine($"[dim]Start time set: {startTime:dd/MM/yyyy HH:mm}[/]");
         AnsiConsole.MarkupLine("[dim]End time must be after start time...[/]");
@@ -69,72 +68,80 @@ public class UserInterface
     }
 
     /// <summary>
-    /// Gets validated shift start and end times for updates with existing values
+    ///     Gets validated shift start and end times for updates with existing values
     /// </summary>
-    private (DateTime startTime, DateTime endTime) GetShiftDateTimeRangeForUpdate(DateTime existingStart, DateTime existingEnd)
+    private (DateTime startTime, DateTime endTime) GetShiftDateTimeRangeForUpdate(DateTime existingStart,
+        DateTime existingEnd)
     {
         AnsiConsole.MarkupLine("[yellow]Update shift times (leave blank to keep current):[/]");
         AnsiConsole.MarkupLine($"[dim]Current start: {existingStart:dd/MM/yyyy HH:mm}[/]");
         AnsiConsole.MarkupLine($"[dim]Current end: {existingEnd:dd/MM/yyyy HH:mm}[/]");
-        AnsiConsole.MarkupLine($"[dim]Current duration: {(existingEnd - existingStart).Hours:D2}:{(existingEnd - existingStart).Minutes:D2}[/]");
+        AnsiConsole.MarkupLine(
+            $"[dim]Current duration: {(existingEnd - existingStart).Hours:D2}:{(existingEnd - existingStart).Minutes:D2}[/]");
         AnsiConsole.WriteLine();
 
         // Ask for new start time (optional)
-        var startTimeInput = AnsiConsole.Ask<string>("[green]Enter Start Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
-        DateTime startTime = existingStart;
-        
+        var startTimeInput =
+            AnsiConsole.Ask<string>("[green]Enter Start Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
+        var startTime = existingStart;
+
         if (!string.IsNullOrWhiteSpace(startTimeInput))
-        {
             // Use a simple validation loop instead of InputValidator for optional input
             while (true)
             {
-                if (DateTime.TryParseExact(startTimeInput, "dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsed))
+                if (DateTime.TryParseExact(startTimeInput, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out var parsed))
                 {
                     startTime = parsed;
                     break;
                 }
+
                 AnsiConsole.MarkupLine("[red]Invalid format. Please use dd/MM/yyyy HH:mm or leave blank.[/]");
-                startTimeInput = AnsiConsole.Ask<string>("[green]Enter Start Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
+                startTimeInput =
+                    AnsiConsole.Ask<string>("[green]Enter Start Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
                 if (string.IsNullOrWhiteSpace(startTimeInput))
                 {
                     startTime = existingStart;
                     break;
                 }
             }
-        }
 
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine($"[dim]Start time: {startTime:dd/MM/yyyy HH:mm}[/]");
-        
+
         // Ask for new end time (optional, but must be after start time)
-        var endTimeInput = AnsiConsole.Ask<string>("[green]Enter End Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
-        DateTime endTime = existingEnd;
+        var endTimeInput =
+            AnsiConsole.Ask<string>("[green]Enter End Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
+        var endTime = existingEnd;
 
         if (!string.IsNullOrWhiteSpace(endTimeInput))
-        {
             while (true)
             {
-                if (DateTime.TryParseExact(endTimeInput, "dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsed))
+                if (DateTime.TryParseExact(endTimeInput, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out var parsed))
                 {
                     if (parsed > startTime)
                     {
                         endTime = parsed;
                         break;
                     }
-                    AnsiConsole.MarkupLine($"[red]End time must be after start time ({startTime:dd/MM/yyyy HH:mm}).[/]");
+
+                    AnsiConsole.MarkupLine(
+                        $"[red]End time must be after start time ({startTime:dd/MM/yyyy HH:mm}).[/]");
                 }
                 else
                 {
                     AnsiConsole.MarkupLine("[red]Invalid format. Please use dd/MM/yyyy HH:mm or leave blank.[/]");
                 }
-                endTimeInput = AnsiConsole.Ask<string>("[green]Enter End Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
+
+                endTimeInput =
+                    AnsiConsole.Ask<string>("[green]Enter End Time[/] [dim](dd/MM/yyyy HH:mm or leave blank):[/]");
                 if (string.IsNullOrWhiteSpace(endTimeInput))
                 {
                     endTime = existingEnd;
                     break;
                 }
             }
-        }
 
         // Ensure end time is still after start time (in case user only changed start time)
         if (endTime <= startTime)
@@ -155,15 +162,16 @@ public class UserInterface
     }
 
     /// <summary>
-    /// Gets a location selection from existing locations
+    ///     Gets a location selection from existing locations
     /// </summary>
     private int GetLocationSelection()
     {
         try
         {
             // Fetch all locations synchronously (following existing pattern)
-            var locationResponse = locationService.GetAllLocations(new LocationFilterOptions()).GetAwaiter().GetResult();
-            
+            var locationResponse =
+                locationService.GetAllLocations(new LocationFilterOptions()).GetAwaiter().GetResult();
+
             if (locationResponse.Data == null || locationResponse.Data.Count == 0)
             {
                 AnsiConsole.MarkupLine("[red]No locations available. Please create locations first.[/]");
@@ -172,9 +180,10 @@ public class UserInterface
 
             // Create selection choices with location display information
             var locationChoices = locationResponse.Data
-                .Select(location => new { 
-                    location.LocationId, 
-                    Display = $"ID: {location.LocationId} | {location.Name} - {location.Town}, {location.County}" 
+                .Select(location => new
+                {
+                    location.LocationId,
+                    Display = $"ID: {location.LocationId} | {location.Name} - {location.Town}, {location.County}"
                 })
                 .ToList();
 
@@ -187,7 +196,7 @@ public class UserInterface
 
             // Find the selected location's ID
             var selectedLocation = locationChoices.First(choice => choice.Display == selectedDisplay);
-            
+
             AnsiConsole.MarkupLine($"[green]✓ Selected location: {selectedDisplay}[/]");
             return selectedLocation.LocationId;
         }
@@ -201,19 +210,19 @@ public class UserInterface
     public Shift CreateShiftUi(int workerId)
     {
         AnsiConsole.WriteLine("\nPlease enter the following details for the shift:");
-        
+
         // Use the business-specific date range method
         var (startTime, endTime) = GetShiftDateTimeRange("new shift");
-        
+
         // Get location selection from existing locations instead of manual ID input
         var locationId = GetLocationSelection();
-        
+
         var createdShift = new Shift
         {
             StartTime = startTime,
             EndTime = endTime,
             LocationId = locationId,
-            WorkerId = workerId,
+            WorkerId = workerId
         };
 
         return createdShift;
@@ -241,7 +250,7 @@ public class UserInterface
             StartTime = startTime,
             EndTime = endTime,
             LocationId = locationId ?? existingShift.LocationId,
-            WorkerId = workerId ?? existingShift.WorkerId,
+            WorkerId = workerId ?? existingShift.WorkerId
         };
 
         return updatedShift;
@@ -261,7 +270,7 @@ public class UserInterface
             LocationName = null,
             Search = null,
             SortBy = null,
-            SortOrder = null,
+            SortOrder = null
         };
 
         AnsiConsole.WriteLine("\nPlease enter filter criteria for Shifts (leave blank to skip):");
@@ -276,36 +285,34 @@ public class UserInterface
             AnsiConsole.MarkupLine("[green]No filters applied.[/]");
             return filterOptions;
         }
-        else
-        {
-            AnsiConsole.MarkupLine("[yellow]Choose which filters...[/]");
-            filterOptions.ShiftId = AnsiConsole.Ask<int?>(
-                "Enter [green]Shift ID[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.WorkerId = AnsiConsole.Ask<int?>(
-                "Enter [green]Worker ID[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.LocationName = AnsiConsole.Ask<string?>(
-                "Enter [green]Location Name[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.Search = AnsiConsole.Ask<string?>(
-                "Enter [green]Search criteria[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.SortBy = AnsiConsole.Ask<string?>(
-                "Enter [green]Sort By[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.SortOrder = AnsiConsole.Ask<string?>(
-                "Enter [green]Sort Order[/] (ASC or DESC...or leave blank):",
-                defaultValue: null
-            );
 
-            return filterOptions;
-        }
+        AnsiConsole.MarkupLine("[yellow]Choose which filters...[/]");
+        filterOptions.ShiftId = AnsiConsole.Ask<int?>(
+            "Enter [green]Shift ID[/] (or leave blank):",
+            null
+        );
+        filterOptions.WorkerId = AnsiConsole.Ask<int?>(
+            "Enter [green]Worker ID[/] (or leave blank):",
+            null
+        );
+        filterOptions.LocationName = AnsiConsole.Ask<string?>(
+            "Enter [green]Location Name[/] (or leave blank):",
+            null
+        );
+        filterOptions.Search = AnsiConsole.Ask<string?>(
+            "Enter [green]Search criteria[/] (or leave blank):",
+            null
+        );
+        filterOptions.SortBy = AnsiConsole.Ask<string?>(
+            "Enter [green]Sort By[/] (or leave blank):",
+            null
+        );
+        filterOptions.SortOrder = AnsiConsole.Ask<string?>(
+            "Enter [green]Sort Order[/] (ASC or DESC...or leave blank):",
+            null
+        );
+
+        return filterOptions;
     }
 
     public void DisplayShiftsTable(IEnumerable<Shift> shifts)
@@ -346,7 +353,7 @@ public class UserInterface
         {
             // Fetch all shifts synchronously (following existing pattern)
             var shiftResponse = shiftService.GetAllShifts(new ShiftFilterOptions()).GetAwaiter().GetResult();
-            
+
             if (shiftResponse.Data == null || shiftResponse.Data.Count == 0)
             {
                 AnsiConsole.MarkupLine("[red]No shifts available. Please create shifts first.[/]");
@@ -355,9 +362,11 @@ public class UserInterface
 
             // Create selection choices with shift display information
             var shiftChoices = shiftResponse.Data
-                .Select(shift => new { 
-                    shift.ShiftId, 
-                    Display = $"ID: {shift.ShiftId} | {shift.Worker?.Name ?? "Unknown Worker"} - {shift.Location?.Name ?? "Unknown Location"} | {shift.StartTime:dd/MM/yyyy HH:mm} to {shift.EndTime:HH:mm}" 
+                .Select(shift => new
+                {
+                    shift.ShiftId,
+                    Display =
+                        $"ID: {shift.ShiftId} | {shift.Worker?.Name ?? "Unknown Worker"} - {shift.Location?.Name ?? "Unknown Location"} | {shift.StartTime:dd/MM/yyyy HH:mm} to {shift.EndTime:HH:mm}"
                 })
                 .ToList();
 
@@ -370,7 +379,7 @@ public class UserInterface
 
             // Find the selected shift's ID
             var selectedShift = shiftChoices.First(choice => choice.Display == selectedDisplay);
-            
+
             AnsiConsole.MarkupLine($"[green]✓ Selected shift: {selectedDisplay}[/]");
             return selectedShift.ShiftId;
         }
@@ -392,7 +401,7 @@ public class UserInterface
             Email = null,
             Search = null,
             SortBy = null,
-            SortOrder = null,
+            SortOrder = null
         };
 
         // Gather user input (UI Layer)
@@ -408,40 +417,38 @@ public class UserInterface
             AnsiConsole.MarkupLine("[green]No filters applied.[/]");
             return filterOptions; // Return default filter options with null values
         }
-        else
-        {
-            AnsiConsole.MarkupLine("[yellow]Choose which filters...[/]");
-            filterOptions.WorkerId = AnsiConsole.Ask<int?>(
-                "Enter [green]Worker ID[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.Name = AnsiConsole.Ask<string?>(
-                "Enter [green]Name[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.PhoneNumber = AnsiConsole.Ask<string?>(
-                "Enter [green]Phone Number[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.Email = AnsiConsole.Ask<string?>(
-                "Enter [green]Email[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.Search = AnsiConsole.Ask<string?>(
-                "Enter [green]Search criteria[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.SortBy = AnsiConsole.Ask<string?>(
-                "Enter [green]Sort By[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterOptions.SortOrder = AnsiConsole.Ask<string?>(
-                "Enter [green]Sort Order[/] (ASC or DESC...or leave blank):",
-                defaultValue: null
-            );
 
-            return filterOptions; // Return the filter options with user input
-        }
+        AnsiConsole.MarkupLine("[yellow]Choose which filters...[/]");
+        filterOptions.WorkerId = AnsiConsole.Ask<int?>(
+            "Enter [green]Worker ID[/] (or leave blank):",
+            null
+        );
+        filterOptions.Name = AnsiConsole.Ask<string?>(
+            "Enter [green]Name[/] (or leave blank):",
+            null
+        );
+        filterOptions.PhoneNumber = AnsiConsole.Ask<string?>(
+            "Enter [green]Phone Number[/] (or leave blank):",
+            null
+        );
+        filterOptions.Email = AnsiConsole.Ask<string?>(
+            "Enter [green]Email[/] (or leave blank):",
+            null
+        );
+        filterOptions.Search = AnsiConsole.Ask<string?>(
+            "Enter [green]Search criteria[/] (or leave blank):",
+            null
+        );
+        filterOptions.SortBy = AnsiConsole.Ask<string?>(
+            "Enter [green]Sort By[/] (or leave blank):",
+            null
+        );
+        filterOptions.SortOrder = AnsiConsole.Ask<string?>(
+            "Enter [green]Sort Order[/] (ASC or DESC...or leave blank):",
+            null
+        );
+
+        return filterOptions; // Return the filter options with user input
     }
 
     public Worker CreateWorkerUi()
@@ -455,7 +462,7 @@ public class UserInterface
         {
             Name = name,
             Email = email,
-            PhoneNumber = phoneNumber,
+            PhoneNumber = phoneNumber
         };
 
         return createdWorker;
@@ -470,40 +477,39 @@ public class UserInterface
         table.AddColumn("Phone Number");
 
         var workersList = workers.ToList();
-        for (int i = 0; i < workersList.Count; i++)
+        for (var i = 0; i < workersList.Count; i++)
         {
             var worker = workersList[i];
             if (worker != null)
-            {
                 table.AddRow(
                     (i + 1).ToString(),
                     worker.Name,
                     worker.Email ?? "N/A", // Handle null email addresses
                     worker.PhoneNumber ?? "N/A" // Handle null phone numbers
                 );
-            }
         }
+
         AnsiConsole.Write(table);
     }
 
     public int GetWorkerByIdUi()
     {
         // 1. Gather user input (UI Layer)
-        var workerId = AnsiConsole.Ask<int>($"Enter [green]Worker ID:[/] ");
+        var workerId = AnsiConsole.Ask<int>("Enter [green]Worker ID:[/] ");
         return workerId;
     }
 
     public Worker UpdateWorkerUi(Worker existingWorker)
     {
-        var name = AnsiConsole.Ask<string>(
+        var name = AnsiConsole.Ask(
             "Enter [green]Name[/] (leave blank to keep current):",
             existingWorker.Name ?? string.Empty
         );
-        var email = AnsiConsole.Ask<string>(
+        var email = AnsiConsole.Ask(
             "Enter [green]Email[/] (leave blank to keep current):",
             existingWorker.Email ?? string.Empty
         );
-        var phoneNumber = AnsiConsole.Ask<string>(
+        var phoneNumber = AnsiConsole.Ask(
             "Enter [green]Phone Number[/] (leave blank to keep current):",
             existingWorker.PhoneNumber ?? string.Empty
         );
@@ -511,7 +517,7 @@ public class UserInterface
         {
             Name = name,
             Email = email,
-            PhoneNumber = phoneNumber,
+            PhoneNumber = phoneNumber
         };
         return updatedWorker;
     }
@@ -530,7 +536,7 @@ public class UserInterface
             Country = null,
             Search = null,
             SortBy = null,
-            SortOrder = null,
+            SortOrder = null
         };
         // 1. Gather user input (UI Layer)
         AnsiConsole.WriteLine(
@@ -546,52 +552,50 @@ public class UserInterface
             AnsiConsole.MarkupLine("[green]No filters applied.[/]");
             return filterLocationOptions; // Return default filter options with null values
         }
-        else
-        {
-            AnsiConsole.MarkupLine("[yellow]Choose which filters...[/]");
-            filterLocationOptions.LocationId = AnsiConsole.Ask<int?>(
-                "Enter [green]Location ID[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterLocationOptions.Name = AnsiConsole.Ask<string?>(
-                "Enter [green]Name[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterLocationOptions.Address = AnsiConsole.Ask<string?>(
-                "Enter [green]Address[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterLocationOptions.Town = AnsiConsole.Ask<string?>(
-                "Enter [green]Town[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterLocationOptions.County = AnsiConsole.Ask<string?>(
-                "Enter [green]County[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterLocationOptions.PostCode = AnsiConsole.Ask<string?>(
-                "Enter [green]postcode[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterLocationOptions.Country = AnsiConsole.Ask<string?>(
-                "Enter [green]Country[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterLocationOptions.Search = AnsiConsole.Ask<string?>(
-                "Enter [green]Search Criteria[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterLocationOptions.SortBy = AnsiConsole.Ask<string?>(
-                "Enter [green]Sort By[/] (or leave blank):",
-                defaultValue: null
-            );
-            filterLocationOptions.SortOrder = AnsiConsole.Ask<string?>(
-                "Enter [green]Sort Order[/] (or leave blank):",
-                defaultValue: null
-            );
 
-            return filterLocationOptions; // Return the filter options with user input
-        }
+        AnsiConsole.MarkupLine("[yellow]Choose which filters...[/]");
+        filterLocationOptions.LocationId = AnsiConsole.Ask<int?>(
+            "Enter [green]Location ID[/] (or leave blank):",
+            null
+        );
+        filterLocationOptions.Name = AnsiConsole.Ask<string?>(
+            "Enter [green]Name[/] (or leave blank):",
+            null
+        );
+        filterLocationOptions.Address = AnsiConsole.Ask<string?>(
+            "Enter [green]Address[/] (or leave blank):",
+            null
+        );
+        filterLocationOptions.Town = AnsiConsole.Ask<string?>(
+            "Enter [green]Town[/] (or leave blank):",
+            null
+        );
+        filterLocationOptions.County = AnsiConsole.Ask<string?>(
+            "Enter [green]County[/] (or leave blank):",
+            null
+        );
+        filterLocationOptions.PostCode = AnsiConsole.Ask<string?>(
+            "Enter [green]postcode[/] (or leave blank):",
+            null
+        );
+        filterLocationOptions.Country = AnsiConsole.Ask<string?>(
+            "Enter [green]Country[/] (or leave blank):",
+            null
+        );
+        filterLocationOptions.Search = AnsiConsole.Ask<string?>(
+            "Enter [green]Search Criteria[/] (or leave blank):",
+            null
+        );
+        filterLocationOptions.SortBy = AnsiConsole.Ask<string?>(
+            "Enter [green]Sort By[/] (or leave blank):",
+            null
+        );
+        filterLocationOptions.SortOrder = AnsiConsole.Ask<string?>(
+            "Enter [green]Sort Order[/] (or leave blank):",
+            null
+        );
+
+        return filterLocationOptions; // Return the filter options with user input
     }
 
     public Location CreateLocationUi()
@@ -611,7 +615,7 @@ public class UserInterface
             Town = town,
             County = county,
             PostCode = postcode,
-            Country = country,
+            Country = country
         };
 
         return createdLocation;
@@ -625,6 +629,7 @@ public class UserInterface
             ContinueAndClearScreen();
             return;
         }
+
         Table table = new();
         table.AddColumn("Index #");
         table.AddColumn("Name");
@@ -636,11 +641,10 @@ public class UserInterface
         // Convert IEnumerable to List for easier indexing
         List<Location> locationsList = [.. locationResponse];
 
-        for (int i = 0; i < locationsList.Count; i++)
+        for (var i = 0; i < locationsList.Count; i++)
         {
             var location = locationsList[i];
             if (location != null)
-            {
                 table.AddRow(
                     (i + 1).ToString(),
                     location.Name,
@@ -650,44 +654,44 @@ public class UserInterface
                     location.PostCode,
                     location.Country
                 );
-            }
         }
+
         AnsiConsole.Write(table);
     }
 
     public int GetLocationByIdUi()
     {
         // 1. Gather user input (UI Layer)
-        var locationId = AnsiConsole.Ask<int>($"Enter [green]Location ID:[/] ");
+        var locationId = AnsiConsole.Ask<int>("Enter [green]Location ID:[/] ");
         return locationId;
     }
 
     public Location UpdateLocationUi(Location existingLocation)
     {
-        var name = AnsiConsole.Ask<string>(
+        var name = AnsiConsole.Ask(
             "Enter [green]Name[/] (leave blank to keep current):",
             existingLocation.Name ?? string.Empty
         );
-        var address = AnsiConsole.Ask<string>(
+        var address = AnsiConsole.Ask(
             "Enter [green]Email[/] (leave blank to keep current):",
             existingLocation.Address ?? string.Empty
         );
-        var townOrCity = AnsiConsole.Ask<string>(
+        var townOrCity = AnsiConsole.Ask(
             "Enter [green]Phone Number[/] (leave blank to keep current):",
             existingLocation.Town ?? string.Empty
         );
 
-        var stateOrCounty = AnsiConsole.Ask<string>(
+        var stateOrCounty = AnsiConsole.Ask(
             "Enter [green]County[/] (leave blank to keep current):",
             existingLocation.County ?? string.Empty
         );
 
-        var zipOrPostCode = AnsiConsole.Ask<string>(
+        var zipOrPostCode = AnsiConsole.Ask(
             "Enter [green]postcode[/] (leave blank to keep current):",
             existingLocation.PostCode ?? string.Empty
         );
 
-        var country = AnsiConsole.Ask<string>(
+        var country = AnsiConsole.Ask(
             "Enter [green]Country[/] (leave blank to keep current):",
             existingLocation.Country ?? string.Empty
         );
@@ -698,7 +702,7 @@ public class UserInterface
             Town = townOrCity,
             County = stateOrCounty,
             PostCode = zipOrPostCode,
-            Country = country,
+            Country = country
         };
         return updatedLocation;
     }

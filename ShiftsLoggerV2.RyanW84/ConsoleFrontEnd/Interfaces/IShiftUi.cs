@@ -1,7 +1,7 @@
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.FilterOptions;
 
-namespace ConsoleFrontEnd;
+namespace ConsoleFrontEnd.Interfaces;
 
 public interface IShiftUi
 {

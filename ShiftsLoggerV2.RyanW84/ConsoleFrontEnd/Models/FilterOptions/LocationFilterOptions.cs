@@ -13,5 +13,5 @@ public class LocationFilterOptions
     public string? Country { get; set; } = string.Empty; // Optional filter by Country
     public string? Search { get; set; } = string.Empty; // Optional search text for filtering locations
     public string? SortBy { get; set; } = "Name"; // Default sorting by name
-    public string ? SortOrder { get; set; } = "asc"; // Default sorting order is ascending
+    public string? SortOrder { get; set; } = "asc"; // Default sorting order is ascending
 }

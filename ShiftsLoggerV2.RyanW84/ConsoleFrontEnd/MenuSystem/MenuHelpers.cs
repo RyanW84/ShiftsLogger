@@ -8,27 +8,27 @@ public static class MenuHelpers
     {
         AnsiConsole.Clear();
         var panel = new Panel(
-            new FigletText("Shifts Logger")
-                .LeftJustified()
-                .Color(Color.Blue))
+                new FigletText("Shifts Logger")
+                    .LeftJustified()
+                    .Color(Color.Blue))
             .Header("[yellow]Welcome to[/]")
             .HeaderAlignment(Justify.Center)
             .Border(BoxBorder.Double)
             .BorderColor(Color.Yellow);
-        
+
         AnsiConsole.Write(panel);
         AnsiConsole.WriteLine();
-        
+
         var infoPanel = new Panel(
-            "Manage your shifts, workers, and locations efficiently.\n" +
-            "Navigate through the menus to perform various operations.")
+                "Manage your shifts, workers, and locations efficiently.\n" +
+                "Navigate through the menus to perform various operations.")
             .Header("[green]System Information[/]")
             .Border(BoxBorder.Rounded)
             .BorderColor(Color.Green);
-        
+
         AnsiConsole.Write(infoPanel);
         AnsiConsole.WriteLine();
-        
+
         AnsiConsole.MarkupLine("[dim]Press any key to continue...[/]");
         Console.ReadKey(true);
     }
@@ -39,13 +39,13 @@ public static class MenuHelpers
             new SelectionPrompt<string>()
                 .Title($"[yellow]{title}[/]")
                 .AddChoices(choices)
-                .HighlightStyle(new Style(foreground: Color.Blue, background: Color.Grey19))
+                .HighlightStyle(new Style(Color.Blue, Color.Grey19))
         );
     }
 
     public static T GetUserInput<T>(string prompt, T? defaultValue = default) where T : struct
     {
-        return AnsiConsole.Ask<T>($"[green]{prompt}[/]", defaultValue ?? default(T));
+        return AnsiConsole.Ask($"[green]{prompt}[/]", defaultValue ?? default(T));
     }
 
     public static string GetUserInput(string prompt, string? defaultValue = null)
@@ -55,7 +55,7 @@ public static class MenuHelpers
 
     public static T? GetOptionalUserInput<T>(string prompt, T? defaultValue = default) where T : struct
     {
-        return AnsiConsole.Ask<T?>($"[green]{prompt}[/] [dim](or leave blank)[/]", defaultValue);
+        return AnsiConsole.Ask($"[green]{prompt}[/] [dim](or leave blank)[/]", defaultValue);
     }
 
     public static string? GetOptionalUserInput(string prompt, string? defaultValue = null)

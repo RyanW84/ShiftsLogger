@@ -43,10 +43,7 @@ public class LocationsController : ControllerBase
         try
         {
             var result = await locationService.GetLocationById(id);
-            if (result == null || result.Data == null)
-            {
-                return NotFound();
-            }
+            if (result == null || result.Data == null) return NotFound();
             return Ok(result);
         }
         catch (Exception ex)
@@ -64,17 +61,12 @@ public class LocationsController : ControllerBase
     {
         try
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            return new ObjectResult(await locationService.CreateLocation(location))
             {
-                return BadRequest(ModelState);
-            }
-            else
-            {
-                return new ObjectResult(await locationService.CreateLocation(location))
-                {
-                    StatusCode = 201,
-                };
-            }
+                StatusCode = 201
+            };
         }
         catch (Exception ex)
         {
@@ -93,10 +85,7 @@ public class LocationsController : ControllerBase
         try
         {
             var result = await locationService.UpdateLocation(id, updatedLocation);
-            if (result == null || result.Data == null)
-            {
-                return NotFound();
-            }
+            if (result == null || result.Data == null) return NotFound();
             return Ok(result);
         }
         catch (Exception ex)
@@ -113,10 +102,7 @@ public class LocationsController : ControllerBase
         try
         {
             var result = await locationService.DeleteLocation(id);
-            if (result.ResponseCode == HttpStatusCode.NotFound || result == null)
-            {
-                return NotFound();
-            }
+            if (result.ResponseCode == HttpStatusCode.NotFound || result == null) return NotFound();
             return NoContent();
         }
         catch (Exception ex)

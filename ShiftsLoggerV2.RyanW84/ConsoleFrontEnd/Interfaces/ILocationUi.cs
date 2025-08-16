@@ -1,7 +1,7 @@
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.FilterOptions;
 
-namespace ConsoleFrontEnd;
+namespace ConsoleFrontEnd.Interfaces;
 
 public interface ILocationUi
 {
@@ -10,4 +10,5 @@ public interface ILocationUi
     LocationFilterOptions FilterLocationsUi();
     void DisplayLocationsTable(IEnumerable<Location> locations);
     int GetLocationByIdUi();
+    int SelectLocation();
 }
