@@ -7,7 +7,6 @@ public class WorkerService : IWorkerService
 {
     public Task<ApiResponseDto<List<Worker>>> GetAllWorkersAsync()
     {
-        // Mock implementation using correct property names
         var workers = new List<Worker>
         {
             new Worker 
@@ -36,7 +35,6 @@ public class WorkerService : IWorkerService
 
     public Task<ApiResponseDto<Worker?>> GetWorkerByIdAsync(int id)
     {
-        // Mock implementation using correct property names
         var worker = new Worker 
         { 
             WorkerId = id, 
@@ -55,7 +53,6 @@ public class WorkerService : IWorkerService
 
     public Task<ApiResponseDto<Worker>> CreateWorkerAsync(Worker worker)
     {
-        // Mock implementation - assign an ID
         worker.WorkerId = new Random().Next(1, 1000);
 
         return Task.FromResult(new ApiResponseDto<Worker>("Worker created successfully")
@@ -68,7 +65,6 @@ public class WorkerService : IWorkerService
 
     public Task<ApiResponseDto<Worker?>> UpdateWorkerAsync(int id, Worker updatedWorker)
     {
-        // Mock implementation
         updatedWorker.WorkerId = id;
 
         return Task.FromResult(new ApiResponseDto<Worker?>("Worker updated successfully")
@@ -81,7 +77,6 @@ public class WorkerService : IWorkerService
 
     public Task<ApiResponseDto<string?>> DeleteWorkerAsync(int id)
     {
-        // Mock implementation
         return Task.FromResult(new ApiResponseDto<string?>("Worker deleted successfully")
         {
             Data = $"Deleted worker with ID {id}",

@@ -34,7 +34,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
     {
         lock (_consoleLock)
         {
-            AnsiConsole.MarkupLine($"[red]❌ {Markup.Escape(message)}[/]");
+            AnsiConsole.MarkupLine($"[red]ERROR: {Markup.Escape(message)}[/]");
         }
     }
 
@@ -42,7 +42,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
     {
         lock (_consoleLock)
         {
-            AnsiConsole.MarkupLine($"[green]✅ {Markup.Escape(message)}[/]");
+            AnsiConsole.MarkupLine($"[green]SUCCESS: {Markup.Escape(message)}[/]");
         }
     }
 
@@ -50,7 +50,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
     {
         lock (_consoleLock)
         {
-            AnsiConsole.MarkupLine($"[blue]ℹ️ {Markup.Escape(message)}[/]");
+            AnsiConsole.MarkupLine($"[cyan]{Markup.Escape(message)}[/]");
         }
     }
 
@@ -58,50 +58,100 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
     {
         lock (_consoleLock)
         {
-            AnsiConsole.MarkupLine($"[yellow]⚠️ {Markup.Escape(message)}[/]");
+            AnsiConsole.MarkupLine($"[yellow]{Markup.Escape(message)}[/]");
         }
     }
 
-    public void DisplayTable<T>(IEnumerable<T> data, string? title = null)
+    public void DisplayText(string text)
+    {
+        lock (_consoleLock)
+        {
+            AnsiConsole.MarkupLine(Markup.Escape(text));
+        }
+    }
+
+    public void DisplayPrompt(string message)
+    {
+        lock (_consoleLock)
+        {
+            AnsiConsole.Markup($"[bold cyan]{Markup.Escape(message)}[/] ");
+        }
+    }
+
+    public string GetInput()
+    {
+        lock (_consoleLock)
+        {
+            return Console.ReadLine() ?? string.Empty;
+        }
+    }
+
+    public void WaitForKeyPress()
+    {
+        lock (_consoleLock)
+        {
+            AnsiConsole.MarkupLine("\n[dim]Press any key to continue...[/]");
+            Console.ReadKey(true);
+        }
+    }
+
+    public void DisplayMenu(string title, string[] options)
+    {
+        lock (_consoleLock)
+        {
+            AnsiConsole.WriteLine();
+            AnsiConsole.Write(new Rule($"[bold cyan]{title}[/]").RuleStyle("cyan").LeftJustified());
+            AnsiConsole.WriteLine();
+
+            for (int i = 0; i < options.Length; i++)
+            {
+                AnsiConsole.MarkupLine($"[green]{i + 1}.[/] {Markup.Escape(options[i])}");
+            }
+            AnsiConsole.WriteLine();
+        }
+    }
+
+    public void DisplayTable<T>(IEnumerable<T> data, string title)
     {
         lock (_consoleLock)
         {
             var table = new Table();
-            
-            if (!string.IsNullOrEmpty(title))
-            {
-                table.Title = new TableTitle(title);
-            }
-
+            table.Title = new TableTitle($"[bold yellow]{title}[/]");
             table.Border = TableBorder.Rounded;
-            table.BorderColor(Color.Blue);
 
-            if (data?.Any() == true)
+            if (!data.Any())
             {
-                // Get properties using reflection
-                var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                
-                // Add columns
-                foreach (var prop in properties)
-                {
-                    table.AddColumn($"[bold]{prop.Name}[/]");
-                }
-
-                // Add rows
-                foreach (var item in data)
-                {
-                    var values = properties.Select(prop => 
-                        Markup.Escape(prop.GetValue(item)?.ToString() ?? "")).ToArray();
-                    table.AddRow(values);
-                }
+                AnsiConsole.MarkupLine($"[yellow]No data available for {title}[/]");
+                return;
             }
-            else
+
+            // Get properties using reflection
+            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            
+            // Add columns
+            foreach (var prop in properties)
             {
-                table.AddColumn("[bold]No Data[/]");
-                table.AddRow("No records found");
+                table.AddColumn(new TableColumn($"[bold]{prop.Name}[/]").Centered());
+            }
+
+            // Add rows
+            foreach (var item in data)
+            {
+                var values = properties.Select(prop => 
+                    Markup.Escape(prop.GetValue(item)?.ToString() ?? "N/A")).ToArray();
+                table.AddRow(values);
             }
 
             AnsiConsole.Write(table);
+            AnsiConsole.WriteLine();
+        }
+    }
+
+    public void DisplaySeparator()
+    {
+        lock (_consoleLock)
+        {
+            AnsiConsole.Write(new Rule().RuleStyle("dim"));
         }
     }
 
@@ -109,21 +159,21 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
     {
         lock (_consoleLock)
         {
-            var table = new Table()
-                .Border(TableBorder.Rounded)
-                .BorderColor(Color.Cyan1);
+            var table = new Table();
+            table.Border = TableBorder.Rounded;
+            table.Title = new TableTitle("[bold yellow]System Information[/]");
 
-            table.AddColumn("[bold]Property[/]");
-            table.AddColumn("[bold]Value[/]");
+            table.AddColumn(new TableColumn("[bold]Property[/]"));
+            table.AddColumn(new TableColumn("[bold]Value[/]"));
 
             table.AddRow("Operating System", Environment.OSVersion.ToString());
-            table.AddRow("Framework Version", Environment.Version.ToString());
             table.AddRow("Machine Name", Environment.MachineName);
             table.AddRow("User Name", Environment.UserName);
-            table.AddRow("Current Directory", Environment.CurrentDirectory);
-            table.AddRow("Application Version", Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown");
+            table.AddRow(".NET Version", Environment.Version.ToString());
+            table.AddRow("Working Directory", Environment.CurrentDirectory);
 
             AnsiConsole.Write(table);
+            AnsiConsole.WriteLine();
         }
     }
 }

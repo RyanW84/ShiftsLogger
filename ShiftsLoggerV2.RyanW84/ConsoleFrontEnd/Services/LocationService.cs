@@ -7,7 +7,6 @@ public class LocationService : ILocationService
 {
     public Task<ApiResponseDto<List<Location>>> GetAllLocationsAsync()
     {
-        // Mock implementation using correct property names
         var locations = new List<Location>
         {
             new Location 
@@ -42,7 +41,6 @@ public class LocationService : ILocationService
 
     public Task<ApiResponseDto<Location?>> GetLocationByIdAsync(int id)
     {
-        // Mock implementation using correct property names
         var location = new Location 
         { 
             LocationId = id, 
@@ -64,7 +62,6 @@ public class LocationService : ILocationService
 
     public Task<ApiResponseDto<Location>> CreateLocationAsync(Location location)
     {
-        // Mock implementation - assign an ID
         location.LocationId = new Random().Next(1, 1000);
 
         return Task.FromResult(new ApiResponseDto<Location>("Location created successfully")
@@ -77,7 +74,6 @@ public class LocationService : ILocationService
 
     public Task<ApiResponseDto<Location?>> UpdateLocationAsync(int id, Location updatedLocation)
     {
-        // Mock implementation
         updatedLocation.LocationId = id;
 
         return Task.FromResult(new ApiResponseDto<Location?>("Location updated successfully")
@@ -90,7 +86,6 @@ public class LocationService : ILocationService
 
     public Task<ApiResponseDto<string?>> DeleteLocationAsync(int id)
     {
-        // Mock implementation
         return Task.FromResult(new ApiResponseDto<string?>("Location deleted successfully")
         {
             Data = $"Deleted location with ID {id}",

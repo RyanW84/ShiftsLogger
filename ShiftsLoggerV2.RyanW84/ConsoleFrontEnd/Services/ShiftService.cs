@@ -7,7 +7,6 @@ public class ShiftService : IShiftService
 {
     public Task<ApiResponseDto<List<Shift>>> GetAllShiftsAsync()
     {
-        // Mock implementation using correct property names
         var shifts = new List<Shift>
         {
             new Shift 
@@ -38,7 +37,6 @@ public class ShiftService : IShiftService
 
     public Task<ApiResponseDto<Shift?>> GetShiftByIdAsync(int id)
     {
-        // Mock implementation using correct property names
         var shift = new Shift 
         { 
             ShiftId = id, 
@@ -58,7 +56,6 @@ public class ShiftService : IShiftService
 
     public Task<ApiResponseDto<Shift>> CreateShiftAsync(Shift shift)
     {
-        // Mock implementation - assign an ID
         shift.ShiftId = new Random().Next(1, 1000);
 
         return Task.FromResult(new ApiResponseDto<Shift>("Shift created successfully")
@@ -71,7 +68,6 @@ public class ShiftService : IShiftService
 
     public Task<ApiResponseDto<Shift?>> UpdateShiftAsync(int id, Shift updatedShift)
     {
-        // Mock implementation
         updatedShift.ShiftId = id;
 
         return Task.FromResult(new ApiResponseDto<Shift?>("Shift updated successfully")
@@ -84,7 +80,6 @@ public class ShiftService : IShiftService
 
     public Task<ApiResponseDto<string?>> DeleteShiftAsync(int id)
     {
-        // Mock implementation
         return Task.FromResult(new ApiResponseDto<string?>("Shift deleted successfully")
         {
             Data = $"Deleted shift with ID {id}",

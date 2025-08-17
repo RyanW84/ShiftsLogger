@@ -6,13 +6,16 @@ public class Location
 {
     [Key] public int LocationId { get; set; }
 
-    public required string Name { get; set; }
-    public required string Address { get; set; }
-    public required string Town { get; set; }
-    public required string County { get; set; }
-    public required string PostCode { get; set; }
-    public required string Country { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+    public string Town { get; set; } = string.Empty;
+    public string County { get; set; } = string.Empty;
+    public string PostCode { get; set; } = string.Empty;
+    public string Country { get; set; } = string.Empty;
 
-    public virtual Shift? Shifts { get; set; } // Navigation property to the Shifts entity
-    public virtual Worker? Workers { get; set; } // Navigation property to the Workers entity
+    // For compatibility with UI layer
+    public int Id => LocationId;
+
+    public virtual ICollection<Shift>? Shifts { get; set; } // Navigation property to the Shifts entity
+    public virtual ICollection<Worker>? Workers { get; set; } // Navigation property to the Workers entity
 }
