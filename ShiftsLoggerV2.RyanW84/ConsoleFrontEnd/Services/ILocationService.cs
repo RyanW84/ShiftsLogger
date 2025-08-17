@@ -1,17 +1,13 @@
-﻿using ConsoleFrontEnd.Models;
+using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
-using ConsoleFrontEnd.Models.FilterOptions;
 
 namespace ConsoleFrontEnd.Services;
 
 public interface ILocationService
 {
-    public Task<ApiResponseDto<List<Location>>> GetAllLocations(
-        LocationFilterOptions locationOptions
-    );
-
-    public Task<ApiResponseDto<Location>> GetLocationById(int id);
-    public Task<ApiResponseDto<Location>> CreateLocation(Location createdLocation);
-    public Task<ApiResponseDto<Location?>> UpdateLocation(int id, Location updatedLocation);
-    public Task<ApiResponseDto<string?>> DeleteLocation(int id);
+    Task<ApiResponseDto<List<Location>>> GetAllLocationsAsync();
+    Task<ApiResponseDto<Location?>> GetLocationByIdAsync(int id);
+    Task<ApiResponseDto<Location>> CreateLocationAsync(Location location);
+    Task<ApiResponseDto<Location?>> UpdateLocationAsync(int id, Location updatedLocation);
+    Task<ApiResponseDto<string?>> DeleteLocationAsync(int id);
 }

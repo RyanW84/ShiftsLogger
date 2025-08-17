@@ -5,9 +5,10 @@ namespace ConsoleFrontEnd.MenuSystem;
 
 public interface IWorkerUi
 {
-    Worker CreateWorker();
-    Worker UpdateWorker(Worker existingWorker);
-    WorkerFilterOptions FilterWorkers();
+    Worker CreateWorkerUi();
+    Worker UpdateWorkerUi(Worker existingWorker);
+    WorkerFilterOptions FilterWorkersUi();
     void DisplayWorkersTable(IEnumerable<Worker> workers);
-    int GetWorkerById();
+    int GetWorkerByIdUi();
+    int SelectWorker();
 }

@@ -1,52 +1,47 @@
-﻿using ConsoleFrontEnd.Interfaces;
-using ConsoleFrontEnd.MenuSystem;
+using ConsoleFrontEnd.Core.Abstractions;
+using ConsoleFrontEnd.Core.Infrastructure;
+using ConsoleFrontEnd.MenuSystem.Menus;
 using ConsoleFrontEnd.Services;
-// UI interface aliases - use fully qualified names to avoid ambiguity
-
-// Service interface aliases
-using IShiftService = ConsoleFrontEnd.Services.IShiftService;
-using ILocationService = ConsoleFrontEnd.Services.ILocationService;
-using ILocationUi = ConsoleFrontEnd.MenuSystem.ILocationUi;
-using ConsoleFrontEnd.MenuSystem;
-using ConsoleFrontEnd.Services;
-using ConsoleFrontEnd.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ConsoleFrontEnd;
 
+/// <summary>
+/// SOLID Refactored Program Entry Point
+/// Demonstrates proper SOLID principles implementation
+/// </summary>
 public class Program
 {
     public static async Task Main(string[] args)
     {
-        // Create service collection
-        var services = new ServiceCollection();
+        Console.WriteLine("=== SOLID Console Frontend Demo ===");
+        Console.WriteLine("This demonstrates a properly refactored console application using SOLID principles.");
+        Console.WriteLine();
 
-        // Register services
-        services.AddSingleton<IDisplayService, SpectreConsoleDisplayService>();
-        services.AddSingleton<IInputService, SpectreConsoleInputService>();
-
-        services.AddScoped<IShiftService, ShiftService>();
-        services.AddScoped<ILocationService, LocationService>();
-        services.AddScoped<IWorkerService, WorkerService>();
-
-        // Register UI implementations
-        services.AddScoped<IShiftUi, ShiftUI>();
-        services.AddScoped<IWorkerUi, WorkerUI>();
-        services.AddScoped<ILocationUi, LocationUI>();
-
-        // Build the service provider
-        var serviceProvider = services.BuildServiceProvider();
-
-        // Create the main menu using the service provider
-        var mainMenu = new MainMenu(serviceProvider);
-        await mainMenu.RunAsync();
+        try
+        {
+            // Create and configure the host using Microsoft.Extensions.Hosting
+            var host = CreateHostBuilder(args).Build();
+            
+            // Get the application service and run
+            var app = host.Services.GetRequiredService<IApplication>();
+            await app.RunAsync();
         }
-        services.AddScoped<IWorkerUi, WorkerUi>();
-        services.AddScoped<ILocationUi, LocationUI>();
-
-// Facade to simplify UI access for controllers
-        services.AddScoped<IUserInterfaceFacade, UserInterfaceFacade>();
-
-        await MainMenu.DisplayMainMenu();
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fatal error: {ex.Message}");
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
+        }
     }
+
+    private static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureServices((context, services) =>
+            {
+                // Register all application services following SOLID principles
+                services.RegisterApplicationServices();
+            });
 }

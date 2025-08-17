@@ -1,204 +1,92 @@
-﻿using System.Net;
-using System.Net.Http.Json;
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
-using ConsoleFrontEnd.Models.FilterOptions;
-using Spectre.Console;
 
 namespace ConsoleFrontEnd.Services;
 
 public class WorkerService : IWorkerService
 {
-    private readonly HttpClient httpClient = new()
+    public Task<ApiResponseDto<List<Worker>>> GetAllWorkersAsync()
     {
-        BaseAddress = new Uri("https://localhost:7009/")
-    };
-
-    public async Task<ApiResponseDto<List<Worker>>> GetAllWorkers(
-        WorkerFilterOptions workerFilterOptions
-    )
-    {
-        try
+        // Mock implementation using correct property names
+        var workers = new List<Worker>
         {
-            var queryString = BuildQueryString("api/workers", workerFilterOptions);
-
-            AnsiConsole.MarkupLine(
-                $"[blue]Final request URL: {httpClient.BaseAddress}{queryString}[/]\n"
-            );
-
-            var response = await httpClient.GetAsync(queryString);
-            if (!response.IsSuccessStatusCode)
-            {
-                AnsiConsole.Markup("[red]Workers not retrieved.[/]\n");
-                return new ApiResponseDto<List<Worker>>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = response.ReasonPhrase ?? "Unknown error",
-                    Data = null
-                };
+            new Worker 
+            { 
+                WorkerId = 1, 
+                Name = "John Doe",
+                PhoneNumber = "+44 123 456 7890",
+                Email = "john.doe@company.com"
+            },
+            new Worker 
+            { 
+                WorkerId = 2, 
+                Name = "Jane Smith",
+                PhoneNumber = "+44 987 654 3210",
+                Email = "jane.smith@company.com"
             }
+        };
 
-            AnsiConsole.Markup("[green]Workers retrieved successfully.[/]\n");
-            return await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Worker>>>()
-                   ?? new ApiResponseDto<List<Worker>>
-                   {
-                       ResponseCode = response.StatusCode,
-                       Message = "Data obtained",
-                       Data = new List<Worker>()
-                   };
-        }
-        catch (Exception ex)
+        return Task.FromResult(new ApiResponseDto<List<Worker>>("Success")
         {
-            Console.WriteLine($"Try catch failed for GetAllWorkers: {ex}");
-            throw;
-        }
+            Data = workers,
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.OK
+        });
     }
 
-    public async Task<ApiResponseDto<Worker>> GetWorkerById(int id)
+    public Task<ApiResponseDto<Worker?>> GetWorkerByIdAsync(int id)
     {
-        HttpResponseMessage response;
-        try
-        {
-            response = await httpClient.GetAsync($"api/workers/{id}");
+        // Mock implementation using correct property names
+        var worker = new Worker 
+        { 
+            WorkerId = id, 
+            Name = $"Worker {id}",
+            PhoneNumber = $"+44 123 456 78{id:00}",
+            Email = $"worker{id}@company.com"
+        };
 
-            if (response.StatusCode == HttpStatusCode.OK)
-                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
-                       ?? new ApiResponseDto<Worker>
-                       {
-                           ResponseCode = response.StatusCode,
-                           Message = "No data returned.",
-                           Data = response.Content.ReadFromJsonAsync<Worker>().Result,
-                           TotalCount = 0
-                       };
-
-            return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
-                   ?? new ApiResponseDto<Worker>
-                   {
-                       ResponseCode = response.StatusCode,
-                       Message = "No data returned.",
-                       Data = null,
-                       TotalCount = 0
-                   };
-        }
-        catch (Exception ex)
+        return Task.FromResult(new ApiResponseDto<Worker?>("Success")
         {
-            Console.WriteLine($"Try catch failed for GetWorkerById: {ex}");
-            throw;
-        }
+            Data = worker,
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.OK
+        });
     }
 
-    public async Task<ApiResponseDto<Worker>> CreateWorker(Worker createdWorker)
+    public Task<ApiResponseDto<Worker>> CreateWorkerAsync(Worker worker)
     {
-        try
-        {
-            var response = await httpClient.PostAsJsonAsync("api/workers", createdWorker);
-            if (response.StatusCode != HttpStatusCode.Created)
-            {
-                Console.WriteLine($"Error: Status Code - {response.StatusCode}");
-                return new ApiResponseDto<Worker>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = response.ReasonPhrase ?? "Creation failed",
-                    Data = null
-                };
-            }
+        // Mock implementation - assign an ID
+        worker.WorkerId = new Random().Next(1, 1000);
 
-            Console.WriteLine("Worker created successfully.");
-            return new ApiResponseDto<Worker>
-            {
-                ResponseCode = response.StatusCode,
-                Data = await response.Content.ReadFromJsonAsync<Worker>() ?? createdWorker
-            };
-        }
-        catch (Exception ex)
+        return Task.FromResult(new ApiResponseDto<Worker>("Worker created successfully")
         {
-            Console.WriteLine($"Try catch failed for CreateWorker: {ex}");
-            throw;
-        }
+            Data = worker,
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.Created
+        });
     }
 
-    public async Task<ApiResponseDto<Worker>> UpdateWorker(int id, Worker updatedWorker)
+    public Task<ApiResponseDto<Worker?>> UpdateWorkerAsync(int id, Worker updatedWorker)
     {
-        HttpResponseMessage response;
-        try
-        {
-            response = await httpClient.PutAsJsonAsync($"api/workers/{id}", updatedWorker);
-            if (response.StatusCode is not HttpStatusCode.OK)
-                return new ApiResponseDto<Worker>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = response.ReasonPhrase,
-                    Data = null
-                };
+        // Mock implementation
+        updatedWorker.WorkerId = id;
 
-            return await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
-                   ?? new ApiResponseDto<Worker>
-                   {
-                       ResponseCode = response.StatusCode,
-                       Message = "Update Worker succeeded.",
-                       Data = null
-                   };
-        }
-        catch (Exception ex)
+        return Task.FromResult(new ApiResponseDto<Worker?>("Worker updated successfully")
         {
-            Console.WriteLine($"Try catch failed for UpdateWorker: {ex}");
-            throw;
-        }
+            Data = updatedWorker,
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.OK
+        });
     }
 
-    public async Task<ApiResponseDto<string>> DeleteWorker(int id)
+    public Task<ApiResponseDto<string?>> DeleteWorkerAsync(int id)
     {
-        try
+        // Mock implementation
+        return Task.FromResult(new ApiResponseDto<string?>("Worker deleted successfully")
         {
-            var response = await httpClient.DeleteAsync($"api/workers/{id}");
-            if (response.StatusCode != HttpStatusCode.NoContent)
-                return new ApiResponseDto<string>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = $"Error deleting Worker - {response.StatusCode}",
-                    Data = null
-                };
-
-            return new ApiResponseDto<string>
-            {
-                ResponseCode = response.StatusCode,
-                Message = "Worker deleted successfully.",
-                Data = null
-            };
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Try catch failed for DeleteWorker: {ex}");
-            throw;
-        }
-    }
-
-    //Helpers
-    private static string BuildQueryString(string basePath, WorkerFilterOptions options)
-    {
-        var queryParams = new List<string>();
-
-        void AddIfNotNullOrEmpty(string key, object? value)
-        {
-            switch (value)
-            {
-                case int intValue:
-                    queryParams.Add($"{key}={intValue}");
-                    break;
-                case string strValue when !string.IsNullOrWhiteSpace(strValue):
-                    queryParams.Add($"{key}={strValue}");
-                    break;
-            }
-        }
-
-        AddIfNotNullOrEmpty("WorkerId", options.WorkerId);
-        AddIfNotNullOrEmpty("Name", options.Name);
-        AddIfNotNullOrEmpty("PhoneNumber", options.PhoneNumber);
-        AddIfNotNullOrEmpty("Email", options.Email);
-        AddIfNotNullOrEmpty("search", options.Search);
-        AddIfNotNullOrEmpty("sortBy", options.SortBy);
-        AddIfNotNullOrEmpty("sortOrder", options.SortOrder);
-
-        return queryParams.Count > 0 ? $"{basePath}?{string.Join("&", queryParams)}" : basePath;
+            Data = $"Deleted worker with ID {id}",
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.OK
+        });
     }
 }

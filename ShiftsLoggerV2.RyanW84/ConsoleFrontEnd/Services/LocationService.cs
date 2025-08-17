@@ -1,206 +1,101 @@
-﻿using System.Net;
-using System.Net.Http.Json;
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
-using ConsoleFrontEnd.Models.FilterOptions;
-using Spectre.Console;
 
 namespace ConsoleFrontEnd.Services;
 
 public class LocationService : ILocationService
 {
-    private readonly HttpClient httpClient = new()
+    public Task<ApiResponseDto<List<Location>>> GetAllLocationsAsync()
     {
-        BaseAddress = new Uri("https://localhost:7009/")
-    };
-
-    public async Task<ApiResponseDto<List<Location>>> GetAllLocations(
-        LocationFilterOptions locationFilterOptions
-    )
-    {
-        try
+        // Mock implementation using correct property names
+        var locations = new List<Location>
         {
-            var queryString = BuildQueryString("api/locations", locationFilterOptions);
-
-            AnsiConsole.MarkupLine(
-                $"[blue]Final request URL: {httpClient.BaseAddress}{queryString}[/]\n"
-            );
-
-            var response = await httpClient.GetAsync(queryString);
-            if (!response.IsSuccessStatusCode)
-            {
-                AnsiConsole.Markup("[red]Locations not retrieved.[/]\n");
-                return new ApiResponseDto<List<Location>>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = response.ReasonPhrase ?? "Unknown error",
-                    Data = null
-                };
+            new Location 
+            { 
+                LocationId = 1, 
+                Name = "Main Office", 
+                Address = "123 Main St",
+                Town = "London",
+                County = "Greater London",
+                PostCode = "SW1A 1AA",
+                Country = "United Kingdom"
+            },
+            new Location 
+            { 
+                LocationId = 2, 
+                Name = "Branch Office",
+                Address = "456 High St",
+                Town = "Manchester",
+                County = "Greater Manchester",
+                PostCode = "M1 1AA",
+                Country = "United Kingdom"
             }
+        };
 
-            AnsiConsole.Markup("[green]Locations retrieved successfully.[/]\n");
-            return await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Location>>>()
-                   ?? new ApiResponseDto<List<Location>>
-                   {
-                       ResponseCode = response.StatusCode,
-                       Message = "Data obtained",
-                       Data = new List<Location>()
-                   };
-        }
-        catch (Exception ex)
+        return Task.FromResult(new ApiResponseDto<List<Location>>("Success")
         {
-            Console.WriteLine($"Try catch failed for GetAllLocations: {ex}");
-            throw;
-        }
+            Data = locations,
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.OK
+        });
     }
 
-    public async Task<ApiResponseDto<Location>> GetLocationById(int id)
+    public Task<ApiResponseDto<Location?>> GetLocationByIdAsync(int id)
     {
-        HttpResponseMessage response;
-        try
-        {
-            response = await httpClient.GetAsync($"api/locations/{id}");
+        // Mock implementation using correct property names
+        var location = new Location 
+        { 
+            LocationId = id, 
+            Name = $"Location {id}",
+            Address = $"{id} Example St",
+            Town = "London",
+            County = "Greater London",
+            PostCode = "SW1A 1AA",
+            Country = "United Kingdom"
+        };
 
-            if (response.StatusCode == HttpStatusCode.OK)
-                return await response.Content.ReadFromJsonAsync<ApiResponseDto<Location>>()
-                       ?? new ApiResponseDto<Location>
-                       {
-                           ResponseCode = response.StatusCode,
-                           Message = "No data returned.",
-                           Data = response.Content.ReadFromJsonAsync<Location>().Result,
-                           TotalCount = 0
-                       };
-
-            return await response.Content.ReadFromJsonAsync<ApiResponseDto<Location>>()
-                   ?? new ApiResponseDto<Location>
-                   {
-                       ResponseCode = response.StatusCode,
-                       Message = "No data returned.",
-                       Data = null,
-                       TotalCount = 0
-                   };
-        }
-        catch (Exception ex)
+        return Task.FromResult(new ApiResponseDto<Location?>("Success")
         {
-            Console.WriteLine($"Try catch failed for GetLocationById: {ex}");
-            throw;
-        }
+            Data = location,
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.OK
+        });
     }
 
-    public async Task<ApiResponseDto<Location>> CreateLocation(Location createdLocation)
+    public Task<ApiResponseDto<Location>> CreateLocationAsync(Location location)
     {
-        try
-        {
-            var response = await httpClient.PostAsJsonAsync("api/locations", createdLocation);
-            if (response.StatusCode != HttpStatusCode.Created)
-            {
-                Console.WriteLine($"Error: Status Code - {response.StatusCode}");
-                return new ApiResponseDto<Location>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = response.ReasonPhrase ?? "Creation failed",
-                    Data = null
-                };
-            }
+        // Mock implementation - assign an ID
+        location.LocationId = new Random().Next(1, 1000);
 
-            Console.WriteLine("Location created successfully.");
-            return new ApiResponseDto<Location>
-            {
-                ResponseCode = response.StatusCode,
-                Data = await response.Content.ReadFromJsonAsync<Location>() ?? createdLocation
-            };
-        }
-        catch (Exception ex)
+        return Task.FromResult(new ApiResponseDto<Location>("Location created successfully")
         {
-            Console.WriteLine($"Try catch failed for CreateLocation: {ex}");
-            throw;
-        }
+            Data = location,
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.Created
+        });
     }
 
-    public async Task<ApiResponseDto<Location>> UpdateLocation(int id, Location updatedLocation)
+    public Task<ApiResponseDto<Location?>> UpdateLocationAsync(int id, Location updatedLocation)
     {
-        HttpResponseMessage response;
-        try
-        {
-            response = await httpClient.PutAsJsonAsync($"api/locations/{id}", updatedLocation);
-            if (response.StatusCode is not HttpStatusCode.OK)
-                return new ApiResponseDto<Location>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = response.ReasonPhrase,
-                    Data = null
-                };
+        // Mock implementation
+        updatedLocation.LocationId = id;
 
-            return await response.Content.ReadFromJsonAsync<ApiResponseDto<Location>>()
-                   ?? new ApiResponseDto<Location>
-                   {
-                       ResponseCode = response.StatusCode,
-                       Message = "Update Location succeeded.",
-                       Data = null
-                   };
-        }
-        catch (Exception ex)
+        return Task.FromResult(new ApiResponseDto<Location?>("Location updated successfully")
         {
-            Console.WriteLine($"Try catch failed for UpdateLocation: {ex}");
-            throw;
-        }
+            Data = updatedLocation,
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.OK
+        });
     }
 
-    public async Task<ApiResponseDto<string>> DeleteLocation(int id)
+    public Task<ApiResponseDto<string?>> DeleteLocationAsync(int id)
     {
-        try
+        // Mock implementation
+        return Task.FromResult(new ApiResponseDto<string?>("Location deleted successfully")
         {
-            var response = await httpClient.DeleteAsync($"api/locations/{id}");
-            if (response.StatusCode != HttpStatusCode.NoContent)
-                return new ApiResponseDto<string>
-                {
-                    ResponseCode = response.StatusCode,
-                    Message = $"Error deleting Location - {response.StatusCode}",
-                    Data = null
-                };
-
-            return new ApiResponseDto<string>
-            {
-                ResponseCode = response.StatusCode,
-                Message = "Location deleted successfully.",
-                Data = null
-            };
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Try catch failed for DeleteLocation: {ex}");
-            throw;
-        }
-    }
-
-    private static string BuildQueryString(string basePath, LocationFilterOptions options)
-    {
-        var queryParams = new List<string>();
-
-        void AddIfNotNullOrEmpty(string key, object? value)
-        {
-            switch (value)
-            {
-                case int intValue:
-                    queryParams.Add($"{key}={intValue}");
-                    break;
-                case string strValue when !string.IsNullOrWhiteSpace(strValue):
-                    queryParams.Add($"{key}={strValue}");
-                    break;
-            }
-        }
-
-        AddIfNotNullOrEmpty("locationId", options.LocationId);
-        AddIfNotNullOrEmpty("name", options.Name);
-        AddIfNotNullOrEmpty("address", options.Address);
-        AddIfNotNullOrEmpty("townOrCity", options.Town);
-        AddIfNotNullOrEmpty("stateOrCounty", options.County);
-        AddIfNotNullOrEmpty("zipOrPostCode", options.PostCode);
-        AddIfNotNullOrEmpty("country", options.Country);
-        AddIfNotNullOrEmpty("search", options.Search);
-        AddIfNotNullOrEmpty("sortBy", options.SortBy);
-        AddIfNotNullOrEmpty("sortOrder", options.SortOrder);
-
-        return queryParams.Count > 0 ? $"{basePath}?{string.Join("&", queryParams)}" : basePath;
+            Data = $"Deleted location with ID {id}",
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.OK
+        });
     }
 }

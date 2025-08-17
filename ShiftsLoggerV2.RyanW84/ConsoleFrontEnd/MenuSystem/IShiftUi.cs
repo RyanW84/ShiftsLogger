@@ -5,9 +5,9 @@ namespace ConsoleFrontEnd.MenuSystem;
 
 public interface IShiftUi
 {
-    Shift CreateShift(int workerId);
-    Shift UpdateShift(Shift existingShift);
-    ShiftFilterOptions FilterShifts();
+    Shift CreateShiftUi(int workerId);
+    Shift UpdateShiftUi(Shift existingShift);
+    ShiftFilterOptions FilterShiftsUi();
     void DisplayShiftsTable(IEnumerable<Shift> shifts);
-    int GetShiftById();
+    int GetShiftByIdUi();
 }

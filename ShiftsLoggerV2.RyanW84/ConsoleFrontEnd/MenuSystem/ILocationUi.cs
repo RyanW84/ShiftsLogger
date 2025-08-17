@@ -5,10 +5,10 @@ namespace ConsoleFrontEnd.MenuSystem;
 
 public interface ILocationUi
 {
-    Location CreateLocation();
-    Location UpdateLocation(Location existingLocation);
-    LocationFilterOptions FilterLocations();
+    Location CreateLocationUi();
+    Location UpdateLocationUi(Location existingLocation);
+    LocationFilterOptions FilterLocationsUi();
     void DisplayLocationsTable(IEnumerable<Location> locations);
-    int GetLocationById();
+    int GetLocationByIdUi();
     int SelectLocation();
 }

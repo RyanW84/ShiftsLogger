@@ -1,31 +1,32 @@
 using ConsoleFrontEnd.Models;
+using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
 
 namespace ConsoleFrontEnd.MenuSystem;
 
-public interface IShiftService
+public interface IShiftServiceLegacy
 {
-    Task<ApiResponse<List<Shift>>> GetAllShifts(ShiftFilterOptions options);
-    Task<ApiResponse<Shift>> GetShiftById(int id);
-    Task<ApiResponse<Shift>> CreateShift(Shift shift);
-    Task<ApiResponse<Shift>> UpdateShift(int id, Shift shift);
-    Task<ApiResponse<bool>> DeleteShift(int id);
+    Task<ApiResponseDto<List<Shift>>> GetAllShifts(ShiftFilterOptions options);
+    Task<ApiResponseDto<Shift>> GetShiftById(int id);
+    Task<ApiResponseDto<Shift>> CreateShift(Shift shift);
+    Task<ApiResponseDto<Shift>> UpdateShift(int id, Shift shift);
+    Task<ApiResponseDto<bool>> DeleteShift(int id);
 }
 
-public interface ILocationService
+public interface ILocationServiceLegacy
 {
-    Task<ApiResponse<List<Location>>> GetAllLocations(LocationFilterOptions options);
-    Task<ApiResponse<Location>> GetLocationById(int id);
-    Task<ApiResponse<Location>> CreateLocation(Location location);
-    Task<ApiResponse<Location>> UpdateLocation(int id, Location location);
-    Task<ApiResponse<bool>> DeleteLocation(int id);
+    Task<ApiResponseDto<List<Location>>> GetAllLocations(LocationFilterOptions options);
+    Task<ApiResponseDto<Location>> GetLocationById(int id);
+    Task<ApiResponseDto<Location>> CreateLocation(Location location);
+    Task<ApiResponseDto<Location>> UpdateLocation(int id, Location location);
+    Task<ApiResponseDto<bool>> DeleteLocation(int id);
 }
 
-public interface IWorkerService
+public interface IWorkerServiceLegacy
 {
-    Task<ApiResponse<List<Worker>>> GetAllWorkers(WorkerFilterOptions options);
-    Task<ApiResponse<Worker>> GetWorkerById(int id);
-    Task<ApiResponse<Worker>> CreateWorker(Worker worker);
-    Task<ApiResponse<Worker>> UpdateWorker(int id, Worker worker);
-    Task<ApiResponse<bool>> DeleteWorker(int id);
+    Task<ApiResponseDto<List<Worker>>> GetAllWorkers(WorkerFilterOptions options);
+    Task<ApiResponseDto<Worker>> GetWorkerById(int id);
+    Task<ApiResponseDto<Worker>> CreateWorker(Worker worker);
+    Task<ApiResponseDto<Worker>> UpdateWorker(int id, Worker worker);
+    Task<ApiResponseDto<bool>> DeleteWorker(int id);
 }
