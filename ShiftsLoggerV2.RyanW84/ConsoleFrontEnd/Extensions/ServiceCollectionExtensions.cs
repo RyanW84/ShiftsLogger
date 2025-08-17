@@ -27,7 +27,7 @@ public static class ServiceCollectionExtensions
         // API Services
         services.AddScoped<IShiftService, ShiftService>();
         services.AddScoped<IWorkerService, WorkerService>();
-        services.AddScoped<ILocationService, UnifiedLocationService>();
+        services.AddScoped<ILocationService, LocationService>();
         
         // UI Services
         services.AddScoped<IShiftUi, ShiftUI>();

@@ -12,16 +12,16 @@ namespace ConsoleFrontEnd.Services;
 /// <summary>
 /// Location Service for API calls - merged and cleaned with comprehensive error handling
 /// </summary>
-public class UnifiedLocationService : ILocationService
+public class LocationService : ILocationService
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
-    private readonly ILogger<UnifiedLocationService> _logger;
+    private readonly ILogger<LocationService> _logger;
 
-    public UnifiedLocationService(
+    public LocationService(
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration, 
-        ILogger<UnifiedLocationService> logger)
+        ILogger<LocationService> logger)
     {
         _httpClient = httpClientFactory.CreateClient("ShiftsLoggerApi");
         _configuration = configuration;
