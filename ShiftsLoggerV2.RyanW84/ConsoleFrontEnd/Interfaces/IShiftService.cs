@@ -1,14 +1,14 @@
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
-using ConsoleFrontEnd.Models.FilterOptions;
 
-namespace ConsoleFrontEnd.Interfaces.Services;
+namespace ConsoleFrontEnd.Services;
 
 public interface IShiftService
 {
-    Task<ApiResponseDto<List<Shift>>> GetAllShifts(ShiftFilterOptions options);
-    Task<ApiResponseDto<Shift>> GetShiftById(int id);
-    Task<ApiResponseDto<Shift>> CreateShift(Shift shift);
-    Task<ApiResponseDto<Shift>> UpdateShift(int id, Shift shift);
-    Task<ApiResponseDto<string>> DeleteShift(int id);
+    Task<ApiResponseDto<List<Shift>>> GetAllShiftsAsync();
+    Task<ApiResponseDto<Shift?>> GetShiftByIdAsync(int id);
+    Task<ApiResponseDto<Shift>> CreateShiftAsync(Shift shift);
+    Task<ApiResponseDto<Shift?>> UpdateShiftAsync(int id, Shift updatedShift);
+    Task<ApiResponseDto<string?>> DeleteShiftAsync(int id);
+    Task<ApiResponseDto<List<Shift>>> GetShiftsByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter);
 }

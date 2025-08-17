@@ -14,6 +14,7 @@ public class ShiftFilterOptions
 
     // Linked table searching
     public string? LocationName { get; set; }
+    public string? WorkerName { get; set; }
 
     // Sorting options
     public string? SortBy { get; set; }

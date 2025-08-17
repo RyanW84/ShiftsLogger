@@ -3,6 +3,7 @@ using ConsoleFrontEnd.Core.Abstractions;
 using ConsoleFrontEnd.Core.Infrastructure;
 using ConsoleFrontEnd.MenuSystem.Menus;
 using ConsoleFrontEnd.Services;
+using ConsoleFrontEnd.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

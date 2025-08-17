@@ -18,7 +18,7 @@ builder
     );
 
 builder.Services.AddDbContext<ShiftsLoggerDbContext>(opt =>
-    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
 // Register all application services following SOLID principles
