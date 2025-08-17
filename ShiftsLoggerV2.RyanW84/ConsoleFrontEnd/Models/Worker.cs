@@ -16,40 +16,7 @@ public class Worker
     public int Id => WorkerId;
     public string? Phone => PhoneNumber;
     
-    // For backward compatibility - split Name into first/last for display
-    public string FirstName 
-    { 
-        get 
-        {
-            var parts = Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            return parts.Length > 0 ? parts[0] : string.Empty;
-        }
-        set
-        {
-            var parts = Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length > 1)
-                Name = $"{value} {string.Join(' ', parts.Skip(1))}";
-            else
-                Name = value;
-        }
-    }
-    
-    public string LastName 
-    { 
-        get 
-        {
-            var parts = Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            return parts.Length > 1 ? string.Join(' ', parts.Skip(1)) : string.Empty;
-        }
-        set
-        {
-            var parts = Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length > 0)
-                Name = $"{parts[0]} {value}";
-            else
-                Name = value;
-        }
-    }
+    // ...existing code...
 
     public virtual ICollection<Shift>? Shifts { get; set; }
     public virtual ICollection<Location>? Locations { get; set; }

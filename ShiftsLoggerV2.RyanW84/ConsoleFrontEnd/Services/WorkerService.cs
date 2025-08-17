@@ -13,14 +13,14 @@ public class WorkerService : IWorkerService
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<WorkerService> _logger;
-    private readonly bool _useMockData;
+
 
     public WorkerService(HttpClient httpClient, IConfiguration configuration, ILogger<WorkerService> logger)
     {
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
-        _useMockData = _configuration.GetValue<bool>("UseMockData", true);
+    // ...existing code...
         
         // Set base address if not already set
         if (_httpClient.BaseAddress == null)
@@ -31,10 +31,7 @@ public class WorkerService : IWorkerService
 
     public async Task<ApiResponseDto<List<Worker>>> GetAllWorkersAsync()
     {
-        if (_useMockData)
-        {
-            return GetMockWorkers();
-        }
+    // ...existing code...
 
         try
         {
@@ -45,7 +42,13 @@ public class WorkerService : IWorkerService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError("Failed to retrieve workers. Status: {StatusCode}", response.StatusCode);
-                return GetMockWorkers(); // Fallback to mock data
+                return new ApiResponseDto<List<Worker>>("Failed to retrieve workers")
+                {
+                    ResponseCode = response.StatusCode,
+                    Message = "Failed to retrieve workers",
+                    Data = new List<Worker>(),
+                    RequestFailed = true
+                };
             }
 
             var result = await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Worker>>>()
@@ -62,44 +65,21 @@ public class WorkerService : IWorkerService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while fetching workers from API");
-            return GetMockWorkers(); // Fallback to mock data
+            return new ApiResponseDto<List<Worker>>("Error occurred while fetching workers from API")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                Message = ex.Message,
+                Data = new List<Worker>(),
+                RequestFailed = true
+            };
         }
     }
 
-    private static ApiResponseDto<List<Worker>> GetMockWorkers()
-    {
-        var workers = new List<Worker>
-        {
-            new Worker 
-            { 
-                WorkerId = 1, 
-                Name = "John Doe",
-                PhoneNumber = "+44 123 456 7890",
-                Email = "john.doe@company.com"
-            },
-            new Worker 
-            { 
-                WorkerId = 2, 
-                Name = "Jane Smith",
-                PhoneNumber = "+44 987 654 3210",
-                Email = "jane.smith@company.com"
-            }
-        };
-
-        return new ApiResponseDto<List<Worker>>("Success")
-        {
-            Data = workers,
-            RequestFailed = false,
-            ResponseCode = HttpStatusCode.OK
-        };
-    }
+    // ...existing code...
 
     public async Task<ApiResponseDto<Worker?>> GetWorkerByIdAsync(int id)
     {
-        if (_useMockData)
-        {
-            return GetMockWorkerById(id);
-        }
+    // ...existing code...
 
         try
         {
@@ -132,34 +112,21 @@ public class WorkerService : IWorkerService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while fetching worker {WorkerId} from API", id);
-            return GetMockWorkerById(id); // Fallback to mock data
+            return new ApiResponseDto<Worker?>("Error occurred while fetching worker from API")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                Message = ex.Message,
+                Data = null,
+                RequestFailed = true
+            };
         }
     }
 
-    private static ApiResponseDto<Worker?> GetMockWorkerById(int id)
-    {
-        var worker = new Worker 
-        { 
-            WorkerId = id, 
-            Name = $"Worker {id}",
-            PhoneNumber = $"+44 123 456 78{id:00}",
-            Email = $"worker{id}@company.com"
-        };
-
-        return new ApiResponseDto<Worker?>("Success")
-        {
-            Data = worker,
-            RequestFailed = false,
-            ResponseCode = HttpStatusCode.OK
-        };
-    }
+    // ...existing code...
 
     public async Task<ApiResponseDto<Worker>> CreateWorkerAsync(Worker worker)
     {
-        if (_useMockData)
-        {
-            return CreateMockWorker(worker);
-        }
+    // ...existing code...
 
         try
         {
@@ -167,7 +134,12 @@ public class WorkerService : IWorkerService
             if (response.StatusCode != HttpStatusCode.Created)
             {
                 _logger.LogError("Error creating worker. Status Code: {StatusCode}", response.StatusCode);
-                return CreateMockWorker(worker); // Fallback to mock data
+                return new ApiResponseDto<Worker>("Error creating worker")
+                {
+                    ResponseCode = response.StatusCode,
+                    RequestFailed = true,
+                    Data = null
+                };
             }
 
             var createdWorker = await response.Content.ReadFromJsonAsync<Worker>() ?? worker;
@@ -183,28 +155,20 @@ public class WorkerService : IWorkerService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while creating worker");
-            return CreateMockWorker(worker); // Fallback to mock data
+            return new ApiResponseDto<Worker>("Error occurred while creating worker")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                RequestFailed = true,
+                Data = null
+            };
         }
     }
 
-    private static ApiResponseDto<Worker> CreateMockWorker(Worker worker)
-    {
-        worker.WorkerId = new Random().Next(1, 1000);
-
-        return new ApiResponseDto<Worker>("Worker created successfully")
-        {
-            Data = worker,
-            RequestFailed = false,
-            ResponseCode = HttpStatusCode.Created
-        };
-    }
+    // ...existing code...
 
     public async Task<ApiResponseDto<Worker?>> UpdateWorkerAsync(int id, Worker updatedWorker)
     {
-        if (_useMockData)
-        {
-            return UpdateMockWorker(id, updatedWorker);
-        }
+    // ...existing code...
 
         try
         {
@@ -212,7 +176,12 @@ public class WorkerService : IWorkerService
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 _logger.LogError("Error updating worker {WorkerId}. Status Code: {StatusCode}", id, response.StatusCode);
-                return UpdateMockWorker(id, updatedWorker); // Fallback to mock data
+                return new ApiResponseDto<Worker?>("Error updating worker")
+                {
+                    ResponseCode = response.StatusCode,
+                    RequestFailed = true,
+                    Data = null
+                };
             }
 
             var result = await response.Content.ReadFromJsonAsync<ApiResponseDto<Worker>>()
@@ -233,33 +202,20 @@ public class WorkerService : IWorkerService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while updating worker {WorkerId}", id);
-            return UpdateMockWorker(id, updatedWorker); // Fallback to mock data
+            return new ApiResponseDto<Worker?>("Error occurred while updating worker")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                RequestFailed = true,
+                Data = null
+            };
         }
     }
 
-    private static ApiResponseDto<Worker?> UpdateMockWorker(int id, Worker updatedWorker)
-    {
-        updatedWorker.WorkerId = id;
-
-        return new ApiResponseDto<Worker?>("Worker updated successfully")
-        {
-            Data = updatedWorker,
-            RequestFailed = false,
-            ResponseCode = HttpStatusCode.OK
-        };
-    }
+    // ...existing code...
 
     public async Task<ApiResponseDto<string?>> DeleteWorkerAsync(int id)
     {
-        if (_useMockData)
-        {
-            return new ApiResponseDto<string?>("Worker deleted successfully")
-            {
-                Data = $"Deleted worker with ID {id}",
-                RequestFailed = false,
-                ResponseCode = HttpStatusCode.OK
-            };
-        }
+    // ...existing code...
 
         try
         {

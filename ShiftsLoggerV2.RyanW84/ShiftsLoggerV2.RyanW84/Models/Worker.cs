@@ -15,4 +15,5 @@ public class Worker : IEntity
 
     // IEntity implementation
     public int Id => WorkerId;
+    // ...existing code...
 }

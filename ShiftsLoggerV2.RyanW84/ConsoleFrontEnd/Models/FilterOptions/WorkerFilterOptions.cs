@@ -9,9 +9,7 @@ public class WorkerFilterOptions
     public string? Email { get; set; }
     public string? Search { get; set; }
 
-    // For compatibility with UI layer
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
+    // ...existing code...
 
     // Sorting options
     public string? SortBy { get; set; }

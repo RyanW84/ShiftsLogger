@@ -13,14 +13,12 @@ public class LocationService : ILocationService
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<LocationService> _logger;
-    private readonly bool _useMockData;
 
     public LocationService(HttpClient httpClient, IConfiguration configuration, ILogger<LocationService> logger)
     {
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
-        _useMockData = _configuration.GetValue<bool>("UseMockData", true);
         
         // Set base address if not already set
         if (_httpClient.BaseAddress == null)
@@ -31,11 +29,6 @@ public class LocationService : ILocationService
 
     public async Task<ApiResponseDto<List<Location>>> GetAllLocationsAsync()
     {
-        if (_useMockData)
-        {
-            return GetMockLocations();
-        }
-
         try
         {
             var queryString = "api/locations";
@@ -45,7 +38,13 @@ public class LocationService : ILocationService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError("Failed to retrieve locations. Status: {StatusCode}", response.StatusCode);
-                return GetMockLocations(); // Fallback to mock data
+                return new ApiResponseDto<List<Location>>("Failed to retrieve locations")
+                {
+                    ResponseCode = response.StatusCode,
+                    Message = "Failed to retrieve locations",
+                    Data = new List<Location>(),
+                    RequestFailed = true
+                };
             }
 
             var result = await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Location>>>()
@@ -62,51 +61,20 @@ public class LocationService : ILocationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while fetching locations from API");
-            return GetMockLocations(); // Fallback to mock data
+            return new ApiResponseDto<List<Location>>("Error occurred while fetching locations from API")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                Message = ex.Message,
+                Data = new List<Location>(),
+                RequestFailed = true
+            };
         }
     }
 
-    private static ApiResponseDto<List<Location>> GetMockLocations()
-    {
-        var locations = new List<Location>
-        {
-            new Location 
-            { 
-                LocationId = 1, 
-                Name = "Main Office", 
-                Address = "123 Main St",
-                Town = "London",
-                County = "Greater London",
-                PostCode = "SW1A 1AA",
-                Country = "United Kingdom"
-            },
-            new Location 
-            { 
-                LocationId = 2, 
-                Name = "Branch Office",
-                Address = "456 High St",
-                Town = "Manchester",
-                County = "Greater Manchester",
-                PostCode = "M1 1AA",
-                Country = "United Kingdom"
-            }
-        };
 
-        return new ApiResponseDto<List<Location>>("Success")
-        {
-            Data = locations,
-            RequestFailed = false,
-            ResponseCode = HttpStatusCode.OK
-        };
-    }
 
     public async Task<ApiResponseDto<Location?>> GetLocationByIdAsync(int id)
     {
-        if (_useMockData)
-        {
-            return GetMockLocationById(id);
-        }
-
         try
         {
             var response = await _httpClient.GetAsync($"api/locations/{id}");
@@ -138,45 +106,32 @@ public class LocationService : ILocationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while fetching location {LocationId} from API", id);
-            return GetMockLocationById(id); // Fallback to mock data
+            return new ApiResponseDto<Location?>("Error occurred while fetching location from API")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                Message = ex.Message,
+                Data = null,
+                RequestFailed = true
+            };
         }
     }
 
-    private static ApiResponseDto<Location?> GetMockLocationById(int id)
-    {
-        var location = new Location 
-        { 
-            LocationId = id, 
-            Name = $"Location {id}",
-            Address = $"{id} Example St",
-            Town = "London",
-            County = "Greater London",
-            PostCode = "SW1A 1AA",
-            Country = "United Kingdom"
-        };
 
-        return new ApiResponseDto<Location?>("Success")
-        {
-            Data = location,
-            RequestFailed = false,
-            ResponseCode = HttpStatusCode.OK
-        };
-    }
 
     public async Task<ApiResponseDto<Location>> CreateLocationAsync(Location location)
     {
-        if (_useMockData)
-        {
-            return CreateMockLocation(location);
-        }
-
         try
         {
             var response = await _httpClient.PostAsJsonAsync("api/locations", location);
             if (response.StatusCode != HttpStatusCode.Created)
             {
                 _logger.LogError("Error creating location. Status Code: {StatusCode}", response.StatusCode);
-                return CreateMockLocation(location); // Fallback to mock data
+                return new ApiResponseDto<Location>("Error creating location")
+                {
+                    ResponseCode = response.StatusCode,
+                    RequestFailed = true,
+                    Data = null
+                };
             }
 
             var createdLocation = await response.Content.ReadFromJsonAsync<Location>() ?? location;
@@ -192,28 +147,19 @@ public class LocationService : ILocationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while creating location");
-            return CreateMockLocation(location); // Fallback to mock data
+            return new ApiResponseDto<Location>("Error occurred while creating location")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                RequestFailed = true,
+                Data = null
+            };
         }
     }
 
-    private static ApiResponseDto<Location> CreateMockLocation(Location location)
-    {
-        location.LocationId = new Random().Next(1, 1000);
-
-        return new ApiResponseDto<Location>("Location created successfully")
-        {
-            Data = location,
-            RequestFailed = false,
-            ResponseCode = HttpStatusCode.Created
-        };
-    }
 
     public async Task<ApiResponseDto<Location?>> UpdateLocationAsync(int id, Location updatedLocation)
     {
-        if (_useMockData)
-        {
-            return UpdateMockLocation(id, updatedLocation);
-        }
+    // ...existing code...
 
         try
         {
@@ -221,7 +167,12 @@ public class LocationService : ILocationService
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 _logger.LogError("Error updating location {LocationId}. Status Code: {StatusCode}", id, response.StatusCode);
-                return UpdateMockLocation(id, updatedLocation); // Fallback to mock data
+                return new ApiResponseDto<Location?>("Error updating location")
+                {
+                    ResponseCode = response.StatusCode,
+                    RequestFailed = true,
+                    Data = null
+                };
             }
 
             var result = await response.Content.ReadFromJsonAsync<ApiResponseDto<Location>>()
@@ -242,33 +193,20 @@ public class LocationService : ILocationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while updating location {LocationId}", id);
-            return UpdateMockLocation(id, updatedLocation); // Fallback to mock data
+            return new ApiResponseDto<Location?>("Error occurred while updating location")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                RequestFailed = true,
+                Data = null
+            };
         }
     }
 
-    private static ApiResponseDto<Location?> UpdateMockLocation(int id, Location updatedLocation)
-    {
-        updatedLocation.LocationId = id;
-
-        return new ApiResponseDto<Location?>("Location updated successfully")
-        {
-            Data = updatedLocation,
-            RequestFailed = false,
-            ResponseCode = HttpStatusCode.OK
-        };
-    }
+    // ...existing code...
 
     public async Task<ApiResponseDto<string?>> DeleteLocationAsync(int id)
     {
-        if (_useMockData)
-        {
-            return new ApiResponseDto<string?>("Location deleted successfully")
-            {
-                Data = $"Deleted location with ID {id}",
-                RequestFailed = false,
-                ResponseCode = HttpStatusCode.OK
-            };
-        }
+    // ...existing code...
 
         try
         {

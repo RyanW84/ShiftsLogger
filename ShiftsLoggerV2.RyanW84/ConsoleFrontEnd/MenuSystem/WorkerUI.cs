@@ -18,15 +18,14 @@ public class WorkerUI : IWorkerUi
     {
         _display.DisplayHeader("Create New Worker");
         
-        var firstName = AnsiConsole.Ask<string>("[green]Enter first name:[/]");
-        var lastName = AnsiConsole.Ask<string>("[green]Enter last name:[/]");
+        var name = AnsiConsole.Ask<string>("[green]Enter name:[/]");
         var email = AnsiConsole.Ask<string>("[green]Enter email:[/]");
         var phone = AnsiConsole.Ask<string>("[green]Enter phone number:[/]");
-        
+
         return new Worker
         {
             WorkerId = 0, // Will be assigned by service
-            Name = $"{firstName} {lastName}".Trim(),
+            Name = name.Trim(),
             Email = email,
             PhoneNumber = phone
         };
@@ -36,15 +35,14 @@ public class WorkerUI : IWorkerUi
     {
         _display.DisplayHeader($"Update Worker: {existingWorker.Name}");
         
-        var firstName = AnsiConsole.Ask<string>("[green]Enter first name:[/]", existingWorker.FirstName);
-        var lastName = AnsiConsole.Ask<string>("[green]Enter last name:[/]", existingWorker.LastName);
+        var name = AnsiConsole.Ask<string>("[green]Enter name:[/]", existingWorker.Name);
         var email = AnsiConsole.Ask<string>("[green]Enter email:[/]", existingWorker.Email ?? string.Empty);
         var phone = AnsiConsole.Ask<string>("[green]Enter phone number:[/]", existingWorker.PhoneNumber ?? string.Empty);
-        
+
         return new Worker
         {
             WorkerId = existingWorker.Id,
-            Name = $"{firstName} {lastName}".Trim(),
+            Name = name.Trim(),
             Email = email,
             PhoneNumber = phone
         };
@@ -54,14 +52,12 @@ public class WorkerUI : IWorkerUi
     {
         _display.DisplayHeader("Filter Workers");
         
-        var firstName = AnsiConsole.Ask<string>("[yellow]Filter by first name (press Enter to skip):[/]", string.Empty);
-        var lastName = AnsiConsole.Ask<string>("[yellow]Filter by last name (press Enter to skip):[/]", string.Empty);
+        var name = AnsiConsole.Ask<string>("[yellow]Filter by name (press Enter to skip):[/]", string.Empty);
         var email = AnsiConsole.Ask<string>("[yellow]Filter by email (press Enter to skip):[/]", string.Empty);
-        
+
         return new WorkerFilterOptions
         {
-            FirstName = string.IsNullOrWhiteSpace(firstName) ? null : firstName,
-            LastName = string.IsNullOrWhiteSpace(lastName) ? null : lastName,
+            Name = string.IsNullOrWhiteSpace(name) ? null : name,
             Email = string.IsNullOrWhiteSpace(email) ? null : email
         };
     }

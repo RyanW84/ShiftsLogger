@@ -202,10 +202,7 @@ public class ShiftService : IShiftService
 
     public async Task<ApiResponseDto<Shift?>> UpdateShiftAsync(int id, Shift updatedShift)
     {
-        if (_useMockData)
-        {
-            return UpdateMockShift(id, updatedShift);
-        }
+    // ...existing code...
 
         try
         {
@@ -213,7 +210,12 @@ public class ShiftService : IShiftService
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 _logger.LogError("Error updating shift {ShiftId}. Status Code: {StatusCode}", id, response.StatusCode);
-                return UpdateMockShift(id, updatedShift); // Fallback to mock data
+                return new ApiResponseDto<Shift?>("Error updating shift")
+                {
+                    ResponseCode = response.StatusCode,
+                    RequestFailed = true,
+                    Data = null
+                };
             }
 
             var result = await response.Content.ReadFromJsonAsync<ApiResponseDto<Shift>>()
@@ -233,33 +235,20 @@ public class ShiftService : IShiftService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while updating shift {ShiftId}", id);
-            return UpdateMockShift(id, updatedShift); // Fallback to mock data
+            return new ApiResponseDto<Shift?>("Error occurred while updating shift")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                RequestFailed = true,
+                Data = null
+            };
         }
     }
 
-    private static ApiResponseDto<Shift?> UpdateMockShift(int id, Shift updatedShift)
-    {
-        updatedShift.ShiftId = id;
-
-        return new ApiResponseDto<Shift?>("Shift updated successfully")
-        {
-            Data = updatedShift,
-            RequestFailed = false,
-            ResponseCode = HttpStatusCode.OK
-        };
-    }
+    // ...existing code...
 
     public async Task<ApiResponseDto<string?>> DeleteShiftAsync(int id)
     {
-        if (_useMockData)
-        {
-            return new ApiResponseDto<string?>("Shift deleted successfully")
-            {
-                Data = $"Deleted shift with ID {id}",
-                RequestFailed = false,
-                ResponseCode = HttpStatusCode.OK
-            };
-        }
+    // ...existing code...
 
         try
         {
