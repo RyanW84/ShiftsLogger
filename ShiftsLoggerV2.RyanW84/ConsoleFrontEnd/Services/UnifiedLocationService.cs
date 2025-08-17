@@ -46,8 +46,20 @@ public class UnifiedLocationService : ILocationService
             
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Failed to fetch locations. Status: {StatusCode}", response.StatusCode);
-                return new ApiResponseDto<List<Location>>("Failed to retrieve locations")
+                string errorMsg = response.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.NotFound => "No locations found (404).",
+                    System.Net.HttpStatusCode.BadRequest => "Bad request (400) while retrieving locations.",
+                    System.Net.HttpStatusCode.InternalServerError => "Server error (500) while retrieving locations.",
+                    System.Net.HttpStatusCode.Unauthorized => "Unauthorized (401) while retrieving locations.",
+                    System.Net.HttpStatusCode.Forbidden => "Forbidden (403) while retrieving locations.",
+                    System.Net.HttpStatusCode.Conflict => "Conflict (409) while retrieving locations.",
+                    System.Net.HttpStatusCode.RequestTimeout => "Request Timeout (408) while retrieving locations.",
+                    (System.Net.HttpStatusCode)422 => "Unprocessable Entity (422) while retrieving locations.",
+                    _ => $"Failed to retrieve locations: {response.ReasonPhrase}"
+                };
+                _logger.LogWarning(errorMsg);
+                return new ApiResponseDto<List<Location>>(errorMsg)
                 {
                     RequestFailed = true,
                     ResponseCode = response.StatusCode,
@@ -84,8 +96,20 @@ public class UnifiedLocationService : ILocationService
             
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Failed to fetch location {LocationId}. Status: {StatusCode}", id, response.StatusCode);
-                return new ApiResponseDto<Location?>("Failed to retrieve location")
+                string errorMsg = response.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.NotFound => "Location not found (404).",
+                    System.Net.HttpStatusCode.BadRequest => "Bad request (400) while retrieving location.",
+                    System.Net.HttpStatusCode.InternalServerError => "Server error (500) while retrieving location.",
+                    System.Net.HttpStatusCode.Unauthorized => "Unauthorized (401) while retrieving location.",
+                    System.Net.HttpStatusCode.Forbidden => "Forbidden (403) while retrieving location.",
+                    System.Net.HttpStatusCode.Conflict => "Conflict (409) while retrieving location.",
+                    System.Net.HttpStatusCode.RequestTimeout => "Request Timeout (408) while retrieving location.",
+                    (System.Net.HttpStatusCode)422 => "Unprocessable Entity (422) while retrieving location.",
+                    _ => $"Failed to retrieve location: {response.ReasonPhrase}"
+                };
+                _logger.LogWarning(errorMsg);
+                return new ApiResponseDto<Location?>(errorMsg)
                 {
                     RequestFailed = true,
                     ResponseCode = response.StatusCode,
@@ -122,8 +146,19 @@ public class UnifiedLocationService : ILocationService
             
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Failed to create location. Status: {StatusCode}", response.StatusCode);
-                return new ApiResponseDto<Location>("Failed to create location")
+                string errorMsg = response.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.BadRequest => "Bad request (400) while creating location.",
+                    System.Net.HttpStatusCode.InternalServerError => "Server error (500) while creating location.",
+                    System.Net.HttpStatusCode.Unauthorized => "Unauthorized (401) while creating location.",
+                    System.Net.HttpStatusCode.Forbidden => "Forbidden (403) while creating location.",
+                    System.Net.HttpStatusCode.Conflict => "Conflict (409) while creating location.",
+                    System.Net.HttpStatusCode.RequestTimeout => "Request Timeout (408) while creating location.",
+                    (System.Net.HttpStatusCode)422 => "Unprocessable Entity (422) while creating location.",
+                    _ => $"Failed to create location: {response.ReasonPhrase}"
+                };
+                _logger.LogWarning(errorMsg);
+                return new ApiResponseDto<Location>(errorMsg)
                 {
                     RequestFailed = true,
                     ResponseCode = response.StatusCode,
@@ -160,8 +195,20 @@ public class UnifiedLocationService : ILocationService
             
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Failed to update location {LocationId}. Status: {StatusCode}", id, response.StatusCode);
-                return new ApiResponseDto<Location?>("Failed to update location")
+                string errorMsg = response.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.NotFound => "Location not found (404) for update.",
+                    System.Net.HttpStatusCode.BadRequest => "Bad request (400) while updating location.",
+                    System.Net.HttpStatusCode.InternalServerError => "Server error (500) while updating location.",
+                    System.Net.HttpStatusCode.Unauthorized => "Unauthorized (401) while updating location.",
+                    System.Net.HttpStatusCode.Forbidden => "Forbidden (403) while updating location.",
+                    System.Net.HttpStatusCode.Conflict => "Conflict (409) while updating location.",
+                    System.Net.HttpStatusCode.RequestTimeout => "Request Timeout (408) while updating location.",
+                    (System.Net.HttpStatusCode)422 => "Unprocessable Entity (422) while updating location.",
+                    _ => $"Failed to update location: {response.ReasonPhrase}"
+                };
+                _logger.LogWarning(errorMsg);
+                return new ApiResponseDto<Location?>(errorMsg)
                 {
                     RequestFailed = true,
                     ResponseCode = response.StatusCode,
@@ -198,8 +245,20 @@ public class UnifiedLocationService : ILocationService
             
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Failed to delete location {LocationId}. Status: {StatusCode}", id, response.StatusCode);
-                return new ApiResponseDto<string?>("Failed to delete location")
+                string errorMsg = response.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.NotFound => "Location not found (404) for delete.",
+                    System.Net.HttpStatusCode.BadRequest => "Bad request (400) while deleting location.",
+                    System.Net.HttpStatusCode.InternalServerError => "Server error (500) while deleting location.",
+                    System.Net.HttpStatusCode.Unauthorized => "Unauthorized (401) while deleting location.",
+                    System.Net.HttpStatusCode.Forbidden => "Forbidden (403) while deleting location.",
+                    System.Net.HttpStatusCode.Conflict => "Conflict (409) while deleting location.",
+                    System.Net.HttpStatusCode.RequestTimeout => "Request Timeout (408) while deleting location.",
+                    (System.Net.HttpStatusCode)422 => "Unprocessable Entity (422) while deleting location.",
+                    _ => $"Failed to delete location: {response.ReasonPhrase}"
+                };
+                _logger.LogWarning(errorMsg);
+                return new ApiResponseDto<string?>(errorMsg)
                 {
                     RequestFailed = true,
                     ResponseCode = response.StatusCode,

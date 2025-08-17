@@ -19,7 +19,6 @@ public class LocationService : ILocationService
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
-        
         // Set base address if not already set
         if (_httpClient.BaseAddress == null)
         {
@@ -27,6 +26,57 @@ public class LocationService : ILocationService
         }
     }
 
+    public async Task<ApiResponseDto<List<Location>>> GetLocationsByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.LocationFilterOptions filter)
+    {
+        try
+        {
+            var allResponse = await GetAllLocationsAsync();
+            if (allResponse.RequestFailed || allResponse.Data == null)
+                return allResponse;
+
+            var filtered = allResponse.Data.AsQueryable();
+            if (filter.LocationId.HasValue && filter.LocationId.Value > 0)
+                filtered = filtered.Where(l => l.LocationId == filter.LocationId.Value);
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                filtered = filtered.Where(l => l.Name != null && l.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(filter.Address))
+                filtered = filtered.Where(l => l.Address != null && l.Address.Contains(filter.Address, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(filter.Town))
+                filtered = filtered.Where(l => l.Town != null && l.Town.Contains(filter.Town, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(filter.County))
+                filtered = filtered.Where(l => l.County != null && l.County.Contains(filter.County, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(filter.PostCode))
+                filtered = filtered.Where(l => l.PostCode != null && l.PostCode.Contains(filter.PostCode, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(filter.Country))
+                filtered = filtered.Where(l => l.Country != null && l.Country.Contains(filter.Country, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+                filtered = filtered.Where(l => (l.Name != null && l.Name.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
+                                               (l.Address != null && l.Address.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
+                                               (l.Town != null && l.Town.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
+                                               (l.County != null && l.County.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
+                                               (l.PostCode != null && l.PostCode.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
+                                               (l.Country != null && l.Country.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)));
+
+            var resultList = filtered.ToList();
+            return new ApiResponseDto<List<Location>>("Filtered locations")
+            {
+                Data = resultList,
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                TotalCount = resultList.Count
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error filtering locations");
+            return new ApiResponseDto<List<Location>>("Error filtering locations")
+            {
+                Data = new List<Location>(),
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError
+            };
+        }
+    }
     public async Task<ApiResponseDto<List<Location>>> GetAllLocationsAsync()
     {
         try

@@ -14,18 +14,56 @@ public class WorkerService : IWorkerService
     private readonly IConfiguration _configuration;
     private readonly ILogger<WorkerService> _logger;
 
-
     public WorkerService(HttpClient httpClient, IConfiguration configuration, ILogger<WorkerService> logger)
     {
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
-    // ...existing code...
-        
         // Set base address if not already set
         if (_httpClient.BaseAddress == null)
         {
             _httpClient.BaseAddress = new Uri(_configuration.GetValue<string>("ApiBaseUrl") ?? "http://localhost:5181/");
+        }
+    }
+
+    // ...existing methods...
+
+    public async Task<ApiResponseDto<List<Worker>>> GetWorkersByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.WorkerFilterOptions filter)
+    {
+        try
+        {
+            var allResponse = await GetAllWorkersAsync();
+            if (allResponse.RequestFailed || allResponse.Data == null)
+                return allResponse;
+
+            var filtered = allResponse.Data.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                filtered = filtered.Where(w => w.Name != null && w.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(filter.Email))
+                filtered = filtered.Where(w => w.Email != null && w.Email.Contains(filter.Email, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(filter.PhoneNumber))
+                filtered = filtered.Where(w => w.PhoneNumber != null && w.PhoneNumber.Contains(filter.PhoneNumber));
+            if (filter.WorkerId.HasValue)
+                filtered = filtered.Where(w => w.WorkerId == filter.WorkerId.Value);
+
+            var resultList = filtered.ToList();
+            return new ApiResponseDto<List<Worker>>("Filtered workers")
+            {
+                Data = resultList,
+                RequestFailed = false,
+                ResponseCode = System.Net.HttpStatusCode.OK,
+                TotalCount = resultList.Count
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error filtering workers");
+            return new ApiResponseDto<List<Worker>>("Error filtering workers")
+            {
+                Data = new List<Worker>(),
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError
+            };
         }
     }
 

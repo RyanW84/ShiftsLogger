@@ -1,3 +1,4 @@
+
 using ConsoleFrontEnd.Core.Abstractions;
 using ConsoleFrontEnd.Core.Infrastructure;
 using ConsoleFrontEnd.MenuSystem.Menus;
@@ -16,9 +17,7 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        Console.WriteLine("=== SOLID Console Frontend Demo ===");
-        Console.WriteLine("This demonstrates a properly refactored console application using SOLID principles.");
-        Console.WriteLine();
+    
 
         try
         {

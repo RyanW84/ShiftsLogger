@@ -10,6 +10,59 @@ namespace ConsoleFrontEnd.Services;
 
 public class ShiftService : IShiftService
 {
+    public async Task<ApiResponseDto<List<Shift>>> GetShiftsByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter)
+    {
+        if (_useMockData)
+        {
+            var allShifts = GetMockShifts();
+            return FilterShiftsLocally(allShifts, filter);
+        }
+        try
+        {
+            var allResponse = await GetAllShiftsAsync();
+            if (allResponse.RequestFailed || allResponse.Data == null)
+                return allResponse;
+
+            return FilterShiftsLocally(allResponse, filter);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error filtering shifts");
+            return new ApiResponseDto<List<Shift>>("Error filtering shifts")
+            {
+                Data = new List<Shift>(),
+                RequestFailed = true,
+                ResponseCode = System.Net.HttpStatusCode.InternalServerError
+            };
+        }
+    }
+
+    private static ApiResponseDto<List<Shift>> FilterShiftsLocally(ApiResponseDto<List<Shift>> allResponse, ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter)
+    {
+    var filtered = (allResponse.Data ?? new List<Shift>()).AsQueryable();
+        if (filter.ShiftId.HasValue)
+            filtered = filtered.Where(s => s.ShiftId == filter.ShiftId.Value);
+        if (filter.WorkerId.HasValue)
+            filtered = filtered.Where(s => s.WorkerId == filter.WorkerId.Value);
+        if (filter.LocationId.HasValue)
+            filtered = filtered.Where(s => s.LocationId == filter.LocationId.Value);
+        if (filter.StartTime.HasValue)
+            filtered = filtered.Where(s => s.StartTime >= filter.StartTime.Value);
+        if (filter.EndTime.HasValue)
+            filtered = filtered.Where(s => s.EndTime <= filter.EndTime.Value);
+        if (!string.IsNullOrWhiteSpace(filter.LocationName))
+            filtered = filtered.Where(s => s.LocationId.ToString() == filter.LocationName);
+        // Add more filters as needed
+        var resultList = filtered.ToList();
+        return new ApiResponseDto<List<Shift>>("Filtered shifts")
+        {
+            Data = resultList,
+            RequestFailed = false,
+            ResponseCode = System.Net.HttpStatusCode.OK,
+            TotalCount = resultList.Count
+        };
+    }
+
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<ShiftService> _logger;
@@ -44,8 +97,25 @@ public class ShiftService : IShiftService
             var response = await _httpClient.GetAsync(queryString);
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("Failed to retrieve shifts. Status: {StatusCode}", response.StatusCode);
-                return GetMockShifts(); // Fallback to mock data
+                string errorMsg = response.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.NotFound => "No shifts found (404).",
+                    System.Net.HttpStatusCode.BadRequest => "Bad request (400) while retrieving shifts.",
+                    System.Net.HttpStatusCode.InternalServerError => "Server error (500) while retrieving shifts.",
+                    System.Net.HttpStatusCode.Unauthorized => "Unauthorized (401) while retrieving shifts.",
+                    System.Net.HttpStatusCode.Forbidden => "Forbidden (403) while retrieving shifts.",
+                    System.Net.HttpStatusCode.Conflict => "Conflict (409) while retrieving shifts.",
+                    System.Net.HttpStatusCode.RequestTimeout => "Request Timeout (408) while retrieving shifts.",
+                    (System.Net.HttpStatusCode)422 => "Unprocessable Entity (422) while retrieving shifts.",
+                    _ => $"Failed to retrieve shifts: {response.ReasonPhrase}"
+                };
+                _logger.LogError(errorMsg);
+                return new ApiResponseDto<List<Shift>>(errorMsg)
+                {
+                    RequestFailed = true,
+                    ResponseCode = response.StatusCode,
+                    Data = new List<Shift>()
+                };
             }
 
             var result = await response.Content.ReadFromJsonAsync<ApiResponseDto<List<Shift>>>()
@@ -122,7 +192,20 @@ public class ShiftService : IShiftService
                 };
             }
 
-            return new ApiResponseDto<Shift?>(response.ReasonPhrase ?? "Shift not found")
+            string errorMsg = response.StatusCode switch
+            {
+                HttpStatusCode.NotFound => "Shift not found (404).",
+                HttpStatusCode.BadRequest => "Bad request (400) while retrieving shift.",
+                HttpStatusCode.InternalServerError => "Server error (500) while retrieving shift.",
+                HttpStatusCode.Unauthorized => "Unauthorized (401) while retrieving shift.",
+                HttpStatusCode.Forbidden => "Forbidden (403) while retrieving shift.",
+                HttpStatusCode.Conflict => "Conflict (409) while retrieving shift.",
+                HttpStatusCode.RequestTimeout => "Request Timeout (408) while retrieving shift.",
+                (HttpStatusCode)422 => "Unprocessable Entity (422) while retrieving shift.",
+                _ => $"Failed to retrieve shift: {response.ReasonPhrase}"
+            };
+            _logger.LogError(errorMsg);
+            return new ApiResponseDto<Shift?>(errorMsg)
             {
                 ResponseCode = response.StatusCode,
                 RequestFailed = true,
@@ -167,8 +250,24 @@ public class ShiftService : IShiftService
             var response = await _httpClient.PostAsJsonAsync("api/shifts", shift);
             if (response.StatusCode != HttpStatusCode.Created)
             {
-                _logger.LogError("Error creating shift. Status Code: {StatusCode}", response.StatusCode);
-                return CreateMockShift(shift); // Fallback to mock data
+                string errorMsg = response.StatusCode switch
+                {
+                    HttpStatusCode.BadRequest => "Bad request (400) while creating shift.",
+                    HttpStatusCode.InternalServerError => "Server error (500) while creating shift.",
+                    HttpStatusCode.Unauthorized => "Unauthorized (401) while creating shift.",
+                    HttpStatusCode.Forbidden => "Forbidden (403) while creating shift.",
+                    HttpStatusCode.Conflict => "Conflict (409) while creating shift.",
+                    HttpStatusCode.RequestTimeout => "Request Timeout (408) while creating shift.",
+                    (HttpStatusCode)422 => "Unprocessable Entity (422) while creating shift.",
+                    _ => $"Failed to create shift: {response.ReasonPhrase}"
+                };
+                _logger.LogError(errorMsg);
+                return new ApiResponseDto<Shift>(errorMsg)
+                {
+                    RequestFailed = true,
+                    ResponseCode = response.StatusCode,
+                    Data = shift
+                };
             }
 
             var createdShift = await response.Content.ReadFromJsonAsync<Shift>() ?? shift;
@@ -209,8 +308,20 @@ public class ShiftService : IShiftService
             var response = await _httpClient.PutAsJsonAsync($"api/shifts/{id}", updatedShift);
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.LogError("Error updating shift {ShiftId}. Status Code: {StatusCode}", id, response.StatusCode);
-                return new ApiResponseDto<Shift?>("Error updating shift")
+                string errorMsg = response.StatusCode switch
+                {
+                    HttpStatusCode.NotFound => "Shift not found (404) for update.",
+                    HttpStatusCode.BadRequest => "Bad request (400) while updating shift.",
+                    HttpStatusCode.InternalServerError => "Server error (500) while updating shift.",
+                    HttpStatusCode.Unauthorized => "Unauthorized (401) while updating shift.",
+                    HttpStatusCode.Forbidden => "Forbidden (403) while updating shift.",
+                    HttpStatusCode.Conflict => "Conflict (409) while updating shift.",
+                    HttpStatusCode.RequestTimeout => "Request Timeout (408) while updating shift.",
+                    (HttpStatusCode)422 => "Unprocessable Entity (422) while updating shift.",
+                    _ => $"Failed to update shift: {response.ReasonPhrase}"
+                };
+                _logger.LogError(errorMsg);
+                return new ApiResponseDto<Shift?>(errorMsg)
                 {
                     ResponseCode = response.StatusCode,
                     RequestFailed = true,
@@ -255,8 +366,20 @@ public class ShiftService : IShiftService
             var response = await _httpClient.DeleteAsync($"api/shifts/{id}");
             if (response.StatusCode != HttpStatusCode.NoContent)
             {
-                _logger.LogError("Error deleting shift {ShiftId}. Status Code: {StatusCode}", id, response.StatusCode);
-                return new ApiResponseDto<string?>($"Error deleting Shift - {response.StatusCode}")
+                string errorMsg = response.StatusCode switch
+                {
+                    HttpStatusCode.NotFound => "Shift not found (404) for delete.",
+                    HttpStatusCode.BadRequest => "Bad request (400) while deleting shift.",
+                    HttpStatusCode.InternalServerError => "Server error (500) while deleting shift.",
+                    HttpStatusCode.Unauthorized => "Unauthorized (401) while deleting shift.",
+                    HttpStatusCode.Forbidden => "Forbidden (403) while deleting shift.",
+                    HttpStatusCode.Conflict => "Conflict (409) while deleting shift.",
+                    HttpStatusCode.RequestTimeout => "Request Timeout (408) while deleting shift.",
+                    (HttpStatusCode)422 => "Unprocessable Entity (422) while deleting shift.",
+                    _ => $"Failed to delete shift: {response.ReasonPhrase}"
+                };
+                _logger.LogError(errorMsg);
+                return new ApiResponseDto<string?>(errorMsg)
                 {
                     ResponseCode = response.StatusCode,
                     RequestFailed = true,

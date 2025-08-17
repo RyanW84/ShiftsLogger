@@ -1,3 +1,4 @@
+using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Core.Abstractions;
 using ConsoleFrontEnd.Services;
 using ConsoleFrontEnd.Models.FilterOptions;
@@ -120,11 +121,40 @@ public class LocationMenuV2 : BaseMenuV2
         
         if (response.RequestFailed)
         {
-            DisplayService.DisplayError($"Failed to retrieve locations: {response.Message}");
+            switch (response.ResponseCode)
+            {
+                case System.Net.HttpStatusCode.NotFound:
+                    DisplayService.DisplayError("No locations found (404).");
+                    break;
+                case System.Net.HttpStatusCode.BadRequest:
+                    DisplayService.DisplayError("Bad request (400).");
+                    break;
+                case System.Net.HttpStatusCode.InternalServerError:
+                    DisplayService.DisplayError("Server error (500).");
+                    break;
+                case System.Net.HttpStatusCode.Unauthorized:
+                    DisplayService.DisplayError("Unauthorized (401).");
+                    break;
+                case System.Net.HttpStatusCode.Forbidden:
+                    DisplayService.DisplayError("Forbidden (403).");
+                    break;
+                case System.Net.HttpStatusCode.Conflict:
+                    DisplayService.DisplayError("Conflict (409).");
+                    break;
+                case System.Net.HttpStatusCode.RequestTimeout:
+                    DisplayService.DisplayError("Request Timeout (408).");
+                    break;
+                case (System.Net.HttpStatusCode)422:
+                    DisplayService.DisplayError("Unprocessable Entity (422).");
+                    break;
+                default:
+                    DisplayService.DisplayError($"Failed to retrieve locations: {response.Message}");
+                    break;
+            }
         }
         else
         {
-            DisplayService.DisplayTable(response.Data, "All Locations");
+            DisplayService.DisplayTable(response.Data != null ? response.Data : Enumerable.Empty<Location>(), "All Locations");
             DisplayService.DisplaySuccess($"Total locations: {response.TotalCount}");
         }
         
@@ -133,10 +163,27 @@ public class LocationMenuV2 : BaseMenuV2
 
     private async Task ViewLocationByIdAsync()
     {
-        var locationId = InputService.GetIntegerInput("Enter Location ID:", 1);
-        
+        var allLocationsResponse = await _locationService.GetAllLocationsAsync();
+        if (allLocationsResponse.RequestFailed || allLocationsResponse.Data == null || !allLocationsResponse.Data.Any())
+        {
+            DisplayService.DisplayError(allLocationsResponse.Message ?? "No locations found.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+        var locationChoices = allLocationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
+        var selected = InputService.GetMenuChoice("Select a location by ID:", locationChoices);
+        var locationId = int.Parse(selected.Split(':')[0]);
+        var response = await _locationService.GetLocationByIdAsync(locationId);
         DisplayService.DisplayHeader($"Location Details (ID: {locationId})", "blue");
-        DisplayService.DisplayInfo("Feature implementation in progress...");
+        if (response.RequestFailed || response.Data == null)
+        {
+            DisplayService.DisplayError(response.Message ?? "Location not found.");
+        }
+        else
+        {
+            DisplayService.DisplayTable(new List<Location> { response.Data }, "Location Details");
+            DisplayService.DisplaySuccess("Location details loaded successfully.");
+        }
         InputService.WaitForKeyPress();
     }
 
@@ -168,51 +215,140 @@ public class LocationMenuV2 : BaseMenuV2
         }
 
         InputService.WaitForKeyPress();
+    await Task.CompletedTask;
     }
 
     private async Task UpdateLocationAsync()
     {
         DisplayService.DisplayHeader("Update Location", "yellow");
-        DisplayService.DisplayInfo("Feature implementation in progress...");
+        var allLocationsResponse = await _locationService.GetAllLocationsAsync();
+        if (allLocationsResponse.RequestFailed || allLocationsResponse.Data == null || !allLocationsResponse.Data.Any())
+        {
+            DisplayService.DisplayError(allLocationsResponse.Message ?? "No locations found.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+        var locationChoices = allLocationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
+        var selected = InputService.GetMenuChoice("Select a location to update:", locationChoices);
+        var locationId = int.Parse(selected.Split(':')[0]);
+        var location = allLocationsResponse.Data.First(l => l.LocationId == locationId);
+        var name = InputService.GetTextInput($"Enter new name (current: {location.Name}):", false);
+        var address = InputService.GetTextInput($"Enter new address (current: {location.Address}):", false);
+        var town = InputService.GetTextInput($"Enter new town (current: {location.Town}):", false);
+        var county = InputService.GetTextInput($"Enter new county (current: {location.County}):", false);
+        var postCode = InputService.GetTextInput($"Enter new post code (current: {location.PostCode}):", false);
+        var country = InputService.GetTextInput($"Enter new country (current: {location.Country}):", false);
+        var updatedLocation = new Location {
+            LocationId = location.LocationId,
+            Name = string.IsNullOrWhiteSpace(name) ? location.Name : name,
+            Address = string.IsNullOrWhiteSpace(address) ? location.Address : address,
+            Town = string.IsNullOrWhiteSpace(town) ? location.Town : town,
+            County = string.IsNullOrWhiteSpace(county) ? location.County : county,
+            PostCode = string.IsNullOrWhiteSpace(postCode) ? location.PostCode : postCode,
+            Country = string.IsNullOrWhiteSpace(country) ? location.Country : country
+        };
+        var response = await _locationService.UpdateLocationAsync(locationId, updatedLocation);
+        if (response.RequestFailed || response.Data == null)
+        {
+            DisplayService.DisplayError(response.Message ?? "Failed to update location.");
+        }
+        else
+        {
+            DisplayService.DisplaySuccess("Location updated successfully.");
+            DisplayService.DisplayTable(new List<Location> { response.Data }, "Updated Location");
+        }
         InputService.WaitForKeyPress();
     }
 
     private async Task DeleteLocationAsync()
     {
         DisplayService.DisplayHeader("Delete Location", "red");
-        
-        var locationId = InputService.GetIntegerInput("Enter Location ID to delete:", 1);
-        
+        var allLocationsResponse = await _locationService.GetAllLocationsAsync();
+        if (allLocationsResponse.RequestFailed || allLocationsResponse.Data == null || !allLocationsResponse.Data.Any())
+        {
+            DisplayService.DisplayError(allLocationsResponse.Message ?? "No locations found.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+        var locationChoices = allLocationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
+        var selected = InputService.GetMenuChoice("Select a location to delete:", locationChoices);
+        var locationId = int.Parse(selected.Split(':')[0]);
         if (InputService.GetConfirmation($"Are you sure you want to delete location {locationId}?"))
         {
-            DisplayService.DisplayInfo("Feature implementation in progress...");
+            var response = await _locationService.DeleteLocationAsync(locationId);
+            if (response.RequestFailed)
+            {
+                DisplayService.DisplayError(response.Message ?? "Failed to delete location.");
+            }
+            else
+            {
+                DisplayService.DisplaySuccess(response.Message ?? $"Location {locationId} deleted successfully.");
+            }
         }
         else
         {
             DisplayService.DisplayInfo("Delete cancelled.");
         }
-        
         InputService.WaitForKeyPress();
     }
 
     private async Task FilterLocationsAsync()
     {
         DisplayService.DisplayHeader("Filter Locations", "blue");
-        DisplayService.DisplayInfo("Feature implementation in progress...");
+        var filter = new LocationFilterOptions {
+            Name = InputService.GetTextInput("Filter by name (leave blank for any):", false),
+            Address = InputService.GetTextInput("Filter by address (leave blank for any):", false),
+            Town = InputService.GetTextInput("Filter by town (leave blank for any):", false),
+            County = InputService.GetTextInput("Filter by county (leave blank for any):", false),
+            PostCode = InputService.GetTextInput("Filter by post code (leave blank for any):", false),
+            Country = InputService.GetTextInput("Filter by country (leave blank for any):", false)
+        };
+        var response = await _locationService.GetLocationsByFilterAsync(filter);
+        if (response.RequestFailed || response.Data == null || !response.Data.Any())
+        {
+            DisplayService.DisplayError(response.Message ?? "No locations found matching filter.");
+        }
+        else
+        {
+            DisplayService.DisplayTable(response.Data, "Filtered Locations");
+            DisplayService.DisplaySuccess($"Total filtered locations: {response.TotalCount}");
+        }
         InputService.WaitForKeyPress();
     }
 
     private async Task ViewLocationsByCountryAsync()
     {
         DisplayService.DisplayHeader("Locations by Country", "blue");
-        DisplayService.DisplayInfo("Feature implementation in progress...");
+        var country = InputService.GetTextInput("Enter country:");
+        var filter = new LocationFilterOptions { Country = country };
+        var response = await _locationService.GetLocationsByFilterAsync(filter);
+        if (response.RequestFailed || response.Data == null || !response.Data.Any())
+        {
+            DisplayService.DisplayError(response.Message ?? $"No locations found in country '{country}'.");
+        }
+        else
+        {
+            DisplayService.DisplayTable(response.Data, $"Locations in '{country}'");
+            DisplayService.DisplaySuccess($"Total: {response.TotalCount}");
+        }
         InputService.WaitForKeyPress();
     }
 
     private async Task ViewLocationsByCountyAsync()
     {
         DisplayService.DisplayHeader("Locations by County", "blue");
-        DisplayService.DisplayInfo("Feature implementation in progress...");
+        var county = InputService.GetTextInput("Enter county:");
+        var filter = new LocationFilterOptions { County = county };
+        var response = await _locationService.GetLocationsByFilterAsync(filter);
+        if (response.RequestFailed || response.Data == null || !response.Data.Any())
+        {
+            DisplayService.DisplayError(response.Message ?? $"No locations found in county '{county}'.");
+        }
+        else
+        {
+            DisplayService.DisplayTable(response.Data, $"Locations in '{county}'");
+            DisplayService.DisplaySuccess($"Total: {response.TotalCount}");
+        }
         InputService.WaitForKeyPress();
     }
 }

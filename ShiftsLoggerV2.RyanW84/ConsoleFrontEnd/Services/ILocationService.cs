@@ -10,4 +10,5 @@ public interface ILocationService
     Task<ApiResponseDto<Location>> CreateLocationAsync(Location location);
     Task<ApiResponseDto<Location?>> UpdateLocationAsync(int id, Location updatedLocation);
     Task<ApiResponseDto<string?>> DeleteLocationAsync(int id);
+    Task<ApiResponseDto<List<Location>>> GetLocationsByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.LocationFilterOptions filter);
 }

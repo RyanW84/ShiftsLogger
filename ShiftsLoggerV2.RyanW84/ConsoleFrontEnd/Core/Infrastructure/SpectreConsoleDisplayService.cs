@@ -111,17 +111,20 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         }
     }
 
-    public void DisplayTable<T>(IEnumerable<T> data, string title)
+    public void DisplayTable<T>(IEnumerable<T> data, string? title = null)
     {
         lock (_consoleLock)
         {
             var table = new Table();
-            table.Title = new TableTitle($"[bold yellow]{title}[/]");
+            if (!string.IsNullOrEmpty(title))
+            {
+                table.Title = new TableTitle($"[bold yellow]{title}[/]");
+            }
             table.Border = TableBorder.Rounded;
 
             if (!data.Any())
             {
-                AnsiConsole.MarkupLine($"[yellow]No data available for {title}[/]");
+                AnsiConsole.MarkupLine($"[yellow]No data available{(string.IsNullOrEmpty(title) ? "" : $" for {title}")}[/]");
                 return;
             }
 

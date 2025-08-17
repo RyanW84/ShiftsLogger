@@ -1,3 +1,4 @@
+using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Core.Abstractions;
 using ConsoleFrontEnd.Services;
 using ConsoleFrontEnd.Models.FilterOptions;
@@ -120,11 +121,40 @@ public class WorkerMenuV2 : BaseMenuV2
         
         if (response.RequestFailed)
         {
-            DisplayService.DisplayError($"Failed to retrieve workers: {response.Message}");
+            switch (response.ResponseCode)
+            {
+                case System.Net.HttpStatusCode.NotFound:
+                    DisplayService.DisplayError("No workers found (404).");
+                    break;
+                case System.Net.HttpStatusCode.BadRequest:
+                    DisplayService.DisplayError("Bad request (400).");
+                    break;
+                case System.Net.HttpStatusCode.InternalServerError:
+                    DisplayService.DisplayError("Server error (500).");
+                    break;
+                case System.Net.HttpStatusCode.Unauthorized:
+                    DisplayService.DisplayError("Unauthorized (401).");
+                    break;
+                case System.Net.HttpStatusCode.Forbidden:
+                    DisplayService.DisplayError("Forbidden (403).");
+                    break;
+                case System.Net.HttpStatusCode.Conflict:
+                    DisplayService.DisplayError("Conflict (409).");
+                    break;
+                case System.Net.HttpStatusCode.RequestTimeout:
+                    DisplayService.DisplayError("Request Timeout (408).");
+                    break;
+                case (System.Net.HttpStatusCode)422:
+                    DisplayService.DisplayError("Unprocessable Entity (422).");
+                    break;
+                default:
+                    DisplayService.DisplayError($"Failed to retrieve workers: {response.Message}");
+                    break;
+            }
         }
         else
         {
-            DisplayService.DisplayTable(response.Data, "All Workers");
+            DisplayService.DisplayTable(response.Data != null ? response.Data : Enumerable.Empty<Worker>(), "All Workers");
             DisplayService.DisplaySuccess($"Total workers: {response.TotalCount}");
         }
         
@@ -133,10 +163,27 @@ public class WorkerMenuV2 : BaseMenuV2
 
     private async Task ViewWorkerByIdAsync()
     {
-        var workerId = InputService.GetIntegerInput("Enter Worker ID:", 1);
-        
+        var allWorkersResponse = await _workerService.GetAllWorkersAsync();
+        if (allWorkersResponse.RequestFailed || allWorkersResponse.Data == null || !allWorkersResponse.Data.Any())
+        {
+            DisplayService.DisplayError(allWorkersResponse.Message ?? "No workers found.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+        var workerChoices = allWorkersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
+        var selected = InputService.GetMenuChoice("Select a worker by ID:", workerChoices);
+        var workerId = int.Parse(selected.Split(':')[0]);
+        var response = await _workerService.GetWorkerByIdAsync(workerId);
         DisplayService.DisplayHeader($"Worker Details (ID: {workerId})", "blue");
-        DisplayService.DisplayInfo("Feature implementation in progress...");
+        if (response.RequestFailed || response.Data == null)
+        {
+            DisplayService.DisplayError(response.Message ?? "Worker not found.");
+        }
+        else
+        {
+            DisplayService.DisplayTable(new List<Worker> { response.Data }, "Worker Details");
+            DisplayService.DisplaySuccess("Worker details loaded successfully.");
+        }
         InputService.WaitForKeyPress();
     }
 
@@ -172,52 +219,146 @@ public class WorkerMenuV2 : BaseMenuV2
             DisplayService.DisplayError($"Failed to create worker: {ex.Message}");
         }
 
-        InputService.WaitForKeyPress();
+    InputService.WaitForKeyPress();
+    await Task.CompletedTask;
     }
 
     private async Task UpdateWorkerAsync()
     {
         DisplayService.DisplayHeader("Update Worker", "yellow");
-        DisplayService.DisplayInfo("Feature implementation in progress...");
+        var allWorkersResponse = await _workerService.GetAllWorkersAsync();
+        if (allWorkersResponse.RequestFailed || allWorkersResponse.Data == null || !allWorkersResponse.Data.Any())
+        {
+            DisplayService.DisplayError(allWorkersResponse.Message ?? "No workers found.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+        var workerChoices = allWorkersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
+        var selected = InputService.GetMenuChoice("Select a worker to update:", workerChoices);
+        var workerId = int.Parse(selected.Split(':')[0]);
+        var worker = allWorkersResponse.Data.First(w => w.WorkerId == workerId);
+        var name = InputService.GetTextInput($"Enter new name (current: {worker.Name}):", false);
+        var email = InputService.GetTextInput($"Enter new email (current: {worker.Email}):", false);
+        var phone = InputService.GetTextInput($"Enter new phone (current: {worker.PhoneNumber}):", false);
+        var updatedWorker = new Worker {
+            WorkerId = worker.WorkerId,
+            Name = string.IsNullOrWhiteSpace(name) ? worker.Name : name,
+            Email = string.IsNullOrWhiteSpace(email) ? worker.Email : email,
+            PhoneNumber = string.IsNullOrWhiteSpace(phone) ? worker.PhoneNumber : phone
+        };
+        var response = await _workerService.UpdateWorkerAsync(workerId, updatedWorker);
+        if (response.RequestFailed || response.Data == null)
+        {
+            DisplayService.DisplayError(response.Message ?? "Failed to update worker.");
+        }
+        else
+        {
+            DisplayService.DisplaySuccess("Worker updated successfully.");
+            DisplayService.DisplayTable(new List<Worker> { response.Data }, "Updated Worker");
+        }
         InputService.WaitForKeyPress();
     }
 
     private async Task DeleteWorkerAsync()
     {
         DisplayService.DisplayHeader("Delete Worker", "red");
-        
-        var workerId = InputService.GetIntegerInput("Enter Worker ID to delete:", 1);
-        
+        var allWorkersResponse = await _workerService.GetAllWorkersAsync();
+        if (allWorkersResponse.RequestFailed || allWorkersResponse.Data == null || !allWorkersResponse.Data.Any())
+        {
+            DisplayService.DisplayError(allWorkersResponse.Message ?? "No workers found.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+        var workerChoices = allWorkersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
+        var selected = InputService.GetMenuChoice("Select a worker to delete:", workerChoices);
+        var workerId = int.Parse(selected.Split(':')[0]);
         if (InputService.GetConfirmation($"Are you sure you want to delete worker {workerId}?"))
         {
-            DisplayService.DisplayInfo("Feature implementation in progress...");
+            var response = await _workerService.DeleteWorkerAsync(workerId);
+            if (response.RequestFailed)
+            {
+                DisplayService.DisplayError(response.Message ?? "Failed to delete worker.");
+            }
+            else
+            {
+                DisplayService.DisplaySuccess(response.Message ?? $"Worker {workerId} deleted successfully.");
+            }
         }
         else
         {
             DisplayService.DisplayInfo("Delete cancelled.");
         }
-        
         InputService.WaitForKeyPress();
     }
 
     private async Task FilterWorkersAsync()
     {
         DisplayService.DisplayHeader("Filter Workers", "blue");
-        DisplayService.DisplayInfo("Feature implementation in progress...");
+        var filter = new WorkerFilterOptions {
+            Name = InputService.GetTextInput("Filter by name (leave blank for any):", false),
+            Email = InputService.GetTextInput("Filter by email (leave blank for any):", false),
+            PhoneNumber = InputService.GetTextInput("Filter by phone (leave blank for any):", false)
+        };
+        var response = await _workerService.GetWorkersByFilterAsync(filter);
+        if (response.RequestFailed || response.Data == null || !response.Data.Any())
+        {
+            DisplayService.DisplayError(response.Message ?? "No workers found matching filter.");
+        }
+        else
+        {
+            DisplayService.DisplayTable(response.Data, "Filtered Workers");
+            DisplayService.DisplaySuccess($"Total filtered workers: {response.TotalCount}");
+        }
         InputService.WaitForKeyPress();
     }
 
     private async Task ViewWorkersByEmailDomainAsync()
     {
         DisplayService.DisplayHeader("Workers by Email Domain", "blue");
-        DisplayService.DisplayInfo("Feature implementation in progress...");
+        var domain = InputService.GetTextInput("Enter email domain (e.g. gmail.com):");
+        var response = await _workerService.GetAllWorkersAsync();
+        if (response.RequestFailed || response.Data == null)
+        {
+            DisplayService.DisplayError(response.Message ?? "No workers found.");
+        }
+        else
+        {
+            var filtered = response.Data.Where(w => !string.IsNullOrEmpty(w.Email) && w.Email.EndsWith(domain, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (!filtered.Any())
+            {
+                DisplayService.DisplayError($"No workers found with email domain '{domain}'.");
+            }
+            else
+            {
+                DisplayService.DisplayTable(filtered, $"Workers with domain '{domain}'");
+                DisplayService.DisplaySuccess($"Total: {filtered.Count}");
+            }
+        }
         InputService.WaitForKeyPress();
     }
 
     private async Task ViewWorkersByPhoneAreaCodeAsync()
     {
         DisplayService.DisplayHeader("Workers by Phone Area Code", "blue");
-        DisplayService.DisplayInfo("Feature implementation in progress...");
+        var areaCode = InputService.GetTextInput("Enter phone area code:");
+        var response = await _workerService.GetAllWorkersAsync();
+        if (response.RequestFailed || response.Data == null)
+        {
+            DisplayService.DisplayError(response.Message ?? "No workers found.");
+        }
+        else
+        {
+            var filtered = response.Data.Where(w => !string.IsNullOrEmpty(w.PhoneNumber) && w.PhoneNumber.StartsWith(areaCode)).ToList();
+            if (!filtered.Any())
+            {
+                DisplayService.DisplayError($"No workers found with area code '{areaCode}'.");
+            }
+            else
+            {
+                DisplayService.DisplayTable(filtered, $"Workers with area code '{areaCode}'");
+                DisplayService.DisplaySuccess($"Total: {filtered.Count}");
+            }
+        }
         InputService.WaitForKeyPress();
     }
 }
