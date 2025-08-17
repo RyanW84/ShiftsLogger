@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run ShiftsLoggerV2.RyanW84 API",
+			"type": "shell",
+			"command": "dotnet run --project /home/ryanw/Documents/GitHub/ShiftsLogger/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84.csproj",
+			"isBackground": true
+		}
+	]
+}

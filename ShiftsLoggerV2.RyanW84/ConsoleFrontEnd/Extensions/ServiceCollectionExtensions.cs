@@ -21,8 +21,10 @@ public static class ServiceCollectionExtensions
         // HTTP Client Factory
         services.AddHttpClient();
         
-        // Core application services
-        services.AddSingleton<IApplication, ConsoleApplication>();
+    // Core application services
+    services.AddSingleton<IMenuFactory, MenuFactory>();
+    services.AddSingleton<INavigationService, NavigationService>();
+    services.AddSingleton<IApplication, ConsoleApplication>();
         
         // API Services
         services.AddScoped<IShiftService, ShiftService>();
