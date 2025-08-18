@@ -1,16 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace ShiftsLoggerV2.RyanW84.Dtos;
 
-public class ShiftApiRequestDto
+public class ShiftApiRequestDtoRaw
 {
     [Required] [Range(1, 255)] public int WorkerId { get; set; }
 
     [Required]
-    public DateTimeOffset StartTime { get; set; }
+    public string StartTime { get; set; } = string.Empty;
 
     [Required]
-    public DateTimeOffset EndTime { get; set; }
+    public string EndTime { get; set; } = string.Empty;
 
     [Required] [Range(1, 255)] public int LocationId { get; set; }
 }

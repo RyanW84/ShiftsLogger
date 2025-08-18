@@ -1,6 +1,6 @@
+using System.Reflection;
 using ConsoleFrontEnd.Core.Abstractions;
 using Spectre.Console;
-using System.Reflection;
 
 namespace ConsoleFrontEnd.Core.Infrastructure;
 
@@ -11,6 +11,32 @@ namespace ConsoleFrontEnd.Core.Infrastructure;
 public class SpectreConsoleDisplayService : IConsoleDisplayService
 {
     private static readonly object _consoleLock = new();
+
+    // Dictionary to define model-specific property exclusions
+    private static readonly Dictionary<string, HashSet<string>> ModelSpecificExclusions = new()
+    {
+        ["Shift"] = new HashSet<string> { "Id", "Start", "End" },
+        ["Worker"] = new HashSet<string> { "Id", "Phone" },
+        ["Location"] = new HashSet<string> { "Id" },
+    };
+
+    // Property ordering for better table display
+    private static readonly Dictionary<string, string[]> ModelPropertyOrder = new()
+    {
+        ["Shift"] = ["ShiftId", "WorkerName", "LocationName", "StartTime", "EndTime"],
+        ["Worker"] = ["WorkerId", "Name", "PhoneNumber", "Email", "ShiftCount"],
+        ["Location"] =
+        [
+            "LocationId",
+            "Name",
+            "Address",
+            "Town",
+            "County",
+            "PostCode",
+            "Country",
+            "ShiftCount",
+        ],
+    };
 
     public void Clear()
     {
@@ -124,30 +150,279 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
 
             if (!data.Any())
             {
-                AnsiConsole.MarkupLine($"[yellow]No data available{(string.IsNullOrEmpty(title) ? "" : $" for {title}")}[/]");
+                AnsiConsole.MarkupLine(
+                    $"[yellow]No data available{(string.IsNullOrEmpty(title) ? "" : $" for {title}")}[/]"
+                );
                 return;
             }
 
-            // Get properties using reflection
-            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            
+            var modelName = typeof(T).Name;
+
+            // Handle different models with specialized displays
+            switch (modelName)
+            {
+                case "Shift":
+                    DisplayShiftsTable(data.Cast<dynamic>(), title);
+                    return;
+                case "Worker":
+                    DisplayWorkersTable(data.Cast<dynamic>(), title);
+                    return;
+                case "Location":
+                    DisplayLocationsTable(data.Cast<dynamic>(), title);
+                    return;
+            }
+
+            // Default generic table display for other models
+            var properties = GetFilteredProperties<T>(modelName);
+
             // Add columns
             foreach (var prop in properties)
             {
-                table.AddColumn(new TableColumn($"[bold]{prop.Name}[/]").Centered());
+                var columnName = GetFriendlyColumnName(prop.Name);
+                table.AddColumn(new TableColumn($"[bold]{columnName}[/]").Centered());
             }
 
             // Add rows
             foreach (var item in data)
             {
-                var values = properties.Select(prop => 
-                    Markup.Escape(prop.GetValue(item)?.ToString() ?? "N/A")).ToArray();
+                var values = properties
+                    .Select(prop => FormatPropertyValue(prop.GetValue(item)))
+                    .ToArray();
                 table.AddRow(values);
             }
 
             AnsiConsole.Write(table);
             AnsiConsole.WriteLine();
         }
+    }
+
+    private void DisplayShiftsTable(IEnumerable<dynamic> shifts, string? title = "Shifts")
+    {
+        var table = new Table();
+        if (!string.IsNullOrEmpty(title))
+        {
+            table.Title = new TableTitle($"[bold yellow]{title}[/]");
+		}
+		table.Border = TableBorder.Rounded;
+
+        // Add specific columns for shifts with row count instead of shift ID
+        table.AddColumn(new TableColumn("[bold]#[/]").Centered());
+        table.AddColumn(new TableColumn("[bold]Worker Name[/]").Centered());
+        table.AddColumn(new TableColumn("[bold]Location Name[/]").Centered());
+        table.AddColumn(new TableColumn("[bold]Start Time[/]").Centered());
+        table.AddColumn(new TableColumn("[bold]End Time[/]").Centered());
+
+        // Add rows with row number instead of shift ID
+        var rowCount = 1;
+        foreach (var shift in shifts)
+        {
+            var workerName = shift.Worker?.Name ?? "N/A";
+            var locationName = shift.Location?.Name ?? "N/A";
+            var startTime = FormatPropertyValue(shift.StartTime);
+            var endTime = FormatPropertyValue(shift.EndTime);
+
+            TableExtensions.AddRow(
+                table,
+                new string[]
+                {
+                    rowCount.ToString(),
+                    Markup.Escape(workerName),
+                    Markup.Escape(locationName),
+                    startTime,
+                    endTime,
+                }
+            );
+            rowCount++;
+        }
+
+        AnsiConsole.Write(table);
+        AnsiConsole.WriteLine();
+    }
+
+    private void DisplayWorkersTable(IEnumerable<dynamic> workers, string? title = "Workers")
+    {
+        var table = new Table();
+        if (!string.IsNullOrEmpty(title))
+        {
+            table.Title = new TableTitle($"[bold yellow]{title}[/]");
+        }
+        table.Border = TableBorder.Rounded;
+
+        // Add columns: row count, name, phone, email, total shifts
+        table.AddColumn(new TableColumn("[bold]#[/]").Centered());
+        table.AddColumn(new TableColumn("[bold]Name[/]").LeftAligned());
+        table.AddColumn(new TableColumn("[bold]Phone[/]").Centered());
+        table.AddColumn(new TableColumn("[bold]Email[/]").LeftAligned());
+        table.AddColumn(new TableColumn("[bold]Total Shifts[/]").Centered());
+
+        // Add rows with row number instead of worker ID
+        var rowCount = 1;
+        foreach (var worker in workers)
+        {
+            var shiftCount = worker.Shifts?.Count ?? 0;
+            var phoneDisplay = string.IsNullOrWhiteSpace(worker.PhoneNumber)
+                ? "N/A"
+                : worker.PhoneNumber;
+            var emailDisplay = string.IsNullOrWhiteSpace(worker.Email) ? "N/A" : worker.Email;
+            var workerName = worker.Name ?? "N/A";
+
+            TableExtensions.AddRow(
+                table,
+                new string[]
+                {
+                    rowCount.ToString(),
+                    Markup.Escape(workerName),
+                    Markup.Escape(phoneDisplay),
+                    Markup.Escape(emailDisplay),
+                    shiftCount.ToString(),
+                }
+            );
+            rowCount++;
+        }
+
+        AnsiConsole.Write(table);
+        AnsiConsole.WriteLine();
+    }
+
+    private void DisplayLocationsTable(IEnumerable<dynamic> locations, string? title = "Locations")
+    {
+        var table = new Table();
+        if (!string.IsNullOrEmpty(title))
+        {
+            table.Title = new TableTitle($"[bold yellow]{title}[/]");
+        }
+        table.Border = TableBorder.Rounded;
+
+        // Add columns: row count, name, town, county, post code, country, total shifts
+        table.AddColumn(new TableColumn("[bold]#[/]").Centered());
+        table.AddColumn(new TableColumn("[bold]Name[/]").LeftAligned());
+        table.AddColumn(new TableColumn("[bold]Town[/]").LeftAligned());
+        table.AddColumn(new TableColumn("[bold]County[/]").LeftAligned());
+        table.AddColumn(new TableColumn("[bold]Post Code[/]").Centered());
+        table.AddColumn(new TableColumn("[bold]Country[/]").LeftAligned());
+        table.AddColumn(new TableColumn("[bold]Total Shifts[/]").Centered());
+
+        // Add rows with row number instead of location ID
+        var rowCount = 1;
+        foreach (var location in locations)
+        {
+            var shiftCount = location.Shifts?.Count ?? 0;
+            var locationName = location.Name ?? "N/A";
+            var town = location.Town ?? "N/A";
+            var county = location.County ?? "N/A";
+            var postCode = location.PostCode ?? "N/A";
+            var country = location.Country ?? "N/A";
+
+            TableExtensions.AddRow(
+                table,
+                new string[]
+                {
+                    rowCount.ToString(),
+                    Markup.Escape(locationName),
+                    Markup.Escape(town),
+                    Markup.Escape(county),
+                    Markup.Escape(postCode),
+                    Markup.Escape(country),
+                    shiftCount.ToString(),
+                }
+            );
+            rowCount++;
+        }
+
+        AnsiConsole.Write(table);
+        AnsiConsole.WriteLine();
+    }
+
+    private PropertyInfo[] GetFilteredProperties<T>(string modelName)
+    {
+        var allProperties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        // Filter properties based on type and model-specific exclusions
+        var filteredProperties = allProperties
+            .Where(prop =>
+                IsDisplayablePropertyType(prop.PropertyType)
+                && !IsNavigationProperty(prop)
+                && !IsExcludedProperty(modelName, prop.Name)
+            )
+            .ToArray();
+
+        // Apply custom ordering if defined for this model
+        if (ModelPropertyOrder.TryGetValue(modelName, out var order))
+        {
+            return filteredProperties
+                .OrderBy(prop =>
+                {
+                    var index = Array.IndexOf(order, prop.Name);
+                    return index == -1 ? int.MaxValue : index;
+                })
+                .ToArray();
+        }
+
+        return filteredProperties.OrderBy(prop => prop.Name).ToArray();
+    }
+
+    private static bool IsDisplayablePropertyType(Type propertyType)
+    {
+        // Include primitive types, strings, DateTime, DateTimeOffset, decimal, Guid and their nullable variants
+        return propertyType.IsPrimitive
+            || propertyType == typeof(string)
+            || propertyType == typeof(DateTime)
+            || propertyType == typeof(DateTimeOffset)
+            || propertyType == typeof(DateTime?)
+            || propertyType == typeof(DateTimeOffset?)
+            || propertyType == typeof(decimal)
+            || propertyType == typeof(decimal?)
+            || propertyType == typeof(Guid)
+            || propertyType == typeof(Guid?)
+            || Nullable.GetUnderlyingType(propertyType)?.IsPrimitive == true;
+    }
+
+    private static bool IsNavigationProperty(PropertyInfo prop)
+    {
+        // Check if it's a virtual property (typical for EF navigation properties)
+        return prop.GetMethod?.IsVirtual == true
+            && (
+                prop.PropertyType.IsClass && prop.PropertyType != typeof(string)
+                || prop.PropertyType.IsGenericType
+                    && (
+                        prop.PropertyType.GetGenericTypeDefinition() == typeof(ICollection<>)
+                        || prop.PropertyType.GetGenericTypeDefinition() == typeof(List<>)
+                    )
+            );
+    }
+
+    private static bool IsExcludedProperty(string modelName, string propertyName)
+    {
+        return ModelSpecificExclusions.TryGetValue(modelName, out var exclusions)
+            && exclusions.Contains(propertyName);
+    }
+
+    private static string GetFriendlyColumnName(string propertyName)
+    {
+        // Convert camelCase/PascalCase to friendly names
+        return propertyName switch
+        {
+            "WorkerId" => "Worker ID",
+            "LocationId" => "Location ID",
+            "ShiftId" => "Shift ID",
+            "StartTime" => "Start Time",
+            "EndTime" => "End Time",
+            "PhoneNumber" => "Phone",
+            "PostCode" => "Post Code",
+            _ => propertyName,
+        };
+    }
+
+    private static string FormatPropertyValue(object? value)
+    {
+        return value switch
+        {
+            null => "N/A",
+            DateTime dateTime => dateTime.ToString("dd-MM-yyyy HH:mm"),
+            DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("dd-MM-yyyy HH:mm"),
+            string str when string.IsNullOrWhiteSpace(str) => "N/A",
+            _ => Markup.Escape(value.ToString() ?? "N/A"),
+        };
     }
 
     public void DisplaySeparator()

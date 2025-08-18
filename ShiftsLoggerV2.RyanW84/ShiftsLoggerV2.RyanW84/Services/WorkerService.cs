@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using ShiftsLoggerV2.RyanW84.Common;
 using Microsoft.EntityFrameworkCore;
 using ShiftsLoggerV2.RyanW84.Data;
 using ShiftsLoggerV2.RyanW84.Dtos;
@@ -14,7 +15,9 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
         WorkerFilterOptions workerOptions
     )
     {
-        var query = dbContext.Workers.AsQueryable<Worker>();
+        var query = dbContext.Workers
+            .Include(w => w.Shifts) // Add this line
+            .AsQueryable<Worker>();
 
         // Apply all filters
         if (workerOptions.WorkerId != null && workerOptions.WorkerId is not 0)
@@ -139,11 +142,12 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
         catch (Exception ex)
         {
             Console.WriteLine($"Back end worker service - {ex}");
+            var (status, message) = ErrorMapper.Map(ex);
             return new ApiResponseDto<Worker>
             {
                 RequestFailed = true,
-                ResponseCode = HttpStatusCode.InternalServerError,
-                Message = "An error occurred while creating the worker.",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             };
         }

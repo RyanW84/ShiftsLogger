@@ -22,9 +22,9 @@ public class WorkerService : IWorkerService
         _logger = logger;
         
         // Set base address if not already set
-        if (_httpClient.BaseAddress == null)
+        if (_httpClient.BaseAddress == null)    
         {
-            _httpClient.BaseAddress = new Uri(_configuration.GetValue<string>("ApiBaseUrl") ?? "http://localhost:5181/");
+            _httpClient.BaseAddress = new Uri(_configuration.GetValue<string>("ApiBaseUrl") ?? "https://localhost:7009");
         }
     }
 

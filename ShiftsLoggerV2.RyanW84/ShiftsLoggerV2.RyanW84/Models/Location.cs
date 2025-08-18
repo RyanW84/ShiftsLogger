@@ -14,6 +14,9 @@ public class Location : IEntity
     public string PostCode { get; set; } = string.Empty;
     public string Country { get; set; } = string.Empty;
 
+    // Navigation property for related shifts
+    public virtual ICollection<Shift> Shifts { get; set; } = new List<Shift>();
+
     // IEntity implementation
     public int Id => LocationId;
 }

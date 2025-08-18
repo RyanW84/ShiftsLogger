@@ -54,11 +54,12 @@ public class WorkersController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get all workers failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<List<Worker>>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<List<Worker>>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = $"Internal server error: {ex.Message}",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -106,11 +107,12 @@ public class WorkersController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get worker by ID failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<Worker>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<Worker>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = $"Internal server error: {ex.Message}",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -148,11 +150,12 @@ public class WorkersController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Create worker failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<Worker>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<Worker>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = $"Internal server error: {ex.Message}",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -188,11 +191,12 @@ public class WorkersController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Update worker failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<Worker>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<Worker>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = $"Internal server error: {ex.Message}",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -229,11 +233,12 @@ public class WorkersController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Delete worker failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<object>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<object>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = $"Internal server error: {ex.Message}",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -275,11 +280,12 @@ public class WorkersController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get workers by email domain failed: {ex}");
-            return StatusCode(500, new ApiResponseDto<List<Worker>>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<List<Worker>>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -317,11 +323,12 @@ public class WorkersController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get workers by phone area code failed: {ex}");
-            return StatusCode(500, new ApiResponseDto<List<Worker>>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<List<Worker>>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }

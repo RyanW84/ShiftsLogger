@@ -21,6 +21,10 @@ public static class ServiceCollectionExtensions
         // HTTP Client Factory
         services.AddHttpClient();
 
+        // Console services
+        services.AddSingleton<IConsoleDisplayService, SpectreConsoleDisplayService>();
+        services.AddSingleton<IConsoleInputService, SpectreConsoleInputService>();
+
         // Core application services
         services.AddSingleton<IMenuFactory, MenuFactory>();
         services.AddSingleton<INavigationService, NavigationService>();

@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using ShiftsLoggerV2.RyanW84.Common;
 using Microsoft.EntityFrameworkCore;
 using ShiftsLoggerV2.RyanW84.Data;
 using ShiftsLoggerV2.RyanW84.Dtos;
@@ -14,7 +15,9 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         LocationFilterOptions locationOptions
     )
     {
-        var query = dbContext.Locations.AsQueryable<Location>();
+        var query = dbContext.Locations
+            .Include(l => l.Shifts) // Add this line
+            .AsQueryable<Location>();
 
         // Apply all filters
         if (locationOptions.LocationId != null && locationOptions.LocationId is not 0)
@@ -169,11 +172,12 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         catch (Exception ex)
         {
             Console.WriteLine($"Back end location service - {ex}");
+            var (status, message) = ErrorMapper.Map(ex);
             return new ApiResponseDto<Location>
             {
                 RequestFailed = true,
-                ResponseCode = HttpStatusCode.InternalServerError,
-                Message = "An error occurred while creating the location.",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             };
         }

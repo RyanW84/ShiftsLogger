@@ -90,14 +90,14 @@ public class UiHelper
     {
         try
         {
-            var input = AnsiConsole.Ask<string>($"[yellow]{prompt} (yyyy-MM-dd HH:mm, press Enter to skip):[/]", string.Empty);
+            var input = AnsiConsole.Ask<string>($"[yellow]{prompt} (dd-MM-YYYY HH:mm, press Enter to skip):[/]", string.Empty);
             if (string.IsNullOrWhiteSpace(input))
                 return null;
 
-            if (DateTime.TryParse(input, out var result))
+            if (DateTime.TryParseExact(input, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var result))
                 return result;
 
-            DisplayValidationError("Invalid date format. Please use yyyy-MM-dd HH:mm");
+            DisplayValidationError("Invalid date format. Please use dd-MM-YYYY HH:mm");
             return GetOptionalDateTimeInput(prompt); // Retry
         }
         catch (Exception ex)
@@ -116,11 +116,14 @@ public class UiHelper
         {
             try
             {
-                return AnsiConsole.Ask<DateTime>($"[green]{prompt} (yyyy-MM-dd HH:mm):[/]");
+                var input = AnsiConsole.Ask<string>($"[green]{prompt} (dd-MM-YYYY HH:mm):[/]");
+                if (DateTime.TryParseExact(input, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var result))
+                    return result;
+                DisplayValidationError("Invalid date format. Please use dd-MM-YYYY HH:mm");
             }
             catch
             {
-                DisplayValidationError("Invalid date format. Please use yyyy-MM-dd HH:mm");
+                DisplayValidationError("Invalid date format. Please use dd-MM-YYYY HH:mm");
             }
         }
     }
