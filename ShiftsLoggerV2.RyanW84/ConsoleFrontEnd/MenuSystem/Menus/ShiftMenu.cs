@@ -1,20 +1,36 @@
-
+using System.Net;
 using ConsoleFrontEnd.Core.Abstractions;
-using ConsoleFrontEnd.Services;
+using ConsoleFrontEnd.Interfaces;
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.FilterOptions;
+using ConsoleFrontEnd.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ConsoleFrontEnd.MenuSystem.Menus;
 
 /// <summary>
-/// Shift menu implementation following Single Responsibility Principle
-/// Handles shift-specific operations
+///     Shift menu implementation following Single Responsibility Principle
+///     Handles shift-specific operations
 /// </summary>
-// ...existing code...
-public class ShiftMenuV2 : BaseMenuV2
+public class ShiftMenu(
+    IConsoleDisplayService displayService,
+    IConsoleInputService inputService,
+    INavigationService navigationService,
+    ILogger<ShiftMenu> logger,
+    IShiftService shiftService,
+    IWorkerService workerService,
+    ILocationService locationService,
+    IShiftUi shiftUi)
+    : BaseMenu(displayService, inputService, navigationService, logger)
 {
-    // ...existing fields, constructor, and methods...
+    private readonly ILocationService _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
+    private readonly IShiftService _shiftService = shiftService ?? throw new ArgumentNullException(nameof(shiftService));
+    private readonly IShiftUi _shiftUi = shiftUi ?? throw new ArgumentNullException(nameof(shiftUi));
+    private readonly IWorkerService _workerService = workerService ?? throw new ArgumentNullException(nameof(workerService));
+
+    public override string Title => "Shift Management";
+    public override string Context => "Shift Management";
+
 
     private async Task ViewShiftsByWorkerAsync()
     {
@@ -26,6 +42,7 @@ public class ShiftMenuV2 : BaseMenuV2
             InputService.WaitForKeyPress();
             return;
         }
+
         var workerChoices = workersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
         var selectedWorkerChoice = InputService.GetMenuChoice("Select Worker:", workerChoices);
         var workerId = int.Parse(selectedWorkerChoice.Split(':')[0]);
@@ -40,6 +57,7 @@ public class ShiftMenuV2 : BaseMenuV2
             _shiftUi.DisplayShiftsTable(response.Data);
             DisplayService.DisplaySuccess($"Total shifts: {response.TotalCount}");
         }
+
         InputService.WaitForKeyPress();
     }
 
@@ -54,6 +72,7 @@ public class ShiftMenuV2 : BaseMenuV2
             InputService.WaitForKeyPress();
             return;
         }
+
         var filter = new ShiftFilterOptions { StartTime = startDate, EndTime = endDate };
         var response = await _shiftService.GetShiftsByFilterAsync(filter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())
@@ -65,37 +84,14 @@ public class ShiftMenuV2 : BaseMenuV2
             _shiftUi.DisplayShiftsTable(response.Data);
             DisplayService.DisplaySuccess($"Total shifts: {response.TotalCount}");
         }
+
         InputService.WaitForKeyPress();
     }
-    private readonly IShiftService _shiftService;
-    private readonly IWorkerService _workerService;
-    private readonly ILocationService _locationService;
-    private readonly IShiftUi _shiftUi;
-
-    public ShiftMenuV2(
-        IConsoleDisplayService displayService,
-        IConsoleInputService inputService,
-        INavigationService navigationService,
-        ILogger<ShiftMenuV2> logger,
-        IShiftService shiftService,
-        IWorkerService workerService,
-        ILocationService locationService,
-        IShiftUi shiftUi)
-        : base(displayService, inputService, navigationService, logger)
-    {
-        _shiftService = shiftService ?? throw new ArgumentNullException(nameof(shiftService));
-        _workerService = workerService ?? throw new ArgumentNullException(nameof(workerService));
-        _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
-        _shiftUi = shiftUi ?? throw new ArgumentNullException(nameof(shiftUi));
-    }
-
-    public override string Title => "Shift Management";
-    public override string Context => "Shift Management";
 
     protected override async Task ShowMenuAsync()
     {
-        bool shouldExit = false;
-        
+        var shouldExit = false;
+
         while (!shouldExit)
         {
             var choice = InputService.GetMenuChoice(
@@ -185,28 +181,28 @@ public class ShiftMenuV2 : BaseMenuV2
         {
             switch (response.ResponseCode)
             {
-                case System.Net.HttpStatusCode.NotFound:
+                case HttpStatusCode.NotFound:
                     DisplayService.DisplayError("No shifts found (404).");
                     break;
-                case System.Net.HttpStatusCode.BadRequest:
+                case HttpStatusCode.BadRequest:
                     DisplayService.DisplayError("Bad request (400).");
                     break;
-                case System.Net.HttpStatusCode.InternalServerError:
+                case HttpStatusCode.InternalServerError:
                     DisplayService.DisplayError("Server error (500).");
                     break;
-                case System.Net.HttpStatusCode.Unauthorized:
+                case HttpStatusCode.Unauthorized:
                     DisplayService.DisplayError("Unauthorized (401). Please log in.");
                     break;
-                case System.Net.HttpStatusCode.Forbidden:
+                case HttpStatusCode.Forbidden:
                     DisplayService.DisplayError("Forbidden (403). You do not have permission.");
                     break;
-                case System.Net.HttpStatusCode.Conflict:
+                case HttpStatusCode.Conflict:
                     DisplayService.DisplayError("Conflict (409). Resource conflict detected.");
                     break;
-                case System.Net.HttpStatusCode.RequestTimeout:
+                case HttpStatusCode.RequestTimeout:
                     DisplayService.DisplayError("Request Timeout (408). The server timed out.");
                     break;
-                case (System.Net.HttpStatusCode)422:
+                case (HttpStatusCode)422:
                     DisplayService.DisplayError("Unprocessable Entity (422). Validation failed.");
                     break;
                 default:
@@ -223,6 +219,7 @@ public class ShiftMenuV2 : BaseMenuV2
             _shiftUi.DisplayShiftsTable(response.Data);
             DisplayService.DisplaySuccess($"Total shifts: {response.TotalCount}");
         }
+
         InputService.WaitForKeyPress();
     }
 
@@ -240,51 +237,54 @@ public class ShiftMenuV2 : BaseMenuV2
             _shiftUi.DisplayShiftsTable(new List<Shift> { response.Data });
             DisplayService.DisplaySuccess("Shift details loaded successfully.");
         }
+
         InputService.WaitForKeyPress();
     }
 
     private async Task CreateShiftAsync()
     {
         DisplayService.DisplayHeader("Create New Shift", "green");
-        
+
         // Get available workers
         var workersResponse = await _workerService.GetAllWorkersAsync();
-    if (workersResponse.RequestFailed)
+        if (workersResponse.RequestFailed)
         {
             switch (workersResponse.ResponseCode)
             {
-                case System.Net.HttpStatusCode.NotFound:
+                case HttpStatusCode.NotFound:
                     DisplayService.DisplayError("No workers found (404).");
                     break;
-                case System.Net.HttpStatusCode.BadRequest:
+                case HttpStatusCode.BadRequest:
                     DisplayService.DisplayError("Bad request (400) while retrieving workers.");
                     break;
-                case System.Net.HttpStatusCode.InternalServerError:
+                case HttpStatusCode.InternalServerError:
                     DisplayService.DisplayError("Server error (500) while retrieving workers.");
                     break;
-                case System.Net.HttpStatusCode.Unauthorized:
+                case HttpStatusCode.Unauthorized:
                     DisplayService.DisplayError("Unauthorized (401) while retrieving workers.");
                     break;
-                case System.Net.HttpStatusCode.Forbidden:
+                case HttpStatusCode.Forbidden:
                     DisplayService.DisplayError("Forbidden (403) while retrieving workers.");
                     break;
-                case System.Net.HttpStatusCode.Conflict:
+                case HttpStatusCode.Conflict:
                     DisplayService.DisplayError("Conflict (409) while retrieving workers.");
                     break;
-                case System.Net.HttpStatusCode.RequestTimeout:
+                case HttpStatusCode.RequestTimeout:
                     DisplayService.DisplayError("Request Timeout (408) while retrieving workers.");
                     break;
-                case (System.Net.HttpStatusCode)422:
+                case (HttpStatusCode)422:
                     DisplayService.DisplayError("Unprocessable Entity (422) while retrieving workers.");
                     break;
                 default:
                     DisplayService.DisplayError($"Failed to retrieve workers: {workersResponse.Message}");
                     break;
             }
+
             InputService.WaitForKeyPress();
             return;
         }
-    if (workersResponse.Data == null || !workersResponse.Data.Any())
+
+        if (workersResponse.Data == null || !workersResponse.Data.Any())
         {
             DisplayService.DisplayError("No workers found (404). Please create workers first.");
             InputService.WaitForKeyPress();
@@ -293,42 +293,44 @@ public class ShiftMenuV2 : BaseMenuV2
 
         // Get available locations
         var locationsResponse = await _locationService.GetAllLocationsAsync();
-    if (locationsResponse.RequestFailed)
+        if (locationsResponse.RequestFailed)
         {
             switch (locationsResponse.ResponseCode)
             {
-                case System.Net.HttpStatusCode.NotFound:
+                case HttpStatusCode.NotFound:
                     DisplayService.DisplayError("No locations found (404).");
                     break;
-                case System.Net.HttpStatusCode.BadRequest:
+                case HttpStatusCode.BadRequest:
                     DisplayService.DisplayError("Bad request (400) while retrieving locations.");
                     break;
-                case System.Net.HttpStatusCode.InternalServerError:
+                case HttpStatusCode.InternalServerError:
                     DisplayService.DisplayError("Server error (500) while retrieving locations.");
                     break;
-                case System.Net.HttpStatusCode.Unauthorized:
+                case HttpStatusCode.Unauthorized:
                     DisplayService.DisplayError("Unauthorized (401) while retrieving locations.");
                     break;
-                case System.Net.HttpStatusCode.Forbidden:
+                case HttpStatusCode.Forbidden:
                     DisplayService.DisplayError("Forbidden (403) while retrieving locations.");
                     break;
-                case System.Net.HttpStatusCode.Conflict:
+                case HttpStatusCode.Conflict:
                     DisplayService.DisplayError("Conflict (409) while retrieving locations.");
                     break;
-                case System.Net.HttpStatusCode.RequestTimeout:
+                case HttpStatusCode.RequestTimeout:
                     DisplayService.DisplayError("Request Timeout (408) while retrieving locations.");
                     break;
-                case (System.Net.HttpStatusCode)422:
+                case (HttpStatusCode)422:
                     DisplayService.DisplayError("Unprocessable Entity (422) while retrieving locations.");
                     break;
                 default:
                     DisplayService.DisplayError($"Failed to retrieve locations: {locationsResponse.Message}");
                     break;
             }
+
             InputService.WaitForKeyPress();
             return;
         }
-    if (locationsResponse.Data == null || !locationsResponse.Data.Any())
+
+        if (locationsResponse.Data == null || !locationsResponse.Data.Any())
         {
             DisplayService.DisplayError("No locations found (404). Please create locations first.");
             InputService.WaitForKeyPress();
@@ -361,7 +363,8 @@ public class ShiftMenuV2 : BaseMenuV2
             // Create shift (this would call the API)
             DisplayService.DisplaySuccess("Shift created successfully!");
             DisplayService.DisplayInfo($"Worker: {workersResponse.Data.First(w => w.WorkerId == workerId).Name}");
-            DisplayService.DisplayInfo($"Location: {locationsResponse.Data.First(l => l.LocationId == locationId).Name}");
+            DisplayService.DisplayInfo(
+                $"Location: {locationsResponse.Data.First(l => l.LocationId == locationId).Name}");
             DisplayService.DisplayInfo($"Start: {startTime}");
             DisplayService.DisplayInfo($"End: {endTime}");
         }
@@ -372,12 +375,12 @@ public class ShiftMenuV2 : BaseMenuV2
         }
 
         InputService.WaitForKeyPress();
-    await Task.CompletedTask;
+        await Task.CompletedTask;
     }
 
     private async Task UpdateShiftAsync()
     {
-        DisplayService.DisplayHeader("Update Shift", "yellow");
+        DisplayService.DisplayHeader("Update Shift");
         var allShiftsResponse = await _shiftService.GetAllShiftsAsync();
         if (allShiftsResponse.RequestFailed || allShiftsResponse.Data == null || !allShiftsResponse.Data.Any())
         {
@@ -385,19 +388,24 @@ public class ShiftMenuV2 : BaseMenuV2
             InputService.WaitForKeyPress();
             return;
         }
-        var shiftChoices = allShiftsResponse.Data.Select(s => $"{s.ShiftId}: {s.StartTime:yyyy-MM-dd HH:mm} - {s.EndTime:yyyy-MM-dd HH:mm}").ToArray();
+
+        var shiftChoices = allShiftsResponse.Data
+            .Select(s => $"{s.ShiftId}: {s.StartTime:yyyy-MM-dd HH:mm} - {s.EndTime:yyyy-MM-dd HH:mm}").ToArray();
         var selectedShiftChoice = InputService.GetMenuChoice("Select Shift to update:", shiftChoices);
         var shiftId = int.Parse(selectedShiftChoice.Split(':')[0]);
         var shift = allShiftsResponse.Data.First(s => s.ShiftId == shiftId);
-    var startTime = InputService.GetDateTimeInput($"Enter new start time (current: {shift.StartTime:yyyy-MM-dd HH:mm}):");
-    var endTime = InputService.GetDateTimeInput($"Enter new end time (current: {shift.EndTime:yyyy-MM-dd HH:mm}):");
+        var startTime =
+            InputService.GetDateTimeInput($"Enter new start time (current: {shift.StartTime:yyyy-MM-dd HH:mm}):");
+        var endTime = InputService.GetDateTimeInput($"Enter new end time (current: {shift.EndTime:yyyy-MM-dd HH:mm}):");
         if (endTime <= startTime)
         {
             DisplayService.DisplayError("End time must be after start time.");
             InputService.WaitForKeyPress();
             return;
         }
-        var updatedShift = new Shift {
+
+        var updatedShift = new Shift
+        {
             ShiftId = shift.ShiftId,
             WorkerId = shift.WorkerId,
             LocationId = shift.LocationId,
@@ -414,6 +422,7 @@ public class ShiftMenuV2 : BaseMenuV2
             DisplayService.DisplaySuccess("Shift updated successfully.");
             _shiftUi.DisplayShiftsTable(new List<Shift> { response.Data });
         }
+
         InputService.WaitForKeyPress();
     }
 
@@ -427,25 +436,24 @@ public class ShiftMenuV2 : BaseMenuV2
             InputService.WaitForKeyPress();
             return;
         }
-        var shiftChoices = allShiftsResponse.Data.Select(s => $"{s.ShiftId}: {s.StartTime:yyyy-MM-dd HH:mm} - {s.EndTime:yyyy-MM-dd HH:mm}").ToArray();
+
+        var shiftChoices = allShiftsResponse.Data
+            .Select(s => $"{s.ShiftId}: {s.StartTime:yyyy-MM-dd HH:mm} - {s.EndTime:yyyy-MM-dd HH:mm}").ToArray();
         var selectedShiftChoice = InputService.GetMenuChoice("Select Shift to delete:", shiftChoices);
         var shiftId = int.Parse(selectedShiftChoice.Split(':')[0]);
         if (InputService.GetConfirmation($"Are you sure you want to delete shift {shiftId}?"))
         {
             var response = await _shiftService.DeleteShiftAsync(shiftId);
             if (response.RequestFailed)
-            {
                 DisplayService.DisplayError(response.Message ?? "Failed to delete shift.");
-            }
             else
-            {
                 DisplayService.DisplaySuccess(response.Message ?? $"Shift {shiftId} deleted successfully.");
-            }
         }
         else
         {
             DisplayService.DisplayInfo("Delete cancelled.");
         }
+
         InputService.WaitForKeyPress();
     }
 
@@ -454,9 +462,10 @@ public class ShiftMenuV2 : BaseMenuV2
         DisplayService.DisplayHeader("Filter Shifts", "blue");
         var workerId = InputService.GetIntegerInput("Filter by Worker ID (0 for any):", 0);
         var locationId = InputService.GetIntegerInput("Filter by Location ID (0 for any):", 0);
-    var startDate = InputService.GetDateTimeInput("Filter start date (leave blank for any):");
-    var endDate = InputService.GetDateTimeInput("Filter end date (leave blank for any):");
-        var filter = new ShiftFilterOptions {
+        var startDate = InputService.GetDateTimeInput("Filter start date (leave blank for any):");
+        var endDate = InputService.GetDateTimeInput("Filter end date (leave blank for any):");
+        var filter = new ShiftFilterOptions
+        {
             WorkerId = workerId > 0 ? workerId : null,
             LocationId = locationId > 0 ? locationId : null,
             StartTime = startDate,
@@ -472,6 +481,7 @@ public class ShiftMenuV2 : BaseMenuV2
             _shiftUi.DisplayShiftsTable(response.Data);
             DisplayService.DisplaySuccess($"Total filtered shifts: {response.TotalCount}");
         }
+
         InputService.WaitForKeyPress();
     }
 }

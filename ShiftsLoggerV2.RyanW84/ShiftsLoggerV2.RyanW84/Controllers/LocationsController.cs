@@ -13,12 +13,12 @@ namespace ShiftsLoggerV2.RyanW84.Controllers;
 public class LocationsController : ControllerBase
 {
     private readonly ILocationService _locationService;
-    private readonly LocationBusinessService _businessService;
+    private readonly LocationValidation _validation;
 
-    public LocationsController(ILocationService locationService, LocationBusinessService businessService)
+    public LocationsController(ILocationService locationService, LocationValidation validation)
     {
         _locationService = locationService;
-        _businessService = businessService;
+        _validation = validation;
     }
 
     // GET: api/Location
@@ -30,7 +30,7 @@ public class LocationsController : ControllerBase
             locationOptions ??= new LocationFilterOptions(); // Provide a default value
             
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.GetAllAsync(locationOptions);
+            var result = await _validation.GetAllAsync(locationOptions);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Location>>
@@ -71,7 +71,7 @@ public class LocationsController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.GetByIdAsync(id);
+            var result = await _validation.GetByIdAsync(id);
             if (!result.IsSuccess)
             {
                 if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -125,7 +125,7 @@ public class LocationsController : ControllerBase
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.CreateAsync(location);
+            var result = await _validation.CreateAsync(location);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<Location>
@@ -166,7 +166,7 @@ public class LocationsController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.UpdateAsync(id, updatedLocation);
+            var result = await _validation.UpdateAsync(id, updatedLocation);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<Location>
@@ -207,7 +207,7 @@ public class LocationsController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.DeleteAsync(id);
+            var result = await _validation.DeleteAsync(id);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<object>
@@ -251,7 +251,7 @@ public class LocationsController : ControllerBase
         {
             var filterOptions = new LocationFilterOptions { Country = country };
 
-            var result = await _businessService.GetAllAsync(filterOptions);
+            var result = await _validation.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Location>>
@@ -292,7 +292,7 @@ public class LocationsController : ControllerBase
         {
             var filterOptions = new LocationFilterOptions { County = county };
 
-            var result = await _businessService.GetAllAsync(filterOptions);
+            var result = await _validation.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Location>>

@@ -14,12 +14,12 @@ namespace ShiftsLoggerV2.RyanW84.Controllers;
 public class WorkersController : ControllerBase
 {
     private readonly IWorkerService _workerService;
-    private readonly WorkerBusinessService _businessService;
+    private readonly WorkerValidation _validation;
 
-    public WorkersController(IWorkerService workerService, WorkerBusinessService businessService)
+    public WorkersController(IWorkerService workerService, WorkerValidation validation)
     {
         _workerService = workerService;
-        _businessService = businessService;
+        _validation = validation;
     }
 
     [HttpGet]
@@ -28,7 +28,7 @@ public class WorkersController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.GetAllAsync(workerOptions);
+            var result = await _validation.GetAllAsync(workerOptions);
             if (!result.IsSuccess)
             {
                 AnsiConsole.MarkupLine($"[Red]Error retrieving all workers: {result.Message}[/]");
@@ -70,7 +70,7 @@ public class WorkersController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.GetByIdAsync(id);
+            var result = await _validation.GetByIdAsync(id);
             if (!result.IsSuccess)
             {
                 if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -124,7 +124,7 @@ public class WorkersController : ControllerBase
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.CreateAsync(worker);
+            var result = await _validation.CreateAsync(worker);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<Worker>
@@ -164,7 +164,7 @@ public class WorkersController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.UpdateAsync(id, updatedWorker);
+            var result = await _validation.UpdateAsync(id, updatedWorker);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<Worker>
@@ -204,7 +204,7 @@ public class WorkersController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.DeleteAsync(id);
+            var result = await _validation.DeleteAsync(id);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<object>
@@ -249,7 +249,7 @@ public class WorkersController : ControllerBase
             // Use search to filter by email domain
             var filterOptions = new WorkerFilterOptions { Search = domain };
 
-            var result = await _businessService.GetAllAsync(filterOptions);
+            var result = await _validation.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Worker>>
@@ -293,7 +293,7 @@ public class WorkersController : ControllerBase
             // Use phone number filter 
             var filterOptions = new WorkerFilterOptions { PhoneNumber = areaCode };
 
-            var result = await _businessService.GetAllAsync(filterOptions);
+            var result = await _validation.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Worker>>

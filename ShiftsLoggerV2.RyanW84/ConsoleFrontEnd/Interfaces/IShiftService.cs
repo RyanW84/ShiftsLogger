@@ -1,7 +1,7 @@
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
 
-namespace ConsoleFrontEnd.Services;
+namespace ConsoleFrontEnd.Interfaces;
 
 public interface IShiftService
 {
@@ -10,5 +10,5 @@ public interface IShiftService
     Task<ApiResponseDto<Shift>> CreateShiftAsync(Shift shift);
     Task<ApiResponseDto<Shift?>> UpdateShiftAsync(int id, Shift updatedShift);
     Task<ApiResponseDto<string?>> DeleteShiftAsync(int id);
-    Task<ApiResponseDto<List<Shift>>> GetShiftsByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter);
+    Task<ApiResponseDto<List<Shift>>> GetShiftsByFilterAsync(Models.FilterOptions.ShiftFilterOptions filter);
 }

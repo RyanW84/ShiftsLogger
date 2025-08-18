@@ -15,12 +15,12 @@ namespace ShiftsLoggerV2.RyanW84.Controllers;
 public class ShiftsController : ControllerBase
 {
     private readonly IShiftService _shiftService;
-    private readonly ShiftBusinessService _businessService;
+    private readonly ShiftValidation _validation;
 
-    public ShiftsController(IShiftService shiftService, ShiftBusinessService businessService)
+    public ShiftsController(IShiftService shiftService, ShiftValidation validation)
     {
         _shiftService = shiftService;
-        _businessService = businessService;
+        _validation = validation;
     }
 
     // This is the route for getting all shifts
@@ -30,7 +30,7 @@ public class ShiftsController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.GetAllAsync(shiftOptions);
+            var result = await _validation.GetAllAsync(shiftOptions);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Shift>>
@@ -71,7 +71,7 @@ public class ShiftsController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.GetByIdAsync(id);
+            var result = await _validation.GetByIdAsync(id);
 
             if (!result.IsSuccess)
             {
@@ -127,7 +127,7 @@ public class ShiftsController : ControllerBase
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.CreateAsync(shift);
+            var result = await _validation.CreateAsync(shift);
             
             if (!result.IsSuccess)
             {
@@ -171,7 +171,7 @@ public class ShiftsController : ControllerBase
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.UpdateAsync(id, shift);
+            var result = await _validation.UpdateAsync(id, shift);
             
             if (!result.IsSuccess)
             {
@@ -213,7 +213,7 @@ public class ShiftsController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _businessService.DeleteAsync(id);
+            var result = await _validation.DeleteAsync(id);
             
             if (!result.IsSuccess)
             {
@@ -261,7 +261,7 @@ public class ShiftsController : ControllerBase
                 EndDate = endDate
             };
 
-            var result = await _businessService.GetAllAsync(filterOptions);
+            var result = await _validation.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Shift>>
@@ -302,7 +302,7 @@ public class ShiftsController : ControllerBase
         {
             var filterOptions = new ShiftFilterOptions { WorkerId = workerId };
 
-            var result = await _businessService.GetAllAsync(filterOptions);
+            var result = await _validation.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Shift>>

@@ -12,11 +12,11 @@ namespace ShiftsLoggerV2.RyanW84.Services;
 /// <summary>
 /// Business logic service for Location operations
 /// </summary>
-public class LocationBusinessService : BaseService<Location, LocationFilterOptions, LocationApiRequestDto, LocationApiRequestDto>, ILocationBusinessService
+public class LocationValidation : BaseService<Location, LocationFilterOptions, LocationApiRequestDto, LocationApiRequestDto>, ILocationBusinessService
 {
     private readonly ILocationRepository _locationRepository;
 
-    public LocationBusinessService(ILocationRepository locationRepository) : base(locationRepository)
+    public LocationValidation(ILocationRepository locationRepository) : base(locationRepository)
     {
         _locationRepository = locationRepository;
     }

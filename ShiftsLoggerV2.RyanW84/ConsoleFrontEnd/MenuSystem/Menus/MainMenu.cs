@@ -7,18 +7,14 @@ namespace ConsoleFrontEnd.MenuSystem.Menus;
 /// Main menu implementation following Single Responsibility Principle
 /// Handles main application navigation
 /// </summary>
-public class MainMenuV2 : BaseMenuV2
+public class MainMenu(
+    IConsoleDisplayService displayService,
+    IConsoleInputService inputService,
+    INavigationService navigationService,
+    ILogger<MainMenu> logger)
+    : BaseMenu(displayService, inputService, navigationService, logger)
 {
     private static bool _firstRun = true;
-
-    public MainMenuV2(
-        IConsoleDisplayService displayService,
-        IConsoleInputService inputService,
-        INavigationService navigationService,
-        ILogger<MainMenuV2> logger)
-        : base(displayService, inputService, navigationService, logger)
-    {
-    }
 
     public override string Title => "Shifts Logger - Main Menu";
     public override string Context => "Main Menu";

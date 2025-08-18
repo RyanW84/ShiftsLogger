@@ -12,11 +12,11 @@ namespace ShiftsLoggerV2.RyanW84.Services;
 /// <summary>
 /// Business logic service for Worker operations
 /// </summary>
-public class WorkerBusinessService : BaseService<Worker, WorkerFilterOptions, WorkerApiRequestDto, WorkerApiRequestDto>, IWorkerBusinessService
+public class WorkerValidation : BaseService<Worker, WorkerFilterOptions, WorkerApiRequestDto, WorkerApiRequestDto>, IWorkerBusinessService
 {
     private readonly IWorkerRepository _workerRepository;
 
-    public WorkerBusinessService(IWorkerRepository workerRepository) : base(workerRepository)
+    public WorkerValidation(IWorkerRepository workerRepository) : base(workerRepository)
     {
         _workerRepository = workerRepository;
     }

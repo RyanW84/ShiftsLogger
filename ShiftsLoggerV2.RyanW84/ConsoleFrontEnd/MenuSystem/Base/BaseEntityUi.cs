@@ -9,18 +9,12 @@ namespace ConsoleFrontEnd.MenuSystem.Base;
 /// Base UI service implementing common CRUD operations following SOLID principles
 /// T - Entity type, TFilter - Filter options type
 /// </summary>
-public abstract class BaseEntityUi<T, TFilter> : IEntityUi<T, TFilter> 
+public abstract class BaseEntityUi<T, TFilter>(IConsoleDisplayService display, ILogger logger) : IEntityUi<T, TFilter>
     where T : class, new()
     where TFilter : class, new()
 {
-    protected readonly IConsoleDisplayService _display;
-    protected readonly ILogger _logger;
-
-    protected BaseEntityUi(IConsoleDisplayService display, ILogger logger)
-    {
-        _display = display ?? throw new ArgumentNullException(nameof(display));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly IConsoleDisplayService _display = display ?? throw new ArgumentNullException(nameof(display));
+    protected readonly ILogger Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     // Abstract methods that must be implemented by derived classes
     public abstract T CreateEntityUi();

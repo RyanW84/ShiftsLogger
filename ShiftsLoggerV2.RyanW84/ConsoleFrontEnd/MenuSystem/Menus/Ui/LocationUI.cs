@@ -41,12 +41,12 @@ public class LocationUI : ILocationUi
     {
         _display.DisplayHeader($"Update Location: {existingLocation.Name}");
         
-        var name = AnsiConsole.Ask<string>("[green]Enter new location name:[/]", existingLocation.Name);
-        var address = AnsiConsole.Ask<string>("[green]Enter address:[/]", existingLocation.Address);
-        var town = AnsiConsole.Ask<string>("[green]Enter town:[/]", existingLocation.Town);
-        var county = AnsiConsole.Ask<string>("[green]Enter county:[/]", existingLocation.County);
-        var postCode = AnsiConsole.Ask<string>("[green]Enter post code:[/]", existingLocation.PostCode);
-        var country = AnsiConsole.Ask<string>("[green]Enter country:[/]", existingLocation.Country);
+        var name = AnsiConsole.Ask("[green]Enter new location name:[/]", existingLocation.Name);
+        var address = AnsiConsole.Ask("[green]Enter address:[/]", existingLocation.Address);
+        var town = AnsiConsole.Ask("[green]Enter town:[/]", existingLocation.Town);
+        var county = AnsiConsole.Ask("[green]Enter county:[/]", existingLocation.County);
+        var postCode = AnsiConsole.Ask("[green]Enter post code:[/]", existingLocation.PostCode);
+        var country = AnsiConsole.Ask("[green]Enter country:[/]", existingLocation.Country);
         
         return new Location
         {

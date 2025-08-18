@@ -10,15 +10,15 @@ namespace ConsoleFrontEnd.MenuSystem.Menus;
 /// Worker menu implementation following Single Responsibility Principle
 /// Handles worker-specific operations
 /// </summary>
-public class WorkerMenuV2 : BaseMenuV2
+public class WorkerMenu : BaseMenu
 {
     private readonly IWorkerService _workerService;
 
-    public WorkerMenuV2(
+    public WorkerMenu(
         IConsoleDisplayService displayService,
         IConsoleInputService inputService,
         INavigationService navigationService,
-        ILogger<WorkerMenuV2> logger,
+        ILogger<WorkerMenu> logger,
         IWorkerService workerService)
         : base(displayService, inputService, navigationService, logger)
     {

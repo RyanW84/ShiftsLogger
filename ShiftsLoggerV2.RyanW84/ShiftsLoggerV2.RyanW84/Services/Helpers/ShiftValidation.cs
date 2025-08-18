@@ -11,11 +11,11 @@ namespace ShiftsLoggerV2.RyanW84.Services;
 /// <summary>
 /// Business logic service for Shift operations
 /// </summary>
-public class ShiftBusinessService : BaseService<Shift, ShiftFilterOptions, ShiftApiRequestDto, ShiftApiRequestDto>, IShiftBusinessService
+public class ShiftValidation : BaseService<Shift, ShiftFilterOptions, ShiftApiRequestDto, ShiftApiRequestDto>, IShiftBusinessService
 {
     private readonly IShiftRepository _shiftRepository;
 
-    public ShiftBusinessService(IShiftRepository shiftRepository) : base(shiftRepository)
+    public ShiftValidation(IShiftRepository shiftRepository) : base(shiftRepository)
     {
         _shiftRepository = shiftRepository;
     }

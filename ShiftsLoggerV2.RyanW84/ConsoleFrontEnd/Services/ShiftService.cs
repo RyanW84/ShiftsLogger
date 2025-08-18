@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using ConsoleFrontEnd.Interfaces;
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;

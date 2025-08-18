@@ -10,20 +10,15 @@ namespace ConsoleFrontEnd.MenuSystem.Menus;
 /// Location menu implementation following Single Responsibility Principle
 /// Handles location-specific operations
 /// </summary>
-public class LocationMenuV2 : BaseMenuV2
+public class LocationMenu(
+    IConsoleDisplayService displayService,
+    IConsoleInputService inputService,
+    INavigationService navigationService,
+    ILogger<LocationMenu> logger,
+    ILocationService locationService)
+    : BaseMenu(displayService, inputService, navigationService, logger)
 {
-    private readonly ILocationService _locationService;
-
-    public LocationMenuV2(
-        IConsoleDisplayService displayService,
-        IConsoleInputService inputService,
-        INavigationService navigationService,
-        ILogger<LocationMenuV2> logger,
-        ILocationService locationService)
-        : base(displayService, inputService, navigationService, logger)
-    {
-        _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
-    }
+    private readonly ILocationService _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
 
     public override string Title => "Location Management";
     public override string Context => "Location Management";
@@ -154,7 +149,7 @@ public class LocationMenuV2 : BaseMenuV2
         }
         else
         {
-            DisplayService.DisplayTable(response.Data != null ? response.Data : Enumerable.Empty<Location>(), "All Locations");
+            DisplayService.DisplayTable(response.Data ?? Enumerable.Empty<Location>(), "All Locations");
             DisplayService.DisplaySuccess($"Total locations: {response.TotalCount}");
         }
         
@@ -220,7 +215,7 @@ public class LocationMenuV2 : BaseMenuV2
 
     private async Task UpdateLocationAsync()
     {
-        DisplayService.DisplayHeader("Update Location", "yellow");
+        DisplayService.DisplayHeader("Update Location");
         var allLocationsResponse = await _locationService.GetAllLocationsAsync();
         if (allLocationsResponse.RequestFailed || allLocationsResponse.Data == null || !allLocationsResponse.Data.Any())
         {

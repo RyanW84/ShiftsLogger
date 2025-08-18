@@ -7,14 +7,14 @@ namespace ConsoleFrontEnd.MenuSystem.Menus;
 /// Base menu implementation following Open/Closed Principle
 /// Provides common functionality that can be extended by specific menus
 /// </summary>
-public abstract class BaseMenuV2 : IMenu
+public abstract class BaseMenu : IMenu
 {
     protected readonly IConsoleDisplayService DisplayService;
     protected readonly IConsoleInputService InputService;
     protected readonly INavigationService NavigationService;
     protected readonly ILogger Logger;
 
-    protected BaseMenuV2(
+    protected BaseMenu(
         IConsoleDisplayService displayService,
         IConsoleInputService inputService,
         INavigationService navigationService,
