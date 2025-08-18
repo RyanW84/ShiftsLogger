@@ -54,11 +54,12 @@ public class LocationsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get All Locations failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<List<Location>>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<List<Location>>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -106,11 +107,12 @@ public class LocationsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get location by ID failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<Location>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<Location>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -149,11 +151,12 @@ public class LocationsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Create location failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<Location>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<Location>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -190,11 +193,12 @@ public class LocationsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Update location failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<Location>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<Location>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -232,11 +236,12 @@ public class LocationsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Delete location failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<object>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<object>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -275,11 +280,12 @@ public class LocationsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get locations by country failed: {ex}");
-            return StatusCode(500, new ApiResponseDto<List<Location>>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<List<Location>>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -316,11 +322,12 @@ public class LocationsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get locations by county failed: {ex}");
-            return StatusCode(500, new ApiResponseDto<List<Location>>
+            var (status, message) = ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<List<Location>>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }

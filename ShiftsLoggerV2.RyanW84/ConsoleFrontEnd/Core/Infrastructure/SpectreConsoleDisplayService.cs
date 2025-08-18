@@ -248,14 +248,15 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         }
         table.Border = TableBorder.Rounded;
 
-        // Add specific columns for workers with enhanced information
-        table.AddColumn(new TableColumn("[bold]Worker ID[/]").Centered());
+        // Add columns: row count, name, phone, email, total shifts
+        table.AddColumn(new TableColumn("[bold]#[/]").Centered());
         table.AddColumn(new TableColumn("[bold]Name[/]").LeftAligned());
         table.AddColumn(new TableColumn("[bold]Phone[/]").Centered());
         table.AddColumn(new TableColumn("[bold]Email[/]").LeftAligned());
         table.AddColumn(new TableColumn("[bold]Total Shifts[/]").Centered());
 
-        // Add rows with enhanced data
+        // Add rows with row number instead of worker ID
+        var rowCount = 1;
         foreach (var worker in workers)
         {
             var shiftCount = worker.Shifts?.Count ?? 0;
@@ -263,20 +264,20 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
                 ? "N/A"
                 : worker.PhoneNumber;
             var emailDisplay = string.IsNullOrWhiteSpace(worker.Email) ? "N/A" : worker.Email;
-            var workerId = worker.WorkerId?.ToString() ?? "N/A";
             var workerName = worker.Name ?? "N/A";
 
             TableExtensions.AddRow(
                 table,
                 new string[]
                 {
-                    workerId,
+                    rowCount.ToString(),
                     Markup.Escape(workerName),
                     Markup.Escape(phoneDisplay),
                     Markup.Escape(emailDisplay),
                     shiftCount.ToString(),
                 }
             );
+            rowCount++;
         }
 
         AnsiConsole.Write(table);
@@ -292,8 +293,8 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         }
         table.Border = TableBorder.Rounded;
 
-        // Add specific columns for locations with enhanced information
-        table.AddColumn(new TableColumn("[bold]Location ID[/]").Centered());
+        // Add columns: row count, name, town, county, post code, country, total shifts
+        table.AddColumn(new TableColumn("[bold]#[/]").Centered());
         table.AddColumn(new TableColumn("[bold]Name[/]").LeftAligned());
         table.AddColumn(new TableColumn("[bold]Town[/]").LeftAligned());
         table.AddColumn(new TableColumn("[bold]County[/]").LeftAligned());
@@ -301,11 +302,11 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         table.AddColumn(new TableColumn("[bold]Country[/]").LeftAligned());
         table.AddColumn(new TableColumn("[bold]Total Shifts[/]").Centered());
 
-        // Add rows with enhanced data
+        // Add rows with row number instead of location ID
+        var rowCount = 1;
         foreach (var location in locations)
         {
             var shiftCount = location.Shifts?.Count ?? 0;
-            var locationId = location.LocationId?.ToString() ?? "N/A";
             var locationName = location.Name ?? "N/A";
             var town = location.Town ?? "N/A";
             var county = location.County ?? "N/A";
@@ -316,7 +317,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
                 table,
                 new string[]
                 {
-                    locationId,
+                    rowCount.ToString(),
                     Markup.Escape(locationName),
                     Markup.Escape(town),
                     Markup.Escape(county),
@@ -325,6 +326,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
                     shiftCount.ToString(),
                 }
             );
+            rowCount++;
         }
 
         AnsiConsole.Write(table);
@@ -416,8 +418,8 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         return value switch
         {
             null => "N/A",
-            DateTime dateTime => dateTime.ToString("yyyy-MM-dd HH:mm"),
-            DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("yyyy-MM-dd HH:mm"),
+            DateTime dateTime => dateTime.ToString("dd-MM-yyyy HH:mm"),
+            DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("dd-MM-yyyy HH:mm"),
             string str when string.IsNullOrWhiteSpace(str) => "N/A",
             _ => Markup.Escape(value.ToString() ?? "N/A"),
         };

@@ -54,11 +54,12 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get All Shifts failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<List<Shift>>
+            var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<List<Shift>>
             {
                 RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             });
         }
@@ -109,26 +110,46 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get by ID failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<Shift>
-            {
-                RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
-                Data = null
-            });
+                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+                return StatusCode((int)status, new ApiResponseDto<Shift>
+                {
+                    RequestFailed = true,
+                    ResponseCode = status,
+                    Message = message,
+                    Data = null
+                });
         }
     }
     // This is the route for creating a createdShift
     [HttpPost]
-    public async Task<ActionResult<ApiResponseDto<Shift>>> CreateShift([FromBody] ShiftApiRequestDto shift)
+    public async Task<ActionResult<ApiResponseDto<Shift>>> CreateShift([FromBody] ShiftApiRequestDtoRaw shift)
     {
         try
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            // Use the new SOLID business service for enhanced functionality
-            var result = await _validation.CreateAsync(shift);
-            
+            // Parse date/time strings to DateTimeOffset and map to typed DTO
+            if (!DateTimeOffset.TryParseExact(shift.StartTime, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedStart))
+            {
+                ModelState.AddModelError("StartTime", "Invalid date format. Use dd-MM-YYYY HH:mm");
+                return BadRequest(ModelState);
+            }
+            if (!DateTimeOffset.TryParseExact(shift.EndTime, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedEnd))
+            {
+                ModelState.AddModelError("EndTime", "Invalid date format. Use dd-MM-YYYY HH:mm");
+                return BadRequest(ModelState);
+            }
+
+            var typedDto = new ShiftApiRequestDto
+            {
+                WorkerId = shift.WorkerId,
+                LocationId = shift.LocationId,
+                StartTime = parsedStart,
+                EndTime = parsedEnd
+            };
+
+            var result = await _validation.CreateAsync(typedDto);
+
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<Shift>
@@ -152,27 +173,47 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Create shift failed, see Exception {ex}");
-            return StatusCode(500, new ApiResponseDto<Shift>
-            {
-                RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
-                Data = null
-            });
+                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+                return StatusCode((int)status, new ApiResponseDto<Shift>
+                {
+                    RequestFailed = true,
+                    ResponseCode = status,
+                    Message = message,
+                    Data = null
+                });
         }
     }
 
     // This is the route for updating a createdShift
         [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponseDto<Shift>>> UpdateShift([FromRoute] int id, [FromBody] ShiftApiRequestDto shift)
+    public async Task<ActionResult<ApiResponseDto<Shift>>> UpdateShift([FromRoute] int id, [FromBody] ShiftApiRequestDtoRaw shift)
     {
         try
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            // Use the new SOLID business service for enhanced functionality
-            var result = await _validation.UpdateAsync(id, shift);
-            
+            // Parse date/time strings to DateTimeOffset and map to typed DTO
+            if (!DateTimeOffset.TryParseExact(shift.StartTime, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedStart))
+            {
+                ModelState.AddModelError("StartTime", "Invalid date format. Use dd-MM-YYYY HH:mm");
+                return BadRequest(ModelState);
+            }
+            if (!DateTimeOffset.TryParseExact(shift.EndTime, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedEnd))
+            {
+                ModelState.AddModelError("EndTime", "Invalid date format. Use dd-MM-YYYY HH:mm");
+                return BadRequest(ModelState);
+            }
+
+            var typedDto = new ShiftApiRequestDto
+            {
+                WorkerId = shift.WorkerId,
+                LocationId = shift.LocationId,
+                StartTime = parsedStart,
+                EndTime = parsedEnd
+            };
+
+            var result = await _validation.UpdateAsync(id, typedDto);
+
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<Shift>
@@ -196,13 +237,14 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Update shift failed, see exception {ex}");
-            return StatusCode(500, new ApiResponseDto<Shift>
-            {
-                RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
-                Data = null
-            });
+                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+                return StatusCode((int)status, new ApiResponseDto<Shift>
+                {
+                    RequestFailed = true,
+                    ResponseCode = status,
+                    Message = message,
+                    Data = null
+                });
         }
     }
 
@@ -238,13 +280,14 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Delete shift failed, see exception {ex}");
-            return StatusCode(500, new ApiResponseDto<object>
-            {
-                RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
-                Data = null
-            });
+                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+                return StatusCode((int)status, new ApiResponseDto<object>
+                {
+                    RequestFailed = true,
+                    ResponseCode = status,
+                    Message = message,
+                    Data = null
+                });
         }
     }
 
@@ -285,13 +328,14 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get shifts by date range failed: {ex}");
-            return StatusCode(500, new ApiResponseDto<List<Shift>>
-            {
-                RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
-                Data = null
-            });
+                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+                return StatusCode((int)status, new ApiResponseDto<List<Shift>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = status,
+                    Message = message,
+                    Data = null
+                });
         }
     }
 
@@ -326,13 +370,14 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get shifts by worker failed: {ex}");
-            return StatusCode(500, new ApiResponseDto<List<Shift>>
-            {
-                RequestFailed = true,
-                ResponseCode = System.Net.HttpStatusCode.InternalServerError,
-                Message = "Internal server error",
-                Data = null
-            });
+                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+                return StatusCode((int)status, new ApiResponseDto<List<Shift>>
+                {
+                    RequestFailed = true,
+                    ResponseCode = status,
+                    Message = message,
+                    Data = null
+                });
         }
     }
 }

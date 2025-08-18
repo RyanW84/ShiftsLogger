@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ShiftsLoggerV2.RyanW84.Data;
 using ShiftsLoggerV2.RyanW84.Dtos;
+using ShiftsLoggerV2.RyanW84.Common;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
 
@@ -152,11 +153,12 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         catch (Exception ex)
         {
             Console.WriteLine($"Back end shift service - {ex}");
+            var (status, message) = ErrorMapper.Map(ex);
             return new ApiResponseDto<Shift>
             {
                 RequestFailed = true,
-                ResponseCode = HttpStatusCode.InternalServerError,
-                Message = "An error occurred while creating the shift.",
+                ResponseCode = status,
+                Message = message,
                 Data = null
             };
         }
