@@ -13,7 +13,10 @@ public class Worker : IEntity
 
     [EmailAddress] public string? Email { get; set; }
 
-    // IEntity implementation
-    public int Id => WorkerId;
-    // ...existing code...
+    // Navigation property for related shifts
+    public virtual ICollection<Shift> Shifts { get; set; } = new List<Shift>();
+
+	// For compatibility with UI layer
+	public int Id => WorkerId;
+	public string? Phone => PhoneNumber;
 }

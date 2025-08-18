@@ -34,12 +34,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IShiftService, ShiftService>();
         services.AddScoped<IWorkerService, WorkerService>();
         services.AddScoped<ILocationService, LocationService>();
-        services.AddScoped<IApplication, ConsoleApplication>();
 
 
         return services;
     }
-
 
     /// <summary>
     ///     Register all application services following SOLID principles

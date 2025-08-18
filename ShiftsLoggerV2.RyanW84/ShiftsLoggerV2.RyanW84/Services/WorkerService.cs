@@ -14,7 +14,9 @@ public class WorkerService(ShiftsLoggerDbContext dbContext) : IWorkerService
         WorkerFilterOptions workerOptions
     )
     {
-        var query = dbContext.Workers.AsQueryable<Worker>();
+        var query = dbContext.Workers
+            .Include(w => w.Shifts) // Add this line
+            .AsQueryable<Worker>();
 
         // Apply all filters
         if (workerOptions.WorkerId != null && workerOptions.WorkerId is not 0)

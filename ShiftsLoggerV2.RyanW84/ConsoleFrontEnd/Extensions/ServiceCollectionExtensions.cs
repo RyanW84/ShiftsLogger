@@ -21,6 +21,10 @@ public static class ServiceCollectionExtensions
         // HTTP Client Factory
         services.AddHttpClient();
 
+        // Console services
+        services.AddSingleton<IConsoleDisplayService, SpectreConsoleDisplayService>();
+        services.AddSingleton<IConsoleInputService, SpectreConsoleInputService>();
+
         // Core application services
         services.AddSingleton<IMenuFactory, MenuFactory>();
         services.AddSingleton<INavigationService, NavigationService>();
@@ -31,15 +35,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWorkerService, WorkerService>();
         services.AddScoped<ILocationService, LocationService>();
 
-        // UI Services
-        services.AddScoped<IShiftUi, ShiftUI>();
-        services.AddScoped<IWorkerUi, WorkerUi>();
-        services.AddScoped<ILocationUi, LocationUI>();
-        services.AddScoped<IMenu, MainMenu>();
-        services.AddScoped<IMenu, ShiftMenu>();
-        services.AddScoped<IMenu, WorkerMenu>();
-        services.AddScoped<IMenu, LocationMenu>();
-        
         // UI Services
         services.AddScoped<IShiftUi, ShiftUI>();
         services.AddScoped<IWorkerUi, WorkerUi>();

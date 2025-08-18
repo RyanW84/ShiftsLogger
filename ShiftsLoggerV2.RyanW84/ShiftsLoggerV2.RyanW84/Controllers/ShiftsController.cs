@@ -206,7 +206,7 @@ public class ShiftsController : ControllerBase
         }
     }
 
-    // Fix for CS0019 and CS1525 errors in the DeleteShift method
+  
         [HttpDelete("{id}")]
     public async Task<ActionResult<ApiResponseDto<object>>> DeleteShift([FromRoute] int id)
     {
@@ -248,7 +248,7 @@ public class ShiftsController : ControllerBase
         }
     }
 
-    // Additional V2 endpoints - Enhanced functionality from SOLID implementation
+    // Additional V5 endpoints - Enhanced functionality from SOLID implementation
     
     [HttpGet("by-date-range")]
     public async Task<ActionResult<ApiResponseDto<List<Shift>>>> GetShiftsByDateRange([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)

@@ -14,7 +14,9 @@ public class LocationService(ShiftsLoggerDbContext dbContext) : ILocationService
         LocationFilterOptions locationOptions
     )
     {
-        var query = dbContext.Locations.AsQueryable<Location>();
+        var query = dbContext.Locations
+            .Include(l => l.Shifts) // Add this line
+            .AsQueryable<Location>();
 
         // Apply all filters
         if (locationOptions.LocationId != null && locationOptions.LocationId is not 0)
