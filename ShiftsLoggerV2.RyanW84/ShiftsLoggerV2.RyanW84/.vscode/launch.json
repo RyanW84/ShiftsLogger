@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug ConsoleFrontEnd",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-consolefront",
+      "program": "${workspaceFolder}/../ConsoleFrontEnd/bin/Debug/net9.0/ConsoleFrontEnd.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/..",
+      "stopAtEntry": false,
+      "console": "externalTerminal"
+    },
+    {
+      "name": "Attach to ConsoleFrontEnd",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    },
+    {
+      "name": "Debug Backend API",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-backend",
+      "program": "${workspaceFolder}/bin/Debug/net9.0/ShiftsLoggerV2.RyanW84.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Backend + ConsoleFrontEnd",
+      "configurations": [
+        "Debug Backend API",
+        "Debug ConsoleFrontEnd"
+      ]
+    }
+  ]
+}
