@@ -13,15 +13,18 @@ public class Shift
 
     // For compatibility with UI layer
     public int Id => ShiftId;
-    public DateTime Start 
-    { 
-        get => StartTime.DateTime;
-        set => StartTime = new DateTimeOffset(value);
+
+    // Preserve offset: expose DateTimeOffset aliases that map directly to the underlying fields
+    public DateTimeOffset Start
+    {
+        get => StartTime;
+        set => StartTime = value;
     }
-    public DateTime End 
-    { 
-        get => EndTime.DateTime;
-        set => EndTime = new DateTimeOffset(value);
+
+    public DateTimeOffset End
+    {
+        get => EndTime;
+        set => EndTime = value;
     }
 
     // Navigation property to the Location entity

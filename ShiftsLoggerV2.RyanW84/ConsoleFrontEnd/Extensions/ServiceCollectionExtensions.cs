@@ -35,6 +35,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IShiftUi, ShiftUI>();
         services.AddScoped<IWorkerUi, WorkerUi>();
         services.AddScoped<ILocationUi, LocationUI>();
+    // Console display service (Spectre.Console-based)
+    services.AddSingleton<ConsoleFrontEnd.Core.Abstractions.IConsoleDisplayService, ConsoleFrontEnd.Core.Infrastructure.SpectreConsoleDisplayService>();
+    // Console input service (Spectre.Console-based)
+    services.AddSingleton<ConsoleFrontEnd.Core.Abstractions.IConsoleInputService, ConsoleFrontEnd.Core.Infrastructure.SpectreConsoleInputService>();
         services.AddScoped<IMenu, MainMenu>();
         services.AddScoped<IMenu, ShiftMenu>();
         services.AddScoped<IMenu, WorkerMenu>();
