@@ -26,11 +26,11 @@ public class ShiftValidation : BaseService<Shift, ShiftFilterOptions, ShiftApiRe
         if (createDto.StartTime >= createDto.EndTime)
             return Task.FromResult(Result.Failure("Start time must be before end time."));
 
-        if (createDto.StartTime < DateTimeOffset.Now.AddDays(-30))
-            return Task.FromResult(Result.Failure("Cannot create shifts more than 30 days in the past."));
+        if (createDto.StartTime < DateTimeOffset.Now.AddDays(-14))
+            return Task.FromResult(Result.Failure("Cannot create shifts more than 14 days in the past."));
 
-        if (createDto.StartTime > DateTimeOffset.Now.AddDays(365))
-            return Task.FromResult(Result.Failure("Cannot create shifts more than 1 year in the future."));
+        if (createDto.StartTime > DateTimeOffset.Now.AddDays(90))
+            return Task.FromResult(Result.Failure("Cannot create shifts more than 90 days in the future."));
 
         var shiftDuration = createDto.EndTime - createDto.StartTime;
         if (shiftDuration.TotalHours > 24)

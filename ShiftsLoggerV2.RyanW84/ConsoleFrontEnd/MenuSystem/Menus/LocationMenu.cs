@@ -243,14 +243,14 @@ public class LocationMenu(
             Country = string.IsNullOrWhiteSpace(country) ? location.Country : country
         };
         var response = await _locationService.UpdateLocationAsync(locationId, updatedLocation);
-        if (response.RequestFailed || response.Data == null)
-        {
-            DisplayService.DisplayError(response.Message ?? "Failed to update location.");
-        }
-        else
-        {
-            DisplayService.DisplaySuccess("Location updated successfully.");
-            DisplayService.DisplayTable(new List<Location> { response.Data }, "Updated Location");
+            if (response.RequestFailed || response.Data == null)
+            {
+                DisplayService.DisplayError(response.Message ?? "Failed to update location.");
+            }
+            else
+            {
+                DisplayService.DisplaySuccess("Location updated successfully.");
+                DisplayService.DisplayTable(new List<Location> { response.Data }, "Updated Location", dateFormat: "dd-MM-yyyy HH:mm");
         }
         InputService.WaitForKeyPress();
     }
@@ -290,13 +290,36 @@ public class LocationMenu(
     private async Task FilterLocationsAsync()
     {
         DisplayService.DisplayHeader("Filter Locations", "blue");
+
+        // Get all locations for country/county selection
+        var allLocationsResponse = await _locationService.GetAllLocationsAsync();
+        string county = null;
+        string country = null;
+        if (allLocationsResponse.Data != null && allLocationsResponse.Data.Any())
+        {
+            var counties = allLocationsResponse.Data.Select(l => l.County).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().OrderBy(c => c).ToList();
+            var countries = allLocationsResponse.Data.Select(l => l.Country).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().OrderBy(c => c).ToList();
+            if (counties.Any())
+            {
+                var countyChoices = new[] { "Any" }.Concat(counties).ToArray();
+                var selectedCounty = InputService.GetMenuChoice("Filter by County:", countyChoices);
+                if (selectedCounty != "Any") county = selectedCounty;
+            }
+            if (countries.Any())
+            {
+                var countryChoices = new[] { "Any" }.Concat(countries).ToArray();
+                var selectedCountry = InputService.GetMenuChoice("Filter by Country:", countryChoices);
+                if (selectedCountry != "Any") country = selectedCountry;
+            }
+        }
+
         var filter = new LocationFilterOptions {
             Name = InputService.GetTextInput("Filter by name (leave blank for any):", false),
             Address = InputService.GetTextInput("Filter by address (leave blank for any):", false),
             Town = InputService.GetTextInput("Filter by town (leave blank for any):", false),
-            County = InputService.GetTextInput("Filter by county (leave blank for any):", false),
+            County = county,
             PostCode = InputService.GetTextInput("Filter by post code (leave blank for any):", false),
-            Country = InputService.GetTextInput("Filter by country (leave blank for any):", false)
+            Country = country
         };
         var response = await _locationService.GetLocationsByFilterAsync(filter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())

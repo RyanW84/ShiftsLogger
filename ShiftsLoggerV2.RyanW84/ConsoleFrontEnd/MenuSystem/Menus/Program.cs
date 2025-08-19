@@ -13,7 +13,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers().AddJsonOptions(opts =>
 {
     opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    opts.JsonSerializerOptions.Converters.Add(new ShiftsLoggerV2.RyanW84.Common.DdMmYyyyHHmmDateTimeOffsetConverter());
+    opts.JsonSerializerOptions.Converters.Add(new DdMmYyyyHHmmDateTimeOffsetConverter());
 });
 
 builder.Services.AddDbContext<ShiftsLoggerDbContext>(opt =>
@@ -26,8 +26,22 @@ builder.Services.AddApplicationServices();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
-
-
+// Custom DateTimeOffset converter for dd-MM-yyyy HH:mm
+public class DdMmYyyyHHmmDateTimeOffsetConverter : System.Text.Json.Serialization.JsonConverter<DateTimeOffset>
+{
+    private const string Format = "dd-MM-yyyy HH:mm";
+    public override DateTimeOffset Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    {
+        var str = reader.GetString();
+        if (DateTimeOffset.TryParseExact(str, Format, null, System.Globalization.DateTimeStyles.None, out var dto))
+            return dto;
+        throw new JsonException($"Invalid date format. Expected {Format}.");
+    }
+    public override void Write(System.Text.Json.Utf8JsonWriter writer, DateTimeOffset value, System.Text.Json.JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString(Format));
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {

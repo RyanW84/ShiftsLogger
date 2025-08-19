@@ -246,7 +246,7 @@ public class WorkerMenu : BaseMenu
             Email = string.IsNullOrWhiteSpace(email) ? worker.Email : email,
             PhoneNumber = string.IsNullOrWhiteSpace(phone) ? worker.PhoneNumber : phone
         };
-        var response = await _workerService.UpdateWorkerAsync(workerId, updatedWorker);
+            var response = await _workerService.UpdateWorkerAsync(workerId, updatedWorker);
         if (response.RequestFailed || response.Data == null)
         {
             DisplayService.DisplayError(response.Message ?? "Failed to update worker.");
@@ -254,7 +254,7 @@ public class WorkerMenu : BaseMenu
         else
         {
             DisplayService.DisplaySuccess("Worker updated successfully.");
-            DisplayService.DisplayTable(new List<Worker> { response.Data }, "Updated Worker");
+                DisplayService.DisplayTable(new List<Worker> { response.Data }, "Updated Worker", dateFormat: "dd-MM-yyyy HH:mm");
         }
         InputService.WaitForKeyPress();
     }
@@ -294,9 +294,32 @@ public class WorkerMenu : BaseMenu
     private async Task FilterWorkersAsync()
     {
         DisplayService.DisplayHeader("Filter Workers", "blue");
+
+        // Get all workers for name/email selection
+        var allWorkersResponse = await _workerService.GetAllWorkersAsync();
+        string name = null;
+        string email = null;
+        if (allWorkersResponse.Data != null && allWorkersResponse.Data.Any())
+        {
+            var names = allWorkersResponse.Data.Select(w => w.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().OrderBy(n => n).ToList();
+            var emails = allWorkersResponse.Data.Select(w => w.Email).Where(e => !string.IsNullOrWhiteSpace(e)).Distinct().OrderBy(e => e).ToList();
+            if (names.Any())
+            {
+                var nameChoices = new[] { "Any" }.Concat(names).ToArray();
+                var selectedName = InputService.GetMenuChoice("Filter by Name:", nameChoices);
+                if (selectedName != "Any") name = selectedName;
+            }
+            if (emails.Any())
+            {
+                var emailChoices = new[] { "Any" }.Concat(emails).ToArray();
+                var selectedEmail = InputService.GetMenuChoice("Filter by Email:", emailChoices);
+                if (selectedEmail != "Any") email = selectedEmail;
+            }
+        }
+
         var filter = new WorkerFilterOptions {
-            Name = InputService.GetTextInput("Filter by name (leave blank for any):", false),
-            Email = InputService.GetTextInput("Filter by email (leave blank for any):", false),
+            Name = name,
+            Email = email,
             PhoneNumber = InputService.GetTextInput("Filter by phone (leave blank for any):", false)
         };
         var response = await _workerService.GetWorkersByFilterAsync(filter);

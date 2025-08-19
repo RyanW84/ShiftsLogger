@@ -64,8 +64,8 @@ public class ShiftMenu(
     private async Task ViewShiftsByDateRangeAsync()
     {
         DisplayService.DisplayHeader("Shifts by Date Range", "blue");
-        var startDate = InputService.GetDateTimeInput("Enter start date (yyyy-MM-dd HH:mm):");
-        var endDate = InputService.GetDateTimeInput("Enter end date (yyyy-MM-dd HH:mm):");
+    var startDate = InputService.GetDateTimeInput("Enter start date (dd-MM-yyyy HH:mm):");
+    var endDate = InputService.GetDateTimeInput("Enter end date (dd-MM-yyyy HH:mm):");
         if (endDate <= startDate)
         {
             DisplayService.DisplayError("End date must be after start date.");
@@ -81,7 +81,7 @@ public class ShiftMenu(
         }
         else
         {
-            _shiftUi.DisplayShiftsTable(response.Data);
+            _shiftUi.DisplayShiftsTable(response.Data, dateFormat: "dd-MM-yyyy HH:mm");
             DisplayService.DisplaySuccess($"Total shifts: {response.TotalCount}");
         }
 
@@ -339,19 +339,31 @@ public class ShiftMenu(
 
         try
         {
-            // Select worker
+            // Select worker with validation
             var workerChoices = workersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
             var selectedWorkerChoice = InputService.GetMenuChoice("Select Worker:", workerChoices);
             var workerId = int.Parse(selectedWorkerChoice.Split(':')[0]);
+            if (workerId <= 0)
+            {
+                DisplayService.DisplayError("Invalid worker ID.");
+                InputService.WaitForKeyPress();
+                return;
+            }
 
-            // Select location
+            // Select location with validation
             var locationChoices = locationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
             var selectedLocationChoice = InputService.GetMenuChoice("Select Location:", locationChoices);
             var locationId = int.Parse(selectedLocationChoice.Split(':')[0]);
+            if (locationId <= 0)
+            {
+                DisplayService.DisplayError("Invalid location ID.");
+                InputService.WaitForKeyPress();
+                return;
+            }
 
-            // Get shift times
-            var startTime = InputService.GetDateTimeInput("Enter Start Time (yyyy-MM-dd HH:mm):");
-            var endTime = InputService.GetDateTimeInput("Enter End Time (yyyy-MM-dd HH:mm):");
+            // Get shift times with validation
+            var startTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime("Enter Start Time (dd-MM-yyyy HH:mm):");
+            var endTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime("Enter End Time (dd-MM-yyyy HH:mm):", minDate: startTime);
 
             if (endTime <= startTime)
             {
@@ -360,13 +372,56 @@ public class ShiftMenu(
                 return;
             }
 
-            // Create shift (this would call the API)
+            // Create shift object
+            var newShift = new Shift
+            {
+                WorkerId = workerId,
+                LocationId = locationId,
+                StartTime = new DateTimeOffset(startTime),
+                EndTime = new DateTimeOffset(endTime)
+            };
+
+            // Call the API to create the shift
+            var createResponse = await _shiftService.CreateShiftAsync(newShift);
+            if (createResponse.RequestFailed)
+            {
+                switch (createResponse.ResponseCode)
+                {
+                    case HttpStatusCode.BadRequest:
+                        DisplayService.DisplayError($"Bad request (400): {createResponse.Message}");
+                        break;
+                    case HttpStatusCode.InternalServerError:
+                        DisplayService.DisplayError($"Server error (500): {createResponse.Message}");
+                        break;
+                    case HttpStatusCode.Unauthorized:
+                        DisplayService.DisplayError("Unauthorized (401). Please log in.");
+                        break;
+                    case HttpStatusCode.Forbidden:
+                        DisplayService.DisplayError("Forbidden (403). You do not have permission.");
+                        break;
+                    case HttpStatusCode.Conflict:
+                        DisplayService.DisplayError($"Conflict (409): {createResponse.Message}");
+                        break;
+                    case HttpStatusCode.RequestTimeout:
+                        DisplayService.DisplayError("Request Timeout (408). Please try again.");
+                        break;
+                    case (HttpStatusCode)422:
+                        DisplayService.DisplayError($"Validation error (422): {createResponse.Message}");
+                        break;
+                    default:
+                        DisplayService.DisplayError($"Failed to create shift: {createResponse.Message}");
+                        break;
+                }
+                InputService.WaitForKeyPress();
+                return;
+            }
+
             DisplayService.DisplaySuccess("Shift created successfully!");
             DisplayService.DisplayInfo($"Worker: {workersResponse.Data.First(w => w.WorkerId == workerId).Name}");
             DisplayService.DisplayInfo(
                 $"Location: {locationsResponse.Data.First(l => l.LocationId == locationId).Name}");
-            DisplayService.DisplayInfo($"Start: {startTime}");
-            DisplayService.DisplayInfo($"End: {endTime}");
+            DisplayService.DisplayInfo($"Start: {startTime:dd-MM-yyyy HH:mm}");
+            DisplayService.DisplayInfo($"End: {endTime:dd-MM-yyyy HH:mm}");
         }
         catch (Exception ex)
         {
@@ -390,13 +445,25 @@ public class ShiftMenu(
         }
 
         var shiftChoices = allShiftsResponse.Data
-            .Select(s => $"{s.ShiftId}: {s.StartTime:yyyy-MM-dd HH:mm} - {s.EndTime:yyyy-MM-dd HH:mm}").ToArray();
+            .Select(s => $"{s.ShiftId}: {s.StartTime:dd-MM-yyyy HH:mm} - {s.EndTime:dd-MM-yyyy HH:mm}").ToArray();
         var selectedShiftChoice = InputService.GetMenuChoice("Select Shift to update:", shiftChoices);
         var shiftId = int.Parse(selectedShiftChoice.Split(':')[0]);
         var shift = allShiftsResponse.Data.First(s => s.ShiftId == shiftId);
-        var startTime =
-            InputService.GetDateTimeInput($"Enter new start time (current: {shift.StartTime:yyyy-MM-dd HH:mm}):");
-        var endTime = InputService.GetDateTimeInput($"Enter new end time (current: {shift.EndTime:yyyy-MM-dd HH:mm}):");
+
+        // Select new worker
+        var workersResponse = await _workerService.GetAllWorkersAsync();
+        var workerChoices = workersResponse.Data?.Select(w => $"{w.WorkerId}: {w.Name}").ToArray() ?? Array.Empty<string>();
+        var selectedWorkerChoice = InputService.GetMenuChoice("Select Worker for shift:", workerChoices, defaultChoice: $"{shift.WorkerId}: {workersResponse.Data?.FirstOrDefault(w => w.WorkerId == shift.WorkerId)?.Name}");
+        var workerId = int.Parse(selectedWorkerChoice.Split(':')[0]);
+
+        // Select new location
+        var locationsResponse = await _locationService.GetAllLocationsAsync();
+        var locationChoices = locationsResponse.Data?.Select(l => $"{l.LocationId}: {l.Name}").ToArray() ?? Array.Empty<string>();
+        var selectedLocationChoice = InputService.GetMenuChoice("Select Location for shift:", locationChoices, defaultChoice: $"{shift.LocationId}: {locationsResponse.Data?.FirstOrDefault(l => l.LocationId == shift.LocationId)?.Name}");
+        var locationId = int.Parse(selectedLocationChoice.Split(':')[0]);
+
+    var startTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime($"Enter new start time (current: {shift.StartTime:dd-MM-yyyy HH:mm}):", minDate: null);
+    var endTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime($"Enter new end time (current: {shift.EndTime:dd-MM-yyyy HH:mm}):", minDate: startTime);
         if (endTime <= startTime)
         {
             DisplayService.DisplayError("End time must be after start time.");
@@ -407,10 +474,10 @@ public class ShiftMenu(
         var updatedShift = new Shift
         {
             ShiftId = shift.ShiftId,
-            WorkerId = shift.WorkerId,
-            LocationId = shift.LocationId,
-            StartTime = startTime == default ? shift.StartTime : startTime,
-            EndTime = endTime == default ? shift.EndTime : endTime
+            WorkerId = workerId,
+            LocationId = locationId,
+            StartTime = new DateTimeOffset(startTime),
+            EndTime = new DateTimeOffset(endTime)
         };
         var response = await _shiftService.UpdateShiftAsync(shiftId, updatedShift);
         if (response.RequestFailed || response.Data == null)
@@ -438,10 +505,11 @@ public class ShiftMenu(
         }
 
         var shiftChoices = allShiftsResponse.Data
-            .Select(s => $"{s.ShiftId}: {s.StartTime:yyyy-MM-dd HH:mm} - {s.EndTime:yyyy-MM-dd HH:mm}").ToArray();
+            .Select(s => $"{s.ShiftId}: {s.StartTime:dd-MM-yyyy HH:mm} - {s.EndTime:dd-MM-yyyy HH:mm}").ToArray();
         var selectedShiftChoice = InputService.GetMenuChoice("Select Shift to delete:", shiftChoices);
         var shiftId = int.Parse(selectedShiftChoice.Split(':')[0]);
-        if (InputService.GetConfirmation($"Are you sure you want to delete shift {shiftId}?"))
+        var shift = allShiftsResponse.Data.First(s => s.ShiftId == shiftId);
+    if (InputService.GetConfirmation($"Are you sure you want to delete shift {shiftId} ({shift.StartTime:dd-MM-yyyy HH:mm} - {shift.EndTime:dd-MM-yyyy HH:mm})?"))
         {
             var response = await _shiftService.DeleteShiftAsync(shiftId);
             if (response.RequestFailed)
@@ -460,14 +528,35 @@ public class ShiftMenu(
     private async Task FilterShiftsAsync()
     {
         DisplayService.DisplayHeader("Filter Shifts", "blue");
-        var workerId = InputService.GetIntegerInput("Filter by Worker ID (0 for any):", 0);
-        var locationId = InputService.GetIntegerInput("Filter by Location ID (0 for any):", 0);
-        var startDate = InputService.GetDateTimeInput("Filter start date (leave blank for any):");
-        var endDate = InputService.GetDateTimeInput("Filter end date (leave blank for any):");
+
+        // Get workers for selection
+        var workersResponse = await _workerService.GetAllWorkersAsync();
+        int? workerId = null;
+        if (workersResponse.Data != null && workersResponse.Data.Any())
+        {
+            var workerChoices = new[] { "Any" }.Concat(workersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}")).ToArray();
+            var selectedWorker = InputService.GetMenuChoice("Filter by Worker:", workerChoices);
+            if (selectedWorker != "Any")
+                workerId = int.Parse(selectedWorker.Split(':')[0]);
+        }
+
+        // Get locations for selection
+        var locationsResponse = await _locationService.GetAllLocationsAsync();
+        int? locationId = null;
+        if (locationsResponse.Data != null && locationsResponse.Data.Any())
+        {
+            var locationChoices = new[] { "Any" }.Concat(locationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}")).ToArray();
+            var selectedLocation = InputService.GetMenuChoice("Filter by Location:", locationChoices);
+            if (selectedLocation != "Any")
+                locationId = int.Parse(selectedLocation.Split(':')[0]);
+        }
+
+    var startDate = InputService.GetDateTimeInput("Filter start date (dd-MM-yyyy HH:mm, leave blank for any):");
+    var endDate = InputService.GetDateTimeInput("Filter end date (dd-MM-yyyy HH:mm, leave blank for any):");
         var filter = new ShiftFilterOptions
         {
-            WorkerId = workerId > 0 ? workerId : null,
-            LocationId = locationId > 0 ? locationId : null,
+            WorkerId = workerId,
+            LocationId = locationId,
             StartTime = startDate,
             EndTime = endDate
         };

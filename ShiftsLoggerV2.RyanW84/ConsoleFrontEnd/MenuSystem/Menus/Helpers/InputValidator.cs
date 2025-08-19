@@ -124,8 +124,8 @@ public static class InputValidator
             // Try multiple date formats with explicit culture
             string[] acceptedFormats =
             [
-                "dd/MM/yyyy HH:mm", "dd/MM/yyyy H:mm",
-                "d/M/yyyy HH:mm", "d/M/yyyy H:mm"
+                "dd-MM-yyyy HH:mm", "dd-MM-yyyy H:mm",
+                "d-M-yyyy HH:mm", "d-M-yyyy H:mm"
             ];
 
             foreach (var format in acceptedFormats)
@@ -145,20 +145,20 @@ public static class InputValidator
 
             if (!isValid)
             {
-                AnsiConsole.MarkupLine("[red]Invalid date/time format. Please use dd/MM/yyyy HH:mm format.[/]");
+                AnsiConsole.MarkupLine("[red]Invalid date/time format. Please use dd-MM-yyyy HH:mm format.[/]");
                 continue;
             }
 
             // Validate date range
             if (minDate.HasValue && parsedDateTime < minDate.Value)
             {
-                AnsiConsole.MarkupLine($"[red]Date must be after {minDate.Value:dd/MM/yyyy HH:mm}.[/]");
+                AnsiConsole.MarkupLine($"[red]Date must be after {minDate.Value:dd-MM-yyyy HH:mm}.[/]");
                 continue;
             }
 
             if (maxDate.HasValue && parsedDateTime > maxDate.Value)
             {
-                AnsiConsole.MarkupLine($"[red]Date must be before {maxDate.Value:dd/MM/yyyy HH:mm}.[/]");
+                AnsiConsole.MarkupLine($"[red]Date must be before {maxDate.Value:dd-MM-yyyy HH:mm}.[/]");
                 continue;
             }
 

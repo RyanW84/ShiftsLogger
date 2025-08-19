@@ -104,10 +104,11 @@ public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
         }
         catch (Exception ex)
         {
-            return Result<TEntity>.Failure(
-                $"Error creating {typeof(TEntity).Name.ToLower()}: {ex.Message}",
-                HttpStatusCode.InternalServerError
-            );
+                Console.WriteLine($"[ERROR] Failed to create {typeof(TEntity).Name}: {ex.Message}\n{ex}");
+                return Result<TEntity>.Failure(
+                    $"Error creating {typeof(TEntity).Name.ToLower()}: {ex.Message}",
+                    HttpStatusCode.InternalServerError
+                );
         }
     }
 
