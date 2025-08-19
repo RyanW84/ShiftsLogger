@@ -243,14 +243,14 @@ public class LocationMenu(
             Country = string.IsNullOrWhiteSpace(country) ? location.Country : country
         };
         var response = await _locationService.UpdateLocationAsync(locationId, updatedLocation);
-            if (response.RequestFailed || response.Data == null)
-            {
-                DisplayService.DisplayError(response.Message ?? "Failed to update location.");
-            }
-            else
-            {
-                DisplayService.DisplaySuccess("Location updated successfully.");
-                DisplayService.DisplayTable(new List<Location> { response.Data }, "Updated Location", dateFormat: "dd-MM-yyyy HH:mm");
+        if (response.RequestFailed || response.Data == null)
+        {
+            DisplayService.DisplayError(response.Message ?? "Failed to update location.");
+        }
+        else
+        {
+            DisplayService.DisplaySuccess("Location updated successfully.");
+            DisplayService.DisplayTable(new List<Location> { response.Data }, "Updated Location");
         }
         InputService.WaitForKeyPress();
     }
@@ -320,6 +320,7 @@ public class LocationMenu(
             County = county,
             PostCode = InputService.GetTextInput("Filter by post code (leave blank for any):", false),
             Country = country
+            // If you add date/time fields in the future, use dd-MM-yyyy HH:mm format for prompts and parsing
         };
         var response = await _locationService.GetLocationsByFilterAsync(filter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())

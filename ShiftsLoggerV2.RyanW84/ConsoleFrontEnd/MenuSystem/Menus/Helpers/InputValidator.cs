@@ -110,7 +110,7 @@ public static class InputValidator
     {
         while (true)
         {
-            var input = AnsiConsole.Ask<string>($"[green]{prompt}[/] [dim](dd/MM/yyyy HH:mm)[/]");
+            var input = AnsiConsole.Ask<string>($"[green]{prompt}[/] [dim](dd-MM-yyyy HH:mm)[/]");
 
             if (string.IsNullOrWhiteSpace(input))
             {
@@ -123,24 +123,19 @@ public static class InputValidator
 
             // Try multiple date formats with explicit culture
             string[] acceptedFormats =
-            [
-                "dd-MM-yyyy HH:mm", "dd-MM-yyyy H:mm",
-                "d-M-yyyy HH:mm", "d-M-yyyy H:mm"
-            ];
+            {
+                "dd-MM-yyyy HH:mm",
+                "dd-MM-yyyy H:mm"
+            };
 
             foreach (var format in acceptedFormats)
+            {
                 if (DateTime.TryParseExact(input, format, CultureInfo.InvariantCulture, DateTimeStyles.None,
                         out parsedDateTime))
                 {
                     isValid = true;
                     break;
                 }
-
-            // Fallback to UK culture
-            if (!isValid)
-            {
-                var ukCulture = new CultureInfo("en-GB");
-                if (DateTime.TryParse(input, ukCulture, DateTimeStyles.None, out parsedDateTime)) isValid = true;
             }
 
             if (!isValid)

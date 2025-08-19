@@ -64,8 +64,8 @@ public class ShiftMenu(
     private async Task ViewShiftsByDateRangeAsync()
     {
         DisplayService.DisplayHeader("Shifts by Date Range", "blue");
-    var startDate = InputService.GetDateTimeInput("Enter start date (dd-MM-yyyy HH:mm):");
-    var endDate = InputService.GetDateTimeInput("Enter end date (dd-MM-yyyy HH:mm):");
+        var startDate = InputService.GetDateTimeInput("Enter start date (dd-MM-yyyy HH:mm):");
+        var endDate = InputService.GetDateTimeInput("Enter end date (dd-MM-yyyy HH:mm):");
         if (endDate <= startDate)
         {
             DisplayService.DisplayError("End date must be after start date.");
@@ -81,7 +81,7 @@ public class ShiftMenu(
         }
         else
         {
-            _shiftUi.DisplayShiftsTable(response.Data, dateFormat: "dd-MM-yyyy HH:mm");
+            _shiftUi.DisplayShiftsTable(response.Data);
             DisplayService.DisplaySuccess($"Total shifts: {response.TotalCount}");
         }
 
@@ -362,8 +362,8 @@ public class ShiftMenu(
             }
 
             // Get shift times with validation
-            var startTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime("Enter Start Time (dd-MM-yyyy HH:mm):");
-            var endTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime("Enter End Time (dd-MM-yyyy HH:mm):", minDate: startTime);
+                var startTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime("Enter Start Time (dd-MM-yyyy HH:mm):");
+                var endTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime("Enter End Time (dd-MM-yyyy HH:mm):", minDate: startTime);
 
             if (endTime <= startTime)
             {
@@ -420,8 +420,8 @@ public class ShiftMenu(
             DisplayService.DisplayInfo($"Worker: {workersResponse.Data.First(w => w.WorkerId == workerId).Name}");
             DisplayService.DisplayInfo(
                 $"Location: {locationsResponse.Data.First(l => l.LocationId == locationId).Name}");
-            DisplayService.DisplayInfo($"Start: {startTime:dd-MM-yyyy HH:mm}");
-            DisplayService.DisplayInfo($"End: {endTime:dd-MM-yyyy HH:mm}");
+            DisplayService.DisplayInfo($"Start: {startTime}");
+            DisplayService.DisplayInfo($"End: {endTime}");
         }
         catch (Exception ex)
         {
@@ -461,9 +461,8 @@ public class ShiftMenu(
         var locationChoices = locationsResponse.Data?.Select(l => $"{l.LocationId}: {l.Name}").ToArray() ?? Array.Empty<string>();
         var selectedLocationChoice = InputService.GetMenuChoice("Select Location for shift:", locationChoices, defaultChoice: $"{shift.LocationId}: {locationsResponse.Data?.FirstOrDefault(l => l.LocationId == shift.LocationId)?.Name}");
         var locationId = int.Parse(selectedLocationChoice.Split(':')[0]);
-
-    var startTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime($"Enter new start time (current: {shift.StartTime:dd-MM-yyyy HH:mm}):", minDate: null);
-    var endTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime($"Enter new end time (current: {shift.EndTime:dd-MM-yyyy HH:mm}):", minDate: startTime);
+            var startTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime($"Enter new start time (current: {shift.StartTime:dd-MM-yyyy HH:mm}):", minDate: null);
+            var endTime = ConsoleFrontEnd.MenuSystem.InputValidator.GetFlexibleDateTime($"Enter new end time (current: {shift.EndTime:dd-MM-yyyy HH:mm}):", minDate: startTime);
         if (endTime <= startTime)
         {
             DisplayService.DisplayError("End time must be after start time.");
@@ -518,8 +517,8 @@ public class ShiftMenu(
                 DisplayService.DisplaySuccess(response.Message ?? $"Shift {shiftId} deleted successfully.");
         }
         else
-        {
-            DisplayService.DisplayInfo("Delete cancelled.");
+            var startDate = InputService.GetDateTimeInput("Filter start date (dd-MM-yyyy HH:mm, leave blank for any):");
+            var endDate = InputService.GetDateTimeInput("Filter end date (dd-MM-yyyy HH:mm, leave blank for any):");
         }
 
         InputService.WaitForKeyPress();
@@ -551,8 +550,8 @@ public class ShiftMenu(
                 locationId = int.Parse(selectedLocation.Split(':')[0]);
         }
 
-    var startDate = InputService.GetDateTimeInput("Filter start date (dd-MM-yyyy HH:mm, leave blank for any):");
-    var endDate = InputService.GetDateTimeInput("Filter end date (dd-MM-yyyy HH:mm, leave blank for any):");
+        var startDate = InputService.GetDateTimeInput("Filter start date (leave blank for any):");
+        var endDate = InputService.GetDateTimeInput("Filter end date (leave blank for any):");
         var filter = new ShiftFilterOptions
         {
             WorkerId = workerId,

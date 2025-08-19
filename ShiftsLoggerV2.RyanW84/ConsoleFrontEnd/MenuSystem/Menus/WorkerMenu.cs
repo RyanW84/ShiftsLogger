@@ -246,7 +246,7 @@ public class WorkerMenu : BaseMenu
             Email = string.IsNullOrWhiteSpace(email) ? worker.Email : email,
             PhoneNumber = string.IsNullOrWhiteSpace(phone) ? worker.PhoneNumber : phone
         };
-            var response = await _workerService.UpdateWorkerAsync(workerId, updatedWorker);
+        var response = await _workerService.UpdateWorkerAsync(workerId, updatedWorker);
         if (response.RequestFailed || response.Data == null)
         {
             DisplayService.DisplayError(response.Message ?? "Failed to update worker.");
@@ -254,7 +254,7 @@ public class WorkerMenu : BaseMenu
         else
         {
             DisplayService.DisplaySuccess("Worker updated successfully.");
-                DisplayService.DisplayTable(new List<Worker> { response.Data }, "Updated Worker", dateFormat: "dd-MM-yyyy HH:mm");
+            DisplayService.DisplayTable(new List<Worker> { response.Data }, "Updated Worker");
         }
         InputService.WaitForKeyPress();
     }
@@ -321,6 +321,7 @@ public class WorkerMenu : BaseMenu
             Name = name,
             Email = email,
             PhoneNumber = InputService.GetTextInput("Filter by phone (leave blank for any):", false)
+            // If you add date/time fields in the future, use dd-MM-yyyy HH:mm format for prompts and parsing
         };
         var response = await _workerService.GetWorkersByFilterAsync(filter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())

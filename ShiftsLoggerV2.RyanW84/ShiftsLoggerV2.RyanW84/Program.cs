@@ -5,16 +5,16 @@ using ShiftsLoggerV2.RyanW84.Data;
 using ShiftsLoggerV2.RyanW84.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
 // Prevents circular dependency issues
-
-builder.Services.AddControllers().AddJsonOptions(opts =>
-{
-    opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    opts.JsonSerializerOptions.Converters.Add(new ShiftsLoggerV2.RyanW84.Common.DdMmYyyyHHmmDateTimeOffsetConverter());
-});
+builder
+    .Services.AddControllers()
+    .AddJsonOptions(opts =>
+        opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles
+    );
 
 builder.Services.AddDbContext<ShiftsLoggerDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -26,8 +26,6 @@ builder.Services.AddApplicationServices();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
-
-
 
 if (app.Environment.IsDevelopment())
 {

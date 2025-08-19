@@ -18,8 +18,8 @@ public class ShiftUI : IShiftUi
     {
         _display.DisplayHeader("Create New Shift");
         
-    var start = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift start (yyyy-MM-dd HH:mm zzz):[/]");
-    var end = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift end (yyyy-MM-dd HH:mm zzz):[/]");
+    var start = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift start (dd-MM-yyyy HH:mm):[/]");
+    var end = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift end (dd-MM-yyyy HH:mm):[/]");
         var locationId = AnsiConsole.Ask<int>("[green]Enter location ID:[/]");
         
         return new Shift
@@ -36,8 +36,8 @@ public class ShiftUI : IShiftUi
     {
         _display.DisplayHeader($"Update Shift ID: {existingShift.Id}");
         
-    var start = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift start (yyyy-MM-dd HH:mm zzz):[/]", existingShift.Start);
-    var end = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift end (yyyy-MM-dd HH:mm zzz):[/]", existingShift.End);
+    var start = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift start (dd-MM-yyyy HH:mm):[/]", existingShift.Start);
+    var end = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift end (dd-MM-yyyy HH:mm):[/]", existingShift.End);
         var locationId = AnsiConsole.Ask<int>("[green]Enter location ID:[/]", existingShift.LocationId);
         
         return new Shift
@@ -56,8 +56,8 @@ public class ShiftUI : IShiftUi
         
         var workerId = AnsiConsole.Ask<int?>("[yellow]Filter by worker ID (press Enter to skip):[/]", null);
         var locationId = AnsiConsole.Ask<int?>("[yellow]Filter by location ID (press Enter to skip):[/]", null);
-        var startDate = AnsiConsole.Ask<DateTime?>("[yellow]Filter by start date (yyyy-MM-dd, press Enter to skip):[/]", null);
-        var endDate = AnsiConsole.Ask<DateTime?>("[yellow]Filter by end date (yyyy-MM-dd, press Enter to skip):[/]", null);
+    var startDate = AnsiConsole.Ask<DateTime?>("[yellow]Filter by start date (dd-MM-yyyy HH:mm, press Enter to skip):[/]", null);
+    var endDate = AnsiConsole.Ask<DateTime?>("[yellow]Filter by end date (dd-MM-yyyy HH:mm, press Enter to skip):[/]", null);
         
         return new ShiftFilterOptions
         {
