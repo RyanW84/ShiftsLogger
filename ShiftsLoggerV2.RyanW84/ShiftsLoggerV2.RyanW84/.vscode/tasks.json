@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-consolefront",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/../ConsoleFrontEnd/ConsoleFrontEnd.csproj"],
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    }
+    ,
+    {
+      "label": "build-backend",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/ShiftsLoggerV2.RyanW84.csproj"],
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    }
+  ]
+}

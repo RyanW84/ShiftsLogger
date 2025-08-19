@@ -18,8 +18,8 @@ public class ShiftUI : IShiftUi
     {
         _display.DisplayHeader("Create New Shift");
         
-        var start = AnsiConsole.Ask<DateTime>("[green]Enter shift start (yyyy-MM-dd HH:mm):[/]");
-        var end = AnsiConsole.Ask<DateTime>("[green]Enter shift end (yyyy-MM-dd HH:mm):[/]");
+    var start = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift start (yyyy-MM-dd HH:mm zzz):[/]");
+    var end = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift end (yyyy-MM-dd HH:mm zzz):[/]");
         var locationId = AnsiConsole.Ask<int>("[green]Enter location ID:[/]");
         
         return new Shift
@@ -27,8 +27,8 @@ public class ShiftUI : IShiftUi
             ShiftId = 0, // Will be assigned by service
             WorkerId = workerId,
             LocationId = locationId,
-            StartTime = new DateTimeOffset(start),
-            EndTime = new DateTimeOffset(end)
+            StartTime = start,
+            EndTime = end
         };
     }
 
@@ -36,8 +36,8 @@ public class ShiftUI : IShiftUi
     {
         _display.DisplayHeader($"Update Shift ID: {existingShift.Id}");
         
-        var start = AnsiConsole.Ask<DateTime>("[green]Enter shift start (yyyy-MM-dd HH:mm):[/]", existingShift.Start);
-        var end = AnsiConsole.Ask<DateTime>("[green]Enter shift end (yyyy-MM-dd HH:mm):[/]", existingShift.End);
+    var start = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift start (yyyy-MM-dd HH:mm zzz):[/]", existingShift.Start);
+    var end = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift end (yyyy-MM-dd HH:mm zzz):[/]", existingShift.End);
         var locationId = AnsiConsole.Ask<int>("[green]Enter location ID:[/]", existingShift.LocationId);
         
         return new Shift
@@ -45,8 +45,8 @@ public class ShiftUI : IShiftUi
             ShiftId = existingShift.Id,
             WorkerId = existingShift.WorkerId,
             LocationId = locationId,
-            StartTime = new DateTimeOffset(start),
-            EndTime = new DateTimeOffset(end)
+            StartTime = start,
+            EndTime = end
         };
     }
 

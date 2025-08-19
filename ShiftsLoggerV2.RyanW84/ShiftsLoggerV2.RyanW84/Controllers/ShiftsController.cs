@@ -10,7 +10,7 @@ using Spectre.Console;
 namespace ShiftsLoggerV2.RyanW84.Controllers;
 
 [ApiController]
-//http://localhost:5009/api/shifts/ this is what the route will look like
+// https://localhost:7009/api/shifts/ this is what the route will look like
 [Route("api/[controller]")]
 public class ShiftsController : ControllerBase
 {
