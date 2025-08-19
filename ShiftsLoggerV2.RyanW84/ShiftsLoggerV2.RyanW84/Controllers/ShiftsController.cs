@@ -10,7 +10,7 @@ using Spectre.Console;
 namespace ShiftsLoggerV2.RyanW84.Controllers;
 
 [ApiController]
-//http://localhost:5009/api/shifts/ this is what the route will look like
+//http://localhost:7009/api/shifts/ this is what the route will look like
 [Route("api/[controller]")]
 public class ShiftsController : ControllerBase
 {
@@ -126,16 +126,22 @@ public class ShiftsController : ControllerBase
     {
         try
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"[CreateShift] ModelState invalid: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
+                return BadRequest(ModelState);
+            }
 
             // Parse date/time strings to DateTimeOffset and map to typed DTO
             if (!DateTimeOffset.TryParseExact(shift.StartTime, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedStart))
             {
+                Console.WriteLine($"[CreateShift] Invalid StartTime format: {shift.StartTime}");
                 ModelState.AddModelError("StartTime", "Invalid date format. Use dd-MM-YYYY HH:mm");
                 return BadRequest(ModelState);
             }
             if (!DateTimeOffset.TryParseExact(shift.EndTime, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedEnd))
             {
+                Console.WriteLine($"[CreateShift] Invalid EndTime format: {shift.EndTime}");
                 ModelState.AddModelError("EndTime", "Invalid date format. Use dd-MM-YYYY HH:mm");
                 return BadRequest(ModelState);
             }
@@ -152,6 +158,7 @@ public class ShiftsController : ControllerBase
 
             if (!result.IsSuccess)
             {
+                Console.WriteLine($"[CreateShift] Validation failed: {result.Message}");
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<Shift>
                 {
                     RequestFailed = true,
@@ -161,6 +168,7 @@ public class ShiftsController : ControllerBase
                 });
             }
 
+            Console.WriteLine($"[CreateShift] Shift created successfully for WorkerId={typedDto.WorkerId}, LocationId={typedDto.LocationId}, Start={typedDto.StartTime}, End={typedDto.EndTime}");
             return StatusCode(201, new ApiResponseDto<Shift>
             {
                 RequestFailed = false,
@@ -172,15 +180,15 @@ public class ShiftsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Create shift failed, see Exception {ex}");
-                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
-                return StatusCode((int)status, new ApiResponseDto<Shift>
-                {
-                    RequestFailed = true,
-                    ResponseCode = status,
-                    Message = message,
-                    Data = null
-                });
+            Console.WriteLine($"[CreateShift] Exception: {ex}");
+            var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<Shift>
+            {
+                RequestFailed = true,
+                ResponseCode = status,
+                Message = message + $" Exception: {ex.Message}",
+                Data = null
+            });
         }
     }
 

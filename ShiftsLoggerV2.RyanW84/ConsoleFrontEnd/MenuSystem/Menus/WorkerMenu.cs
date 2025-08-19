@@ -297,8 +297,8 @@ public class WorkerMenu : BaseMenu
 
         // Get all workers for name/email selection
         var allWorkersResponse = await _workerService.GetAllWorkersAsync();
-        string name = null;
-        string email = null;
+    string? name = null;
+    string? email = null;
         if (allWorkersResponse.Data != null && allWorkersResponse.Data.Any())
         {
             var names = allWorkersResponse.Data.Select(w => w.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().OrderBy(n => n).ToList();
@@ -311,7 +311,7 @@ public class WorkerMenu : BaseMenu
             }
             if (emails.Any())
             {
-                var emailChoices = new[] { "Any" }.Concat(emails).ToArray();
+                var emailChoices = new[] { "Any" }.Concat(emails).Select(s => s!).ToArray();
                 var selectedEmail = InputService.GetMenuChoice("Filter by Email:", emailChoices);
                 if (selectedEmail != "Any") email = selectedEmail;
             }

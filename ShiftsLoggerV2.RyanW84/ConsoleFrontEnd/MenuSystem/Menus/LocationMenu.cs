@@ -293,21 +293,21 @@ public class LocationMenu(
 
         // Get all locations for country/county selection
         var allLocationsResponse = await _locationService.GetAllLocationsAsync();
-        string county = null;
-        string country = null;
+    string? county = null;
+    string? country = null;
         if (allLocationsResponse.Data != null && allLocationsResponse.Data.Any())
         {
             var counties = allLocationsResponse.Data.Select(l => l.County).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().OrderBy(c => c).ToList();
             var countries = allLocationsResponse.Data.Select(l => l.Country).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().OrderBy(c => c).ToList();
             if (counties.Any())
             {
-                var countyChoices = new[] { "Any" }.Concat(counties).ToArray();
+                var countyChoices = new[] { "Any" }.Concat(counties).Select(s => s!).ToArray();
                 var selectedCounty = InputService.GetMenuChoice("Filter by County:", countyChoices);
                 if (selectedCounty != "Any") county = selectedCounty;
             }
             if (countries.Any())
             {
-                var countryChoices = new[] { "Any" }.Concat(countries).ToArray();
+                var countryChoices = new[] { "Any" }.Concat(countries).Select(s => s!).ToArray();
                 var selectedCountry = InputService.GetMenuChoice("Filter by Country:", countryChoices);
                 if (selectedCountry != "Any") country = selectedCountry;
             }
