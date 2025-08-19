@@ -87,6 +87,16 @@ public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
             await DbSet.AddAsync(entity);
             await DbContext.SaveChangesAsync();
 
+            try
+            {
+                // Log created entity id for debugging (IEntity.Id is implemented by entities)
+                Console.WriteLine($"Created {typeof(TEntity).Name} with ID {entity.Id}");
+            }
+            catch
+            {
+                // ignore any logging failures
+            }
+
             return Result<TEntity>.Create(
                 entity,
                 $"{typeof(TEntity).Name} created successfully."

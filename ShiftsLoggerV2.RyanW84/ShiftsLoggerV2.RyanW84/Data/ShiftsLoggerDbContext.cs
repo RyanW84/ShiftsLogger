@@ -14,13 +14,13 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
         modelBuilder
             .Entity<Shift>()
             .HasOne(s => s.Location)
-            .WithMany()
+            .WithMany(l => l.Shifts)
             .HasForeignKey(s => s.LocationId)
             .OnDelete(DeleteBehavior.Cascade);
         modelBuilder
             .Entity<Shift>()
             .HasOne(s => s.Worker)
-            .WithMany()
+            .WithMany(w => w.Shifts)
             .HasForeignKey(s => s.WorkerId)
             .OnDelete(DeleteBehavior.Cascade);
         modelBuilder

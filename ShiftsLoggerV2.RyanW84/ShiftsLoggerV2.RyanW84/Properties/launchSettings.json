@@ -17,7 +17,8 @@
       "applicationUrl": "https://127.0.0.1:7009",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "externalConsole": true
     },
     "IIS Express": {
       "commandName": "IISExpress",
