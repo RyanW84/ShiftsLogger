@@ -9,7 +9,7 @@ namespace ConsoleFrontEnd;
 ///     SOLID Refactored Program Entry Point
 ///     Demonstrates proper SOLID principles implementation
 /// </summary>
-public class Program
+public class Program //testing git commit
 {
     public static async Task Main(string[] args)
     {
