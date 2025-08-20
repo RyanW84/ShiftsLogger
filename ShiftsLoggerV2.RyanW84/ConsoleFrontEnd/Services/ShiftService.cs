@@ -135,7 +135,15 @@ public class ShiftService : IShiftService
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("api/shifts", shift);
+            var payload = new
+            {
+                WorkerId = shift.WorkerId,
+                StartTime = shift.StartTime.ToString("dd-MM-yyyy HH:mm"),
+                EndTime = shift.EndTime.ToString("dd-MM-yyyy HH:mm"),
+                LocationId = shift.LocationId
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("api/shifts", payload);
             return await HttpResponseHelper.HandleHttpResponseAsync<Shift>(
                 response,
                 _logger,
@@ -159,7 +167,15 @@ public class ShiftService : IShiftService
     {
         try
         {
-            var response = await _httpClient.PutAsJsonAsync($"api/shifts/{id}", updatedShift);
+            var payload = new
+            {
+                WorkerId = updatedShift.WorkerId,
+                StartTime = updatedShift.StartTime.ToString("dd-MM-yyyy HH:mm"),
+                EndTime = updatedShift.EndTime.ToString("dd-MM-yyyy HH:mm"),
+                LocationId = updatedShift.LocationId
+            };
+
+            var response = await _httpClient.PutAsJsonAsync($"api/shifts/{id}", payload);
             return await HttpResponseHelper.HandleHttpResponseAsync<Shift?>(
                 response,
                 _logger,

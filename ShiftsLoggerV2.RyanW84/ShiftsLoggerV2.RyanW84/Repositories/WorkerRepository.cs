@@ -5,6 +5,7 @@ using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
 using ShiftsLoggerV2.RyanW84.Repositories.Interfaces;
+using ShiftsLoggerV2.RyanW84.Common;
 
 namespace ShiftsLoggerV2.RyanW84.Repositories;
 
@@ -19,7 +20,8 @@ public class WorkerRepository : BaseRepository<Worker, WorkerFilterOptions, Work
 
     protected override IQueryable<Worker> BuildQuery(WorkerFilterOptions filterOptions)
     {
-        var query = DbSet.AsQueryable();
+    // Base query for workers (do not include Shifts to avoid loading collections)
+    IQueryable<Worker> query = DbSet;
 
         // Apply filters
         if (filterOptions.WorkerId.HasValue && filterOptions.WorkerId.Value > 0)
@@ -73,6 +75,43 @@ public class WorkerRepository : BaseRepository<Worker, WorkerFilterOptions, Work
         }
 
         return query;
+    }
+
+    // Override GetAllAsync to populate ShiftCount efficiently via grouping
+    public override async Task<Result<List<Worker>>> GetAllAsync(WorkerFilterOptions filterOptions)
+    {
+        try
+        {
+            // Build base worker query with filters applied
+            var baseQuery = BuildQuery(filterOptions);
+
+            // Perform a left join/group to compute shift counts per worker without loading full collections
+            var counts = await DbContext.Shifts
+                .GroupBy(s => s.WorkerId)
+                .Select(g => new { WorkerId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var workers = await baseQuery.ToListAsync();
+
+            // Map counts into worker entities
+            var countsDict = counts.ToDictionary(c => c.WorkerId, c => c.Count);
+            foreach (var w in workers)
+            {
+                countsDict.TryGetValue(w.WorkerId, out var c);
+                w.ShiftCount = c;
+            }
+
+            if (!workers.Any())
+            {
+                return Result<List<Worker>>.NotFound("No workers found with the specified criteria.");
+            }
+
+            return Result<List<Worker>>.Success(workers, "Workers retrieved successfully.", System.Net.HttpStatusCode.OK);
+        }
+        catch (Exception ex)
+        {
+            return Result<List<Worker>>.Failure($"Error retrieving workers: {ex.Message}", System.Net.HttpStatusCode.InternalServerError);
+        }
     }
 
     protected override async Task<Worker?> GetEntityByIdAsync(int id)

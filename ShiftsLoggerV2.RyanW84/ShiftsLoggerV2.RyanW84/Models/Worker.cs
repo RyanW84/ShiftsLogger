@@ -19,4 +19,7 @@ public class Worker : IEntity
 	// For compatibility with UI layer
 	public int Id => WorkerId;
 	public string? Phone => PhoneNumber;
+
+    // Computed count of shifts for lightweight projections (populated by repository)
+    public int ShiftCount { get; set; }
 }

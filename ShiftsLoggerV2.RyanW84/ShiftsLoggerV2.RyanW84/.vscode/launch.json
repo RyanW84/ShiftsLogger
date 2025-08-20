@@ -5,19 +5,14 @@
       "name": "Debug ConsoleFrontEnd",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build-consolefront",
+  "preLaunchTask": "build-consolefront",
       "program": "${workspaceFolder}/../ConsoleFrontEnd/bin/Debug/net9.0/ConsoleFrontEnd.dll",
       "args": [],
       "cwd": "${workspaceFolder}/..",
       "stopAtEntry": false,
-      "console": "externalTerminal"
+  "console": "integratedTerminal"
     },
-    {
-      "name": "Attach to ConsoleFrontEnd",
-      "type": "coreclr",
-      "request": "attach",
-      "processId": "${command:pickProcess}"
-    },
+  // ...removed attach configurations to keep launch.json minimal
     {
       "name": "Debug Backend API",
       "type": "coreclr",
@@ -35,7 +30,7 @@
   ],
   "compounds": [
     {
-      "name": "Debug Backend + ConsoleFrontEnd",
+      "name": "Debug Backend + Frontend (auto)",
       "configurations": [
         "Debug Backend API",
         "Debug ConsoleFrontEnd"

@@ -257,9 +257,10 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
 
         // Add rows with row number instead of worker ID
         var rowCount = 1;
-        foreach (var worker in workers)
-        {
-            var shiftCount = worker.Shifts?.Count ?? 0;
+            foreach (var worker in workers)
+            {
+                // Use lightweight ShiftCount when available to avoid loading full collections
+                var shiftCount = (worker.ShiftCount != 0) ? worker.ShiftCount : (worker.Shifts?.Count ?? 0);
             var phoneDisplay = string.IsNullOrWhiteSpace(worker.PhoneNumber)
                 ? "N/A"
                 : worker.PhoneNumber;

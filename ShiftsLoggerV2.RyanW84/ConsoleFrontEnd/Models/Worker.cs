@@ -20,4 +20,7 @@ public class Worker
 
     public virtual ICollection<Shift>? Shifts { get; set; }
     public virtual ICollection<Location>? Locations { get; set; }
+    
+    // Lightweight shift count populated by API to avoid loading full collections
+    public int ShiftCount { get; set; }
 }

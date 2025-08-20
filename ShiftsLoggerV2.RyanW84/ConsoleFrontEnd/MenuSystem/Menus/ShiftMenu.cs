@@ -237,9 +237,23 @@ public class ShiftMenu : BaseMenu
 
     private async Task ViewShiftByIdAsync()
     {
-        var shiftId = InputService.GetIntegerInput("Enter Shift ID:", 1);
+        // Use the same selection-style UI as Update/Delete so users can pick from a list
+        DisplayService.DisplayHeader("Select Shift", "blue");
+        var allShiftsResponse = await _shiftService.GetAllShiftsAsync();
+        if (allShiftsResponse.RequestFailed || allShiftsResponse.Data == null || !allShiftsResponse.Data.Any())
+        {
+            DisplayService.DisplayError(allShiftsResponse.Message ?? "No shifts found.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+
+        var shiftChoices = allShiftsResponse.Data
+            .Select(s => $"{s.ShiftId}: {s.StartTime:dd-MM-yyyy HH:mm} - {s.EndTime:dd-MM-yyyy HH:mm}").ToArray();
+        var selectedShiftChoice = InputService.GetMenuChoice("Select Shift:", shiftChoices);
+        var shiftId = int.Parse(selectedShiftChoice.Split(':')[0]);
+
         DisplayService.DisplayHeader($"Shift Details (ID: {shiftId})", "blue");
-    var response = await _shiftService.GetShiftByIdAsync(shiftId);
+        var response = await _shiftService.GetShiftByIdAsync(shiftId);
         if (response.RequestFailed || response.Data == null)
         {
             DisplayService.DisplayError(response.Message ?? "Shift not found (404).");
