@@ -2,9 +2,11 @@ using System.Net;
 using ConsoleFrontEnd.Core.Abstractions;
 using ConsoleFrontEnd.Interfaces;
 using ConsoleFrontEnd.Models;
+using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
 using ConsoleFrontEnd.Services;
 using Microsoft.Extensions.Logging;
+using Spectre.Console;
 
 
 namespace ConsoleFrontEnd.MenuSystem.Menus;
@@ -42,7 +44,7 @@ public class ShiftMenu : BaseMenu
             {
                 if (error.Contains("WorkerId"))
                 {
-                    // Fetch all workers
+                    // ...existing code for WorkerId selection...
                     var workersResponse = _workerService.GetAllWorkersAsync().Result;
                     var workers = workersResponse.Data ?? new List<Worker>();
                     var currentWorker = workers.FirstOrDefault(w => w.WorkerId == (existing?.WorkerId ?? dto.WorkerId));
@@ -52,7 +54,7 @@ public class ShiftMenu : BaseMenu
                         choices.Insert(0, $"(Keep current: {currentName})");
                     var selected = AnsiConsole.Prompt(
                         new SelectionPrompt<string>()
-                            .Title($"Select Worker (current: {currentName}, press Enter to keep)")
+                            .Title($"Select Worker (current: {currentName})")
                             .AddChoices(choices)
                     );
                     if (existing != null && selected == $"(Keep current: {currentName})")
@@ -62,7 +64,7 @@ public class ShiftMenu : BaseMenu
                 }
                 else if (error.Contains("LocationId"))
                 {
-                    // Fetch all locations
+                    // ...existing code for LocationId selection...
                     var locationsResponse = _locationService.GetAllLocationsAsync().Result;
                     var locations = locationsResponse.Data ?? new List<Location>();
                     var currentLocation = locations.FirstOrDefault(l => l.LocationId == (existing?.LocationId ?? dto.LocationId));
@@ -72,7 +74,7 @@ public class ShiftMenu : BaseMenu
                         choices.Insert(0, $"(Keep current: {currentName})");
                     var selected = AnsiConsole.Prompt(
                         new SelectionPrompt<string>()
-                            .Title($"Select Location (current: {currentName}, press Enter to keep)")
+                            .Title($"Select Location (current: {currentName})")
                             .AddChoices(choices)
                     );
                     if (existing != null && selected == $"(Keep current: {currentName})")
@@ -82,6 +84,7 @@ public class ShiftMenu : BaseMenu
                 }
                 else if (error.Contains("Start time"))
                 {
+                    // ...existing code for StartTime correction...
                     while (true)
                     {
                         var prompt = existing != null
@@ -103,6 +106,7 @@ public class ShiftMenu : BaseMenu
                 }
                 else if (error.Contains("End time"))
                 {
+                    // ...existing code for EndTime correction...
                     while (true)
                     {
                         var prompt = existing != null
@@ -122,7 +126,29 @@ public class ShiftMenu : BaseMenu
                         DisplayService.DisplayError("Invalid date format. Please use dd-MM-yyyy HH:mm");
                     }
                 }
-                // Add more field-specific corrections as needed
+                else
+                {
+                    // For any other field, prompt for correction
+                    var fieldName = error.Split(' ')[0];
+                    var currentValue = existing?.GetType().GetProperty(fieldName)?.GetValue(existing)?.ToString() ?? "";
+                    var prompt = existing != null
+                        ? $"Enter {fieldName} (current: {currentValue}, press Enter to keep):"
+                        : $"Enter {fieldName}:";
+                    var input = AnsiConsole.Ask<string>(prompt, "");
+                    if (string.IsNullOrWhiteSpace(input) && existing != null)
+                    {
+                        // Keep current value
+                        var prop = dto.GetType().GetProperty(fieldName);
+                        if (prop != null && existing != null)
+                            prop.SetValue(dto, prop.GetValue(existing));
+                    }
+                    else
+                    {
+                        var prop = dto.GetType().GetProperty(fieldName);
+                        if (prop != null)
+                            prop.SetValue(dto, input);
+                    }
+                }
             }
         }
     }

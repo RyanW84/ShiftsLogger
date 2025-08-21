@@ -122,8 +122,8 @@ public class WorkerService : IWorkerService
         var dto = new ConsoleFrontEnd.Models.Dtos.WorkerApiRequestDto
         {
             Name = worker.Name,
-            Email = worker.Email,
-            PhoneNumber = worker.PhoneNumber
+            Email = worker.Email ?? string.Empty,
+            PhoneNumber = worker.PhoneNumber ?? string.Empty
         };
         var errors = Services.Validation.WorkerValidation.Validate(dto);
         if (errors.Count > 0)
@@ -163,8 +163,8 @@ public class WorkerService : IWorkerService
         var dto = new ConsoleFrontEnd.Models.Dtos.WorkerApiRequestDto
         {
             Name = updatedWorker.Name,
-            Email = updatedWorker.Email,
-            PhoneNumber = updatedWorker.PhoneNumber
+            Email = updatedWorker.Email ?? string.Empty,
+            PhoneNumber = updatedWorker.PhoneNumber ?? string.Empty
         };
         var errors = Services.Validation.WorkerValidation.Validate(dto);
         if (errors.Count > 0)
