@@ -110,14 +110,14 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get by ID failed, see Exception {ex}");
-                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
-                return StatusCode((int)status, new ApiResponseDto<Shift>
-                {
-                    RequestFailed = true,
-                    ResponseCode = status,
-                    Message = message,
-                    Data = null
-                });
+            var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<Shift>
+            {
+                RequestFailed = true,
+                ResponseCode = status,
+                Message = message,
+                Data = null
+            });
         }
     }
     // This is the route for creating a createdShift
@@ -193,7 +193,7 @@ public class ShiftsController : ControllerBase
     }
 
     // This is the route for updating a createdShift
-        [HttpPut("{id}")]
+    [HttpPut("{id}")]
     public async Task<ActionResult<ApiResponseDto<Shift>>> UpdateShift([FromRoute] int id, [FromBody] ShiftApiRequestDtoRaw shift)
     {
         try
@@ -245,62 +245,62 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Update shift failed, see exception {ex}");
-                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
-                return StatusCode((int)status, new ApiResponseDto<Shift>
-                {
-                    RequestFailed = true,
-                    ResponseCode = status,
-                    Message = message,
-                    Data = null
-                });
+            var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<Shift>
+            {
+                RequestFailed = true,
+                ResponseCode = status,
+                Message = message,
+                Data = null
+            });
         }
     }
 
-  
-        [HttpDelete("{id}")]
-    public async Task<ActionResult<ApiResponseDto<object>>> DeleteShift([FromRoute] int id)
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponseDto<bool>>> DeleteShift([FromRoute] int id)
     {
         try
         {
             // Use the new SOLID business service for enhanced functionality
             var result = await _validation.DeleteAsync(id);
-            
+
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, new ApiResponseDto<object>
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<bool>
                 {
                     RequestFailed = true,
                     ResponseCode = result.StatusCode,
                     Message = result.Message,
-                    Data = null
+                    Data = false
                 });
             }
 
-            return Ok(new ApiResponseDto<object>
+            return Ok(new ApiResponseDto<bool>
             {
                 RequestFailed = false,
                 ResponseCode = System.Net.HttpStatusCode.OK,
                 Message = "Shift deleted successfully",
-                Data = null,
-                TotalCount = 0
+                Data = true,
+                TotalCount = 1
             });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Delete shift failed, see exception {ex}");
-                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
-                return StatusCode((int)status, new ApiResponseDto<object>
-                {
-                    RequestFailed = true,
-                    ResponseCode = status,
-                    Message = message,
-                    Data = null
-                });
+            var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<bool>
+            {
+                RequestFailed = true,
+                ResponseCode = status,
+                Message = message,
+                Data = false
+            });
         }
     }
 
     // Additional V5 endpoints - Enhanced functionality from SOLID implementation
-    
+
     [HttpGet("by-date-range")]
     public async Task<ActionResult<ApiResponseDto<List<Shift>>>> GetShiftsByDateRange([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
     {
@@ -336,14 +336,14 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get shifts by date range failed: {ex}");
-                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
-                return StatusCode((int)status, new ApiResponseDto<List<Shift>>
-                {
-                    RequestFailed = true,
-                    ResponseCode = status,
-                    Message = message,
-                    Data = null
-                });
+            var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<List<Shift>>
+            {
+                RequestFailed = true,
+                ResponseCode = status,
+                Message = message,
+                Data = null
+            });
         }
     }
 
@@ -378,14 +378,14 @@ public class ShiftsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Get shifts by worker failed: {ex}");
-                var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
-                return StatusCode((int)status, new ApiResponseDto<List<Shift>>
-                {
-                    RequestFailed = true,
-                    ResponseCode = status,
-                    Message = message,
-                    Data = null
-                });
+            var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
+            return StatusCode((int)status, new ApiResponseDto<List<Shift>>
+            {
+                RequestFailed = true,
+                ResponseCode = status,
+                Message = message,
+                Data = null
+            });
         }
     }
 }

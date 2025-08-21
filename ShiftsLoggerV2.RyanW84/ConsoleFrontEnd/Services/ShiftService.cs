@@ -21,7 +21,7 @@ public class ShiftService : IShiftService
         _httpClient = httpClientFactory.CreateClient("ShiftsLoggerApi");
         _configuration = configuration;
         _logger = logger;
-        
+
         // Set base address if not already set
         if (_httpClient.BaseAddress == null)
         {
@@ -33,15 +33,20 @@ public class ShiftService : IShiftService
     {
         try
         {
-            var allResponse = await GetAllShiftsAsync();
-            if (allResponse.RequestFailed || allResponse.Data == null)
-                return allResponse;
+            var queryString = $"api/shifts?" + BuildShiftFilterQuery(filter);
+            _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
-            return FilterShiftsLocally(allResponse, filter);
+            var response = await _httpClient.GetAsync(queryString);
+            return await HttpResponseHelper.HandleHttpResponseAsync<List<Shift>>(
+                response,
+                _logger,
+                "Get Shifts By Filter",
+                new List<Shift>()
+            );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error filtering shifts");
+            _logger.LogError(ex, "Error filtering shifts via API");
             return new ApiResponseDto<List<Shift>>($"Filter Error: {ex.Message}")
             {
                 Data = new List<Shift>(),
@@ -51,10 +56,23 @@ public class ShiftService : IShiftService
         }
     }
 
+    private string BuildShiftFilterQuery(ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter)
+    {
+        var query = new List<string>();
+        if (filter.ShiftId.HasValue) query.Add($"ShiftId={filter.ShiftId.Value}");
+        if (filter.WorkerId.HasValue) query.Add($"WorkerId={filter.WorkerId.Value}");
+        if (filter.LocationId.HasValue) query.Add($"LocationId={filter.LocationId.Value}");
+        if (filter.StartTime.HasValue) query.Add($"StartTime={Uri.EscapeDataString(filter.StartTime.Value.ToString("o"))}");
+        if (filter.EndTime.HasValue) query.Add($"EndTime={Uri.EscapeDataString(filter.EndTime.Value.ToString("o"))}");
+        if (!string.IsNullOrWhiteSpace(filter.LocationName)) query.Add($"LocationName={Uri.EscapeDataString(filter.LocationName)}");
+        if (!string.IsNullOrWhiteSpace(filter.WorkerName)) query.Add($"WorkerName={Uri.EscapeDataString(filter.WorkerName)}");
+        return string.Join("&", query);
+    }
+
     private static ApiResponseDto<List<Shift>> FilterShiftsLocally(ApiResponseDto<List<Shift>> allResponse, ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter)
     {
         var filtered = (allResponse.Data ?? new List<Shift>()).AsQueryable();
-        
+
         if (filter.ShiftId.HasValue)
             filtered = filtered.Where(s => s.ShiftId == filter.ShiftId.Value);
         if (filter.WorkerId.HasValue)
@@ -133,17 +151,27 @@ public class ShiftService : IShiftService
 
     public async Task<ApiResponseDto<Shift>> CreateShiftAsync(Shift shift)
     {
+        var dto = new ConsoleFrontEnd.Models.Dtos.ShiftApiRequestDto
+        {
+            WorkerId = shift.WorkerId,
+            StartTime = shift.StartTime,
+            EndTime = shift.EndTime,
+            LocationId = shift.LocationId
+        };
+        var errors = Services.Validation.ShiftValidation.Validate(dto);
+        if (errors.Count > 0)
+        {
+            return new ApiResponseDto<Shift>("Validation failed")
+            {
+                RequestFailed = true,
+                ResponseCode = HttpStatusCode.BadRequest,
+                Data = null,
+                Message = string.Join("; ", errors)
+            };
+        }
         try
         {
-            var payload = new
-            {
-                WorkerId = shift.WorkerId,
-                StartTime = shift.StartTime.ToString("dd-MM-yyyy HH:mm"),
-                EndTime = shift.EndTime.ToString("dd-MM-yyyy HH:mm"),
-                LocationId = shift.LocationId
-            };
-
-            var response = await _httpClient.PostAsJsonAsync("api/shifts", payload);
+            var response = await _httpClient.PostAsJsonAsync("api/shifts", dto);
             return await HttpResponseHelper.HandleHttpResponseAsync<Shift>(
                 response,
                 _logger,
@@ -165,17 +193,27 @@ public class ShiftService : IShiftService
 
     public async Task<ApiResponseDto<Shift?>> UpdateShiftAsync(int id, Shift updatedShift)
     {
+        var dto = new ConsoleFrontEnd.Models.Dtos.ShiftApiRequestDto
+        {
+            WorkerId = updatedShift.WorkerId,
+            StartTime = updatedShift.StartTime,
+            EndTime = updatedShift.EndTime,
+            LocationId = updatedShift.LocationId
+        };
+        var errors = Services.Validation.ShiftValidation.Validate(dto);
+        if (errors.Count > 0)
+        {
+            return new ApiResponseDto<Shift?>("Validation failed")
+            {
+                RequestFailed = true,
+                ResponseCode = HttpStatusCode.BadRequest,
+                Data = null,
+                Message = string.Join("; ", errors)
+            };
+        }
         try
         {
-            var payload = new
-            {
-                WorkerId = updatedShift.WorkerId,
-                StartTime = updatedShift.StartTime.ToString("dd-MM-yyyy HH:mm"),
-                EndTime = updatedShift.EndTime.ToString("dd-MM-yyyy HH:mm"),
-                LocationId = updatedShift.LocationId
-            };
-
-            var response = await _httpClient.PutAsJsonAsync($"api/shifts/{id}", payload);
+            var response = await _httpClient.PutAsJsonAsync($"api/shifts/{id}", dto);
             return await HttpResponseHelper.HandleHttpResponseAsync<Shift?>(
                 response,
                 _logger,

@@ -20,7 +20,7 @@ public class LocationService : ILocationService
 
     public LocationService(
         IHttpClientFactory httpClientFactory,
-        IConfiguration configuration, 
+        IConfiguration configuration,
         ILogger<LocationService> logger)
     {
         _httpClient = httpClientFactory.CreateClient("ShiftsLoggerApi");
@@ -37,45 +37,20 @@ public class LocationService : ILocationService
     {
         try
         {
-            var allResponse = await GetAllLocationsAsync();
-            if (allResponse.RequestFailed || allResponse.Data == null)
-                return allResponse;
+            var queryString = $"api/locations?" + BuildLocationFilterQuery(filter);
+            _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
-            var filtered = allResponse.Data.AsQueryable();
-            if (filter.LocationId.HasValue && filter.LocationId.Value > 0)
-                filtered = filtered.Where(l => l.LocationId == filter.LocationId.Value);
-            if (!string.IsNullOrWhiteSpace(filter.Name))
-                filtered = filtered.Where(l => l.Name != null && l.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(filter.Address))
-                filtered = filtered.Where(l => l.Address != null && l.Address.Contains(filter.Address, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(filter.Town))
-                filtered = filtered.Where(l => l.Town != null && l.Town.Contains(filter.Town, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(filter.County))
-                filtered = filtered.Where(l => l.County != null && l.County.Contains(filter.County, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(filter.PostCode))
-                filtered = filtered.Where(l => l.PostCode != null && l.PostCode.Contains(filter.PostCode, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(filter.Country))
-                filtered = filtered.Where(l => l.Country != null && l.Country.Contains(filter.Country, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(filter.Search))
-                filtered = filtered.Where(l => (l.Name != null && l.Name.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
-                                               (l.Address != null && l.Address.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
-                                               (l.Town != null && l.Town.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
-                                               (l.County != null && l.County.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
-                                               (l.PostCode != null && l.PostCode.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
-                                               (l.Country != null && l.Country.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)));
-
-            var resultList = filtered.ToList();
-            return new ApiResponseDto<List<Location>>("Filtered locations")
-            {
-                Data = resultList,
-                RequestFailed = false,
-                ResponseCode = System.Net.HttpStatusCode.OK,
-                TotalCount = resultList.Count
-            };
+            var response = await _httpClient.GetAsync(queryString);
+            return await HttpResponseHelper.HandleHttpResponseAsync<List<Location>>(
+                response,
+                _logger,
+                "Get Locations By Filter",
+                new List<Location>()
+            );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error filtering locations");
+            _logger.LogError(ex, "Error filtering locations via API");
             return new ApiResponseDto<List<Location>>($"Filter Error: {ex.Message}")
             {
                 Data = new List<Location>(),
@@ -84,7 +59,21 @@ public class LocationService : ILocationService
             };
         }
     }
-    
+
+    private string BuildLocationFilterQuery(ConsoleFrontEnd.Models.FilterOptions.LocationFilterOptions filter)
+    {
+        var query = new List<string>();
+        if (filter.LocationId.HasValue) query.Add($"LocationId={filter.LocationId.Value}");
+        if (!string.IsNullOrWhiteSpace(filter.Name)) query.Add($"Name={Uri.EscapeDataString(filter.Name)}");
+        if (!string.IsNullOrWhiteSpace(filter.Address)) query.Add($"Address={Uri.EscapeDataString(filter.Address)}");
+        if (!string.IsNullOrWhiteSpace(filter.Town)) query.Add($"Town={Uri.EscapeDataString(filter.Town)}");
+        if (!string.IsNullOrWhiteSpace(filter.County)) query.Add($"County={Uri.EscapeDataString(filter.County)}");
+        if (!string.IsNullOrWhiteSpace(filter.PostCode)) query.Add($"PostCode={Uri.EscapeDataString(filter.PostCode)}");
+        if (!string.IsNullOrWhiteSpace(filter.Country)) query.Add($"Country={Uri.EscapeDataString(filter.Country)}");
+        if (!string.IsNullOrWhiteSpace(filter.Search)) query.Add($"Search={Uri.EscapeDataString(filter.Search)}");
+        return string.Join("&", query);
+    }
+
     public async Task<ApiResponseDto<List<Location>>> GetAllLocationsAsync()
     {
         try
@@ -94,8 +83,8 @@ public class LocationService : ILocationService
 
             var response = await _httpClient.GetAsync(queryString);
             return await HttpResponseHelper.HandleHttpResponseAsync<List<Location>>(
-                response, 
-                _logger, 
+                response,
+                _logger,
                 "Get All Locations",
                 new List<Location>()
             );
@@ -138,9 +127,29 @@ public class LocationService : ILocationService
 
     public async Task<ApiResponseDto<Location>> CreateLocationAsync(Location location)
     {
+        var dto = new ConsoleFrontEnd.Models.Dtos.LocationApiRequestDto
+        {
+            Name = location.Name,
+            Address = location.Address,
+            Town = location.Town,
+            County = location.County,
+            PostCode = location.PostCode,
+            Country = location.Country
+        };
+        var errors = Services.Validation.LocationValidation.Validate(dto);
+        if (errors.Count > 0)
+        {
+            return new ApiResponseDto<Location>("Validation failed")
+            {
+                RequestFailed = true,
+                ResponseCode = HttpStatusCode.BadRequest,
+                Data = null,
+                Message = string.Join("; ", errors)
+            };
+        }
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("api/locations", location);
+            var response = await _httpClient.PostAsJsonAsync("api/locations", dto);
             return await HttpResponseHelper.HandleHttpResponseAsync<Location>(
                 response,
                 _logger,
@@ -162,9 +171,29 @@ public class LocationService : ILocationService
 
     public async Task<ApiResponseDto<Location?>> UpdateLocationAsync(int id, Location updatedLocation)
     {
+        var dto = new ConsoleFrontEnd.Models.Dtos.LocationApiRequestDto
+        {
+            Name = updatedLocation.Name,
+            Address = updatedLocation.Address,
+            Town = updatedLocation.Town,
+            County = updatedLocation.County,
+            PostCode = updatedLocation.PostCode,
+            Country = updatedLocation.Country
+        };
+        var errors = Services.Validation.LocationValidation.Validate(dto);
+        if (errors.Count > 0)
+        {
+            return new ApiResponseDto<Location?>("Validation failed")
+            {
+                RequestFailed = true,
+                ResponseCode = HttpStatusCode.BadRequest,
+                Data = null,
+                Message = string.Join("; ", errors)
+            };
+        }
         try
         {
-            var response = await _httpClient.PutAsJsonAsync($"api/locations/{id}", updatedLocation);
+            var response = await _httpClient.PutAsJsonAsync($"api/locations/{id}", dto);
             return await HttpResponseHelper.HandleHttpResponseAsync<Location?>(
                 response,
                 _logger,

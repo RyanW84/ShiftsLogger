@@ -7,7 +7,7 @@ using ConsoleFrontEnd.Services;
 using Microsoft.Extensions.Logging;
 
 
-namespace ConsoleFrontEnd.MenuSystem.Menus; 
+namespace ConsoleFrontEnd.MenuSystem.Menus;
 
 /// <summary>
 ///     Shift menu implementation following Single Responsibility Principle
@@ -15,6 +15,117 @@ namespace ConsoleFrontEnd.MenuSystem.Menus;
 /// </summary>
 public class ShiftMenu : BaseMenu
 {
+    /// <summary>
+    /// Interactive validation and correction for shift creation/update
+    /// </summary>
+    private ShiftApiRequestDto GetValidatedShiftInput(ShiftApiRequestDto initial, ShiftApiRequestDto? existing = null)
+    {
+        var dto = new ShiftApiRequestDto
+        {
+            WorkerId = initial.WorkerId,
+            LocationId = initial.LocationId,
+            StartTime = initial.StartTime,
+            EndTime = initial.EndTime
+        };
+        while (true)
+        {
+            var errors = ConsoleFrontEnd.Services.Validation.ShiftValidation.Validate(dto);
+            if (errors.Count == 0)
+                return dto;
+
+            DisplayService.DisplayError("Validation failed:");
+            foreach (var error in errors)
+                DisplayService.DisplayError(error);
+
+            // For each invalid field, prompt for correction or use existing value
+            foreach (var error in errors)
+            {
+                if (error.Contains("WorkerId"))
+                {
+                    // Fetch all workers
+                    var workersResponse = _workerService.GetAllWorkersAsync().Result;
+                    var workers = workersResponse.Data ?? new List<Worker>();
+                    var currentWorker = workers.FirstOrDefault(w => w.WorkerId == (existing?.WorkerId ?? dto.WorkerId));
+                    var currentName = currentWorker?.Name ?? "None";
+                    var choices = workers.Select(w => w.Name).ToList();
+                    if (existing != null)
+                        choices.Insert(0, $"(Keep current: {currentName})");
+                    var selected = AnsiConsole.Prompt(
+                        new SelectionPrompt<string>()
+                            .Title($"Select Worker (current: {currentName}, press Enter to keep)")
+                            .AddChoices(choices)
+                    );
+                    if (existing != null && selected == $"(Keep current: {currentName})")
+                        dto.WorkerId = existing.WorkerId;
+                    else
+                        dto.WorkerId = workers.FirstOrDefault(w => w.Name == selected)?.WorkerId ?? dto.WorkerId;
+                }
+                else if (error.Contains("LocationId"))
+                {
+                    // Fetch all locations
+                    var locationsResponse = _locationService.GetAllLocationsAsync().Result;
+                    var locations = locationsResponse.Data ?? new List<Location>();
+                    var currentLocation = locations.FirstOrDefault(l => l.LocationId == (existing?.LocationId ?? dto.LocationId));
+                    var currentName = currentLocation?.Name ?? "None";
+                    var choices = locations.Select(l => l.Name).ToList();
+                    if (existing != null)
+                        choices.Insert(0, $"(Keep current: {currentName})");
+                    var selected = AnsiConsole.Prompt(
+                        new SelectionPrompt<string>()
+                            .Title($"Select Location (current: {currentName}, press Enter to keep)")
+                            .AddChoices(choices)
+                    );
+                    if (existing != null && selected == $"(Keep current: {currentName})")
+                        dto.LocationId = existing.LocationId;
+                    else
+                        dto.LocationId = locations.FirstOrDefault(l => l.Name == selected)?.LocationId ?? dto.LocationId;
+                }
+                else if (error.Contains("Start time"))
+                {
+                    while (true)
+                    {
+                        var prompt = existing != null
+                            ? $"Enter Start Time (current: {existing.StartTime:dd-MM-yyyy HH:mm}, press Enter to keep):"
+                            : "Enter Start Time (dd-MM-yyyy HH:mm):";
+                        var input = AnsiConsole.Ask<string>(prompt, "");
+                        if (string.IsNullOrWhiteSpace(input) && existing != null)
+                        {
+                            dto.StartTime = existing.StartTime;
+                            break;
+                        }
+                        if (DateTime.TryParseExact(input, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var value))
+                        {
+                            dto.StartTime = new DateTimeOffset(value);
+                            break;
+                        }
+                        DisplayService.DisplayError("Invalid date format. Please use dd-MM-yyyy HH:mm");
+                    }
+                }
+                else if (error.Contains("End time"))
+                {
+                    while (true)
+                    {
+                        var prompt = existing != null
+                            ? $"Enter End Time (current: {existing.EndTime:dd-MM-yyyy HH:mm}, press Enter to keep):"
+                            : "Enter End Time (dd-MM-yyyy HH:mm):";
+                        var input = AnsiConsole.Ask<string>(prompt, "");
+                        if (string.IsNullOrWhiteSpace(input) && existing != null)
+                        {
+                            dto.EndTime = existing.EndTime;
+                            break;
+                        }
+                        if (DateTime.TryParseExact(input, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var value))
+                        {
+                            dto.EndTime = new DateTimeOffset(value);
+                            break;
+                        }
+                        DisplayService.DisplayError("Invalid date format. Please use dd-MM-yyyy HH:mm");
+                    }
+                }
+                // Add more field-specific corrections as needed
+            }
+        }
+    }
     // Use inherited DisplayService, InputService, NavigationService and Logger from BaseMenu
     // Private fields for services specific to this menu (use underscore names because methods reference them)
     private readonly IShiftService _shiftService;
@@ -58,8 +169,8 @@ public class ShiftMenu : BaseMenu
         var workerChoices = workersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
         var selectedWorkerChoice = InputService.GetMenuChoice("Select Worker:", workerChoices);
         var workerId = int.Parse(selectedWorkerChoice.Split(':')[0]);
-    var filter = new ShiftFilterOptions { WorkerId = workerId };
-    var response = await _shiftService.GetShiftsByFilterAsync(filter);
+        var filter = new ShiftFilterOptions { WorkerId = workerId };
+        var response = await _shiftService.GetShiftsByFilterAsync(filter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())
         {
             DisplayService.DisplayError(response.Message ?? "No shifts found for selected worker.");
@@ -453,7 +564,7 @@ public class ShiftMenu : BaseMenu
         var shift = allShiftsResponse.Data.First(s => s.ShiftId == shiftId);
 
         // Select new worker
-    var workersResponse = await _workerService.GetAllWorkersAsync();
+        var workersResponse = await _workerService.GetAllWorkersAsync();
         var workerChoices = workersResponse.Data?.Select(w => $"{w.WorkerId}: {w.Name}").ToArray() ?? Array.Empty<string>();
         var selectedWorkerChoice = InputService.GetMenuChoice("Select Worker for shift:", workerChoices);
         var workerId = int.Parse(selectedWorkerChoice.Split(':')[0]);
@@ -480,7 +591,7 @@ public class ShiftMenu : BaseMenu
             StartTime = new DateTimeOffset(startTime),
             EndTime = new DateTimeOffset(endTime)
         };
-    var response = await _shiftService.UpdateShiftAsync(shiftId, updatedShift);
+        var response = await _shiftService.UpdateShiftAsync(shiftId, updatedShift);
         if (response.RequestFailed || response.Data == null)
         {
             DisplayService.DisplayError(response.Message ?? "Failed to update shift.");
@@ -497,7 +608,7 @@ public class ShiftMenu : BaseMenu
     private async Task DeleteShiftAsync()
     {
         DisplayService.DisplayHeader("Delete Shift", "red");
-    var allShiftsResponse = await _shiftService.GetAllShiftsAsync();
+        var allShiftsResponse = await _shiftService.GetAllShiftsAsync();
         if (allShiftsResponse.RequestFailed || allShiftsResponse.Data == null || !allShiftsResponse.Data.Any())
         {
             DisplayService.DisplayError(allShiftsResponse.Message ?? "No shifts found.");
@@ -510,7 +621,7 @@ public class ShiftMenu : BaseMenu
         var selectedShiftChoice = InputService.GetMenuChoice("Select Shift to delete:", shiftChoices);
         var shiftId = int.Parse(selectedShiftChoice.Split(':')[0]);
         var shift = allShiftsResponse.Data.First(s => s.ShiftId == shiftId);
-        
+
         if (InputService.GetConfirmation($"Are you sure you want to delete shift {shiftId} ({shift.StartTime:dd-MM-yyyy HH:mm} - {shift.EndTime:dd-MM-yyyy HH:mm})?"))
         {
             var response = await _shiftService.DeleteShiftAsync(shiftId);
@@ -528,7 +639,7 @@ public class ShiftMenu : BaseMenu
         DisplayService.DisplayHeader("Filter Shifts", "blue");
 
         // Get workers for selection
-    var workersResponse = await _workerService.GetAllWorkersAsync();
+        var workersResponse = await _workerService.GetAllWorkersAsync();
         int? workerId = null;
         if (workersResponse.Data != null && workersResponse.Data.Any())
         {
@@ -558,7 +669,7 @@ public class ShiftMenu : BaseMenu
             StartTime = startDate,
             EndTime = endDate
         };
-    var response = await _shiftService.GetShiftsByFilterAsync(filter);
+        var response = await _shiftService.GetShiftsByFilterAsync(filter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())
         {
             DisplayService.DisplayError(response.Message ?? "No shifts found matching filter.");

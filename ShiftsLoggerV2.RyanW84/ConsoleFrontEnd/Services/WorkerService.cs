@@ -20,9 +20,9 @@ public class WorkerService : IWorkerService
         _httpClient = httpClientFactory.CreateClient("ShiftsLoggerApi");
         _configuration = configuration;
         _logger = logger;
-        
+
         // Set base address if not already set
-        if (_httpClient.BaseAddress == null)    
+        if (_httpClient.BaseAddress == null)
         {
             _httpClient.BaseAddress = new Uri(_configuration.GetValue<string>("ApiBaseUrl") ?? "https://localhost:7009");
         }
@@ -32,36 +32,20 @@ public class WorkerService : IWorkerService
     {
         try
         {
-            var allResponse = await GetAllWorkersAsync();
-            if (allResponse.RequestFailed || allResponse.Data == null)
-                return allResponse;
+            var queryString = $"api/workers?" + BuildWorkerFilterQuery(filter);
+            _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
-            var filtered = allResponse.Data.AsQueryable();
-            if (!string.IsNullOrWhiteSpace(filter.Name))
-                filtered = filtered.Where(w => w.Name != null && w.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(filter.Email))
-                filtered = filtered.Where(w => w.Email != null && w.Email.Contains(filter.Email, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(filter.PhoneNumber))
-                filtered = filtered.Where(w => w.PhoneNumber != null && w.PhoneNumber.Contains(filter.PhoneNumber));
-            if (filter.WorkerId.HasValue)
-                filtered = filtered.Where(w => w.WorkerId == filter.WorkerId.Value);
-            if (!string.IsNullOrWhiteSpace(filter.Search))
-                filtered = filtered.Where(w => (w.Name != null && w.Name.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
-                                               (w.Email != null && w.Email.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)) ||
-                                               (w.PhoneNumber != null && w.PhoneNumber.Contains(filter.Search, StringComparison.OrdinalIgnoreCase)));
-
-            var resultList = filtered.ToList();
-            return new ApiResponseDto<List<Worker>>("Filtered workers successfully")
-            {
-                Data = resultList,
-                RequestFailed = false,
-                ResponseCode = System.Net.HttpStatusCode.OK,
-                TotalCount = resultList.Count
-            };
+            var response = await _httpClient.GetAsync(queryString);
+            return await HttpResponseHelper.HandleHttpResponseAsync<List<Worker>>(
+                response,
+                _logger,
+                "Get Workers By Filter",
+                new List<Worker>()
+            );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error filtering workers");
+            _logger.LogError(ex, "Error filtering workers via API");
             return new ApiResponseDto<List<Worker>>($"Filter Error: {ex.Message}")
             {
                 Data = new List<Worker>(),
@@ -69,6 +53,17 @@ public class WorkerService : IWorkerService
                 ResponseCode = System.Net.HttpStatusCode.InternalServerError
             };
         }
+    }
+
+    private string BuildWorkerFilterQuery(ConsoleFrontEnd.Models.FilterOptions.WorkerFilterOptions filter)
+    {
+        var query = new List<string>();
+        if (filter.WorkerId.HasValue) query.Add($"WorkerId={filter.WorkerId.Value}");
+        if (!string.IsNullOrWhiteSpace(filter.Name)) query.Add($"Name={Uri.EscapeDataString(filter.Name)}");
+        if (!string.IsNullOrWhiteSpace(filter.Email)) query.Add($"Email={Uri.EscapeDataString(filter.Email)}");
+        if (!string.IsNullOrWhiteSpace(filter.PhoneNumber)) query.Add($"PhoneNumber={Uri.EscapeDataString(filter.PhoneNumber)}");
+        if (!string.IsNullOrWhiteSpace(filter.Search)) query.Add($"Search={Uri.EscapeDataString(filter.Search)}");
+        return string.Join("&", query);
     }
 
     public async Task<ApiResponseDto<List<Worker>>> GetAllWorkersAsync()
@@ -124,9 +119,26 @@ public class WorkerService : IWorkerService
 
     public async Task<ApiResponseDto<Worker>> CreateWorkerAsync(Worker worker)
     {
+        var dto = new ConsoleFrontEnd.Models.Dtos.WorkerApiRequestDto
+        {
+            Name = worker.Name,
+            Email = worker.Email,
+            PhoneNumber = worker.PhoneNumber
+        };
+        var errors = Services.Validation.WorkerValidation.Validate(dto);
+        if (errors.Count > 0)
+        {
+            return new ApiResponseDto<Worker>("Validation failed")
+            {
+                RequestFailed = true,
+                ResponseCode = HttpStatusCode.BadRequest,
+                Data = null,
+                Message = string.Join("; ", errors)
+            };
+        }
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("api/workers", worker);
+            var response = await _httpClient.PostAsJsonAsync("api/workers", dto);
             return await HttpResponseHelper.HandleHttpResponseAsync<Worker>(
                 response,
                 _logger,
@@ -148,9 +160,26 @@ public class WorkerService : IWorkerService
 
     public async Task<ApiResponseDto<Worker?>> UpdateWorkerAsync(int id, Worker updatedWorker)
     {
+        var dto = new ConsoleFrontEnd.Models.Dtos.WorkerApiRequestDto
+        {
+            Name = updatedWorker.Name,
+            Email = updatedWorker.Email,
+            PhoneNumber = updatedWorker.PhoneNumber
+        };
+        var errors = Services.Validation.WorkerValidation.Validate(dto);
+        if (errors.Count > 0)
+        {
+            return new ApiResponseDto<Worker?>("Validation failed")
+            {
+                RequestFailed = true,
+                ResponseCode = HttpStatusCode.BadRequest,
+                Data = null,
+                Message = string.Join("; ", errors)
+            };
+        }
         try
         {
-            var response = await _httpClient.PutAsJsonAsync($"api/workers/{id}", updatedWorker);
+            var response = await _httpClient.PutAsJsonAsync($"api/workers/{id}", dto);
             return await HttpResponseHelper.HandleHttpResponseAsync<Worker?>(
                 response,
                 _logger,

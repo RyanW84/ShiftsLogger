@@ -203,7 +203,7 @@ public class WorkersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult<ApiResponseDto<object>>> DeleteWorker(int id)
+    public async Task<ActionResult<ApiResponseDto<bool>>> DeleteWorker(int id)
     {
         try
         {
@@ -211,41 +211,41 @@ public class WorkersController : ControllerBase
             var result = await _validation.DeleteAsync(id);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, new ApiResponseDto<object>
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<bool>
                 {
                     RequestFailed = true,
                     ResponseCode = result.StatusCode,
                     Message = result.Message,
-                    Data = null
+                    Data = false
                 });
             }
 
             Console.WriteLine($"Worker with ID {id} deleted successfully.");
-            return Ok(new ApiResponseDto<object>
+            return Ok(new ApiResponseDto<bool>
             {
                 RequestFailed = false,
                 ResponseCode = System.Net.HttpStatusCode.OK,
                 Message = "Worker deleted successfully",
-                Data = null,
-                TotalCount = 0
+                Data = true,
+                TotalCount = 1
             });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Delete worker failed, see Exception {ex}");
             var (status, message) = ErrorMapper.Map(ex);
-            return StatusCode((int)status, new ApiResponseDto<object>
+            return StatusCode((int)status, new ApiResponseDto<bool>
             {
                 RequestFailed = true,
                 ResponseCode = status,
                 Message = message,
-                Data = null
+                Data = false
             });
         }
     }
 
     // Additional V2 endpoints - Enhanced functionality from SOLID implementation
-    
+
     [HttpGet("by-email-domain")]
     public async Task<ActionResult<ApiResponseDto<List<Worker>>>> GetWorkersByEmailDomain([FromQuery] string domain)
     {

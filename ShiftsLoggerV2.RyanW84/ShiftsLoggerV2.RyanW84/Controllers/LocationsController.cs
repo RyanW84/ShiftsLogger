@@ -28,7 +28,7 @@ public class LocationsController : ControllerBase
         try
         {
             locationOptions ??= new LocationFilterOptions(); // Provide a default value
-            
+
             // Use the new SOLID business service for enhanced functionality
             var result = await _validation.GetAllAsync(locationOptions);
             if (!result.IsSuccess)
@@ -206,7 +206,7 @@ public class LocationsController : ControllerBase
 
     // DELETE: api/Location/{id}
     [HttpDelete("{id}")]
-    public async Task<ActionResult<ApiResponseDto<object>>> DeleteLocation(int id)
+    public async Task<ActionResult<ApiResponseDto<bool>>> DeleteLocation(int id)
     {
         try
         {
@@ -214,41 +214,41 @@ public class LocationsController : ControllerBase
             var result = await _validation.DeleteAsync(id);
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, new ApiResponseDto<object>
+                return StatusCode((int)result.StatusCode, new ApiResponseDto<bool>
                 {
                     RequestFailed = true,
                     ResponseCode = result.StatusCode,
                     Message = result.Message,
-                    Data = null
+                    Data = false
                 });
             }
 
             Console.WriteLine($"Location with ID {id} deleted successfully.");
-            return Ok(new ApiResponseDto<object>
+            return Ok(new ApiResponseDto<bool>
             {
                 RequestFailed = false,
                 ResponseCode = System.Net.HttpStatusCode.OK,
                 Message = "Location deleted successfully",
-                Data = null,
-                TotalCount = 0
+                Data = true,
+                TotalCount = 1
             });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Delete location failed, see Exception {ex}");
             var (status, message) = ErrorMapper.Map(ex);
-            return StatusCode((int)status, new ApiResponseDto<object>
+            return StatusCode((int)status, new ApiResponseDto<bool>
             {
                 RequestFailed = true,
                 ResponseCode = status,
                 Message = message,
-                Data = null
+                Data = false
             });
         }
     }
 
     // Additional V2 endpoints - Enhanced functionality from SOLID implementation
-    
+
     [HttpGet("by-country/{country}")]
     public async Task<ActionResult<ApiResponseDto<List<Location>>>> GetLocationsByCountry(string country)
     {
