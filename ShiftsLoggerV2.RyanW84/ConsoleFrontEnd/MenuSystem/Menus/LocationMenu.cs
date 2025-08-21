@@ -26,7 +26,7 @@ public class LocationMenu(
     protected override async Task ShowMenuAsync()
     {
         bool shouldExit = false;
-        
+
         while (!shouldExit)
         {
             var choice = InputService.GetMenuChoice(
@@ -38,7 +38,7 @@ public class LocationMenu(
                 "Delete Location",
                 "Filter Locations",
                 "View Locations by Country",
-                "View Locations by County", 
+                "View Locations by County",
                 "Back to Main Menu"
             );
 
@@ -111,9 +111,9 @@ public class LocationMenu(
     private async Task ViewAllLocationsAsync()
     {
         DisplayService.DisplayHeader("All Locations", "blue");
-        
+
         var response = await _locationService.GetAllLocationsAsync();
-        
+
         if (response.RequestFailed)
         {
             switch (response.ResponseCode)
@@ -152,7 +152,7 @@ public class LocationMenu(
             DisplayService.DisplayTable(response.Data ?? Enumerable.Empty<Location>(), "All Locations");
             DisplayService.DisplaySuccess($"Total locations: {response.TotalCount}");
         }
-        
+
         InputService.WaitForKeyPress();
     }
 
@@ -185,7 +185,7 @@ public class LocationMenu(
     private async Task CreateLocationAsync()
     {
         DisplayService.DisplayHeader("Create New Location", "green");
-        
+
         try
         {
             var name = InputService.GetTextInput("Enter Location Name:");
@@ -210,7 +210,7 @@ public class LocationMenu(
         }
 
         InputService.WaitForKeyPress();
-    await Task.CompletedTask;
+        await Task.CompletedTask;
     }
 
     private async Task UpdateLocationAsync()
@@ -233,7 +233,8 @@ public class LocationMenu(
         var county = InputService.GetTextInput($"Enter new county (current: {location.County}):", false);
         var postCode = InputService.GetTextInput($"Enter new post code (current: {location.PostCode}):", false);
         var country = InputService.GetTextInput($"Enter new country (current: {location.Country}):", false);
-        var updatedLocation = new Location {
+        var updatedLocation = new Location
+        {
             LocationId = location.LocationId,
             Name = string.IsNullOrWhiteSpace(name) ? location.Name : name,
             Address = string.IsNullOrWhiteSpace(address) ? location.Address : address,
@@ -293,8 +294,8 @@ public class LocationMenu(
 
         // Get all locations for country/county selection
         var allLocationsResponse = await _locationService.GetAllLocationsAsync();
-    string? county = null;
-    string? country = null;
+        string? county = null;
+        string? country = null;
         if (allLocationsResponse.Data != null && allLocationsResponse.Data.Any())
         {
             var counties = allLocationsResponse.Data.Select(l => l.County).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().OrderBy(c => c).ToList();
@@ -313,14 +314,15 @@ public class LocationMenu(
             }
         }
 
-        var filter = new LocationFilterOptions {
+        var filter = new LocationFilterOptions
+        {
             Name = InputService.GetTextInput("Filter by name (leave blank for any):", false),
             Address = InputService.GetTextInput("Filter by address (leave blank for any):", false),
             Town = InputService.GetTextInput("Filter by town (leave blank for any):", false),
             County = county,
             PostCode = InputService.GetTextInput("Filter by post code (leave blank for any):", false),
             Country = country
-            // If you add date/time fields in the future, use dd-MM-yyyy HH:mm format for prompts and parsing
+            // If you add date/time fields in the future, use dd/MM/yyyy HH:mm format for prompts and parsing
         };
         var response = await _locationService.GetLocationsByFilterAsync(filter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())

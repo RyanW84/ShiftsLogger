@@ -6,7 +6,7 @@ namespace ShiftsLoggerV2.RyanW84.Common;
 
 public class DdMmYyyyHHmmDateTimeOffsetConverter : JsonConverter<DateTimeOffset>
 {
-	private const string Format = "dd-MM-yyyy HH:mm";
+	private const string Format = "dd/MM/yyyy HH:mm";
 
 	public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{

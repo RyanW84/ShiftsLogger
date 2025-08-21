@@ -53,7 +53,7 @@ public class UiHelper
             var input = AnsiConsole.Ask<string>($"[green]{prompt}:[/]");
             if (!string.IsNullOrWhiteSpace(input))
                 return input.Trim();
-            
+
             DisplayValidationError("This field is required.");
         }
     }
@@ -90,14 +90,14 @@ public class UiHelper
     {
         try
         {
-            var input = AnsiConsole.Ask<string>($"[yellow]{prompt} (dd-MM-YYYY HH:mm, press Enter to skip):[/]", string.Empty);
+            var input = AnsiConsole.Ask<string>($"[yellow]{prompt} (dd/MM/yyyy HH:mm, press Enter to skip):[/]", string.Empty);
             if (string.IsNullOrWhiteSpace(input))
                 return null;
 
-            if (DateTime.TryParseExact(input, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var result))
+            if (DateTime.TryParseExact(input, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var result))
                 return result;
 
-            DisplayValidationError("Invalid date format. Please use dd-MM-YYYY HH:mm");
+            DisplayValidationError("Invalid date format. Please use dd/MM/yyyy HH:mm");
             return GetOptionalDateTimeInput(prompt); // Retry
         }
         catch (Exception ex)
@@ -116,14 +116,14 @@ public class UiHelper
         {
             try
             {
-                var input = AnsiConsole.Ask<string>($"[green]{prompt} (dd-MM-YYYY HH:mm):[/]");
-                if (DateTime.TryParseExact(input, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var result))
+                var input = AnsiConsole.Ask<string>($"[green]{prompt} (dd/MM/yyyy HH:mm):[/]");
+                if (DateTime.TryParseExact(input, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var result))
                     return result;
-                DisplayValidationError("Invalid date format. Please use dd-MM-YYYY HH:mm");
+                DisplayValidationError("Invalid date format. Please use dd/MM/yyyy HH:mm");
             }
             catch
             {
-                DisplayValidationError("Invalid date format. Please use dd-MM-YYYY HH:mm");
+                DisplayValidationError("Invalid date format. Please use dd/MM/yyyy HH:mm");
             }
         }
     }

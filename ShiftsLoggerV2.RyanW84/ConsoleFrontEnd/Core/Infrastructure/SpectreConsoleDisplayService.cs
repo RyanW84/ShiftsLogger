@@ -202,8 +202,8 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         if (!string.IsNullOrEmpty(title))
         {
             table.Title = new TableTitle($"[bold yellow]{title}[/]");
-		}
-		table.Border = TableBorder.Rounded;
+        }
+        table.Border = TableBorder.Rounded;
 
         // Add specific columns for shifts with row count instead of shift ID
         table.AddColumn(new TableColumn("[bold]#[/]").Centered());
@@ -257,10 +257,10 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
 
         // Add rows with row number instead of worker ID
         var rowCount = 1;
-            foreach (var worker in workers)
-            {
-                // Use lightweight ShiftCount when available to avoid loading full collections
-                var shiftCount = (worker.ShiftCount != 0) ? worker.ShiftCount : (worker.Shifts?.Count ?? 0);
+        foreach (var worker in workers)
+        {
+            // Use lightweight ShiftCount when available to avoid loading full collections
+            var shiftCount = (worker.ShiftCount != 0) ? worker.ShiftCount : (worker.Shifts?.Count ?? 0);
             var phoneDisplay = string.IsNullOrWhiteSpace(worker.PhoneNumber)
                 ? "N/A"
                 : worker.PhoneNumber;
@@ -419,8 +419,8 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         return value switch
         {
             null => "N/A",
-            DateTime dateTime => dateTime.ToString("dd-MM-yyyy HH:mm"),
-            DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("dd-MM-yyyy HH:mm"),
+            DateTime dateTime => dateTime.ToString("dd/MM/yyyy HH:mm"),
+            DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("dd/MM/yyyy HH:mm"),
             string str when string.IsNullOrWhiteSpace(str) => "N/A",
             _ => Markup.Escape(value.ToString() ?? "N/A"),
         };

@@ -133,16 +133,23 @@ public class ShiftsController : ControllerBase
             }
 
             // Parse date/time strings to DateTimeOffset and map to typed DTO
-            if (!DateTimeOffset.TryParseExact(shift.StartTime, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedStart))
+            if (!DateTimeOffset.TryParseExact(shift.StartTime, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedStart))
             {
                 Console.WriteLine($"[CreateShift] Invalid StartTime format: {shift.StartTime}");
-                ModelState.AddModelError("StartTime", "Invalid date format. Use dd-MM-YYYY HH:mm");
+                ModelState.AddModelError("StartTime", "Invalid date format. Use dd/MM/yyyy HH:mm");
                 return BadRequest(ModelState);
             }
-            if (!DateTimeOffset.TryParseExact(shift.EndTime, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedEnd))
+            if (!DateTimeOffset.TryParseExact(shift.EndTime, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedEnd))
             {
                 Console.WriteLine($"[CreateShift] Invalid EndTime format: {shift.EndTime}");
-                ModelState.AddModelError("EndTime", "Invalid date format. Use dd-MM-YYYY HH:mm");
+                ModelState.AddModelError("EndTime", "Invalid date format. Use dd/MM/yyyy HH:mm");
+                return BadRequest(ModelState);
+            }
+
+            // Ensure end is after start
+            if (parsedEnd <= parsedStart)
+            {
+                ModelState.AddModelError("EndTime", "End time must be after start time.");
                 return BadRequest(ModelState);
             }
 
@@ -201,14 +208,21 @@ public class ShiftsController : ControllerBase
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             // Parse date/time strings to DateTimeOffset and map to typed DTO
-            if (!DateTimeOffset.TryParseExact(shift.StartTime, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedStart))
+            if (!DateTimeOffset.TryParseExact(shift.StartTime, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedStart))
             {
-                ModelState.AddModelError("StartTime", "Invalid date format. Use dd-MM-YYYY HH:mm");
+                ModelState.AddModelError("StartTime", "Invalid date format. Use dd/MM/yyyy HH:mm");
                 return BadRequest(ModelState);
             }
-            if (!DateTimeOffset.TryParseExact(shift.EndTime, "dd-MM-yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedEnd))
+            if (!DateTimeOffset.TryParseExact(shift.EndTime, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedEnd))
             {
-                ModelState.AddModelError("EndTime", "Invalid date format. Use dd-MM-YYYY HH:mm");
+                ModelState.AddModelError("EndTime", "Invalid date format. Use dd/MM/yyyy HH:mm");
+                return BadRequest(ModelState);
+            }
+
+            // Ensure end is after start
+            if (parsedEnd <= parsedStart)
+            {
+                ModelState.AddModelError("EndTime", "End time must be after start time.");
                 return BadRequest(ModelState);
             }
 

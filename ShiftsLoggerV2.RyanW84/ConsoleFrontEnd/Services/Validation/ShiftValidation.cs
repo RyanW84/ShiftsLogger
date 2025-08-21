@@ -24,17 +24,13 @@ public static class ShiftValidation
         // Additional business rules:
         if ((dto.EndTime - dto.StartTime).TotalMinutes < 15)
             errors.Add("Shift duration must be at least 15 minutes.");
-        if ((dto.EndTime - dto.StartTime).TotalHours > 16)
-            errors.Add("Shift duration cannot exceed 16 hours.");
-        if (dto.StartTime.Date != dto.EndTime.Date)
-            errors.Add("Shift must start and end on the same day.");
+        // Allow shifts up to 24 hours (can span midnight)
+        if ((dto.EndTime - dto.StartTime).TotalHours > 24)
+            errors.Add("Shift duration cannot exceed 24 hours.");
+        // Allow shifts to span multiple calendar days (e.g., overnight shifts)
+        // Keep a small tolerance for past-start to prevent accidental past dates
         if (dto.StartTime < DateTimeOffset.Now.AddMinutes(-5))
             errors.Add("Shift cannot start in the past (with more than 5 minutes tolerance).");
-        if (dto.StartTime.DayOfWeek == DayOfWeek.Sunday)
-            errors.Add("Shifts cannot start on Sundays.");
-        // Example: restrict shifts to business hours (6am-10pm)
-        if (dto.StartTime.Hour < 6 || dto.EndTime.Hour > 22)
-            errors.Add("Shifts must be within business hours (6am-10pm).");
 
         // Add more rules as needed for your business logic
         return errors;

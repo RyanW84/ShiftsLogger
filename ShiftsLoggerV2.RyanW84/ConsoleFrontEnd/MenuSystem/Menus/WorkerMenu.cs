@@ -31,7 +31,7 @@ public class WorkerMenu : BaseMenu
     protected override async Task ShowMenuAsync()
     {
         bool shouldExit = false;
-        
+
         while (!shouldExit)
         {
             var choice = InputService.GetMenuChoice(
@@ -116,9 +116,9 @@ public class WorkerMenu : BaseMenu
     private async Task ViewAllWorkersAsync()
     {
         DisplayService.DisplayHeader("All Workers", "blue");
-        
+
         var response = await _workerService.GetAllWorkersAsync();
-        
+
         if (response.RequestFailed)
         {
             switch (response.ResponseCode)
@@ -157,7 +157,7 @@ public class WorkerMenu : BaseMenu
             DisplayService.DisplayTable(response.Data != null ? response.Data : Enumerable.Empty<Worker>(), "All Workers");
             DisplayService.DisplaySuccess($"Total workers: {response.TotalCount}");
         }
-        
+
         InputService.WaitForKeyPress();
     }
 
@@ -190,7 +190,7 @@ public class WorkerMenu : BaseMenu
     private async Task CreateWorkerAsync()
     {
         DisplayService.DisplayHeader("Create New Worker", "green");
-        
+
         try
         {
             var name = InputService.GetTextInput("Enter Worker Name:");
@@ -219,8 +219,8 @@ public class WorkerMenu : BaseMenu
             DisplayService.DisplayError($"Failed to create worker: {ex.Message}");
         }
 
-    InputService.WaitForKeyPress();
-    await Task.CompletedTask;
+        InputService.WaitForKeyPress();
+        await Task.CompletedTask;
     }
 
     private async Task UpdateWorkerAsync()
@@ -240,7 +240,8 @@ public class WorkerMenu : BaseMenu
         var name = InputService.GetTextInput($"Enter new name (current: {worker.Name}):", false);
         var email = InputService.GetTextInput($"Enter new email (current: {worker.Email}):", false);
         var phone = InputService.GetTextInput($"Enter new phone (current: {worker.PhoneNumber}):", false);
-        var updatedWorker = new Worker {
+        var updatedWorker = new Worker
+        {
             WorkerId = worker.WorkerId,
             Name = string.IsNullOrWhiteSpace(name) ? worker.Name : name,
             Email = string.IsNullOrWhiteSpace(email) ? worker.Email : email,
@@ -297,8 +298,8 @@ public class WorkerMenu : BaseMenu
 
         // Get all workers for name/email selection
         var allWorkersResponse = await _workerService.GetAllWorkersAsync();
-    string? name = null;
-    string? email = null;
+        string? name = null;
+        string? email = null;
         if (allWorkersResponse.Data != null && allWorkersResponse.Data.Any())
         {
             var names = allWorkersResponse.Data.Select(w => w.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().OrderBy(n => n).ToList();
@@ -317,11 +318,12 @@ public class WorkerMenu : BaseMenu
             }
         }
 
-        var filter = new WorkerFilterOptions {
+        var filter = new WorkerFilterOptions
+        {
             Name = name,
             Email = email,
             PhoneNumber = InputService.GetTextInput("Filter by phone (leave blank for any):", false)
-            // If you add date/time fields in the future, use dd-MM-yyyy HH:mm format for prompts and parsing
+            // If you add date/time fields in the future, use dd/MM/yyyy HH:mm format for prompts and parsing
         };
         var response = await _workerService.GetWorkersByFilterAsync(filter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())

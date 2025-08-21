@@ -6,8 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="ShiftMenu.cs" />
-    <Compile Remove="Legacy/**" />
+  <Compile Remove="Legacy/**" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="14.0.0" />
