@@ -1,12 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Description>A WebAPI based app for recording shifts, storing them and accessing via SQL Server and actioning them through an API</Description>
-      <UserSecretsId>2c52f817-fd30-4f63-9111-2b1267eb1fe1</UserSecretsId>
-      
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Description>A WebAPI based app for recording shifts, storing them and accessing via SQL Server and actioning them through an API</Description>
+    <UserSecretsId>2c52f817-fd30-4f63-9111-2b1267eb1fe1</UserSecretsId>
+    <!-- Prevent SDK auto-generation of assembly attributes here to avoid duplicate attributes when building with referenced projects -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  <!-- Prevent auto-generation of the TargetFrameworkAttribute (duplicate when referenced/project references produce one) -->
+  <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+
   </PropertyGroup>
 
     <ItemGroup>
