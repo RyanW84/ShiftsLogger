@@ -53,9 +53,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IApplication, ConsoleApplication>();
 
-        // API Services
-        services.AddScoped<IWorkerService, WorkerService>();
-        services.AddScoped<ILocationService, LocationService>();
+    // API Services (registered as typed HttpClients above)
+    // NOTE: Do not re-register IWorkerService/ILocationService here with AddScoped -
+    // that would override the typed HttpClient registrations and produce HttpClient
+    // instances without the configured BaseAddress. The typed AddHttpClient registrations
+    // above already register the service implementations with configured HttpClient.
 
     // UI Services
     services.AddScoped<IShiftUi, ShiftUI>();
