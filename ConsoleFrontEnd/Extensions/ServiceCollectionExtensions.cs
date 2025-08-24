@@ -5,6 +5,7 @@ using ConsoleFrontEnd.MenuSystem;
 using ConsoleFrontEnd.MenuSystem.Menus;
 using ConsoleFrontEnd.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 namespace ConsoleFrontEnd.Extensions;
 
@@ -21,24 +22,24 @@ public static class ServiceCollectionExtensions
         // HTTP Client Factory and typed clients
         services.AddHttpClient();
         // Typed client for ShiftService - sets BaseAddress from configuration via named setting
-        services.AddHttpClient<ConsoleFrontEnd.Interfaces.IShiftService, ConsoleFrontEnd.Services.ShiftService>((sp, client) =>
+        services.AddHttpClient<IShiftService, ShiftService>((sp, client) =>
         {
-            var config = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+            var config = sp.GetRequiredService<IConfiguration>();
             var baseUrl = config.GetValue<string>("ApiBaseUrl") ?? "https://localhost:7009";
             client.BaseAddress = new Uri(baseUrl);
         });
 
         // Typed clients for other API services
-        services.AddHttpClient<ConsoleFrontEnd.Interfaces.IWorkerService, ConsoleFrontEnd.Services.WorkerService>((sp, client) =>
+        services.AddHttpClient<IWorkerService, WorkerService>((sp, client) =>
         {
-            var config = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+            var config = sp.GetRequiredService<IConfiguration>();
             var baseUrl = config.GetValue<string>("ApiBaseUrl") ?? "https://localhost:7009";
             client.BaseAddress = new Uri(baseUrl);
         });
 
-        services.AddHttpClient<ConsoleFrontEnd.Interfaces.ILocationService, ConsoleFrontEnd.Services.LocationService>((sp, client) =>
+        services.AddHttpClient<ILocationService, LocationService>((sp, client) =>
         {
-            var config = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+            var config = sp.GetRequiredService<IConfiguration>();
             var baseUrl = config.GetValue<string>("ApiBaseUrl") ?? "https://localhost:7009";
             client.BaseAddress = new Uri(baseUrl);
         });

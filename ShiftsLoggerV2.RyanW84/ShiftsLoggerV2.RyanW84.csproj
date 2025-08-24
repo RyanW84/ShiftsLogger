@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Description>A WebAPI based app for recording shifts, storing them and accessing via SQL Server and actioning them through an API</Description>
       <UserSecretsId>2c52f817-fd30-4f63-9111-2b1267eb1fe1</UserSecretsId>
+      
   </PropertyGroup>
 
     <ItemGroup>
