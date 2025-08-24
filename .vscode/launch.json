@@ -24,7 +24,7 @@
     {
       "name": "Run Backend then Frontend",
       "configurations": ["Backend (API) Debug", "ConsoleFrontEnd Debug"],
-      "preLaunchTask": "wait-for-backend"
+      "preLaunchTask": "Run ShiftsLogger API (background)"
     }
   ]
 }

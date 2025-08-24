@@ -1,11 +1,26 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "Run ShiftsLoggerV2.RyanW84 API",
-			"type": "shell",
-			"command": "dotnet run --project /home/ryanw/Documents/GitHub/ShiftsLogger/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84.csproj",
-			"isBackground": true
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run ShiftsLogger API (background)",
+      "type": "shell",
+      "command": "dotnet run --project /home/ryanw/Documents/GitHub/ShiftsLogger/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84.csproj",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Run ConsoleFrontEnd",
+      "type": "shell",
+      "command": "dotnet run --project /home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ConsoleFrontEnd/ConsoleFrontEnd.csproj",
+      "isBackground": false,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Run backend then frontend",
+      "dependsOn": ["Run ShiftsLogger API (background)", "Run ConsoleFrontEnd"],
+      "dependsOrder": "sequence"
+    }
+  ]
 }
