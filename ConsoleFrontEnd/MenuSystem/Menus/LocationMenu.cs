@@ -10,15 +10,20 @@ namespace ConsoleFrontEnd.MenuSystem.Menus;
 /// Location menu implementation following Single Responsibility Principle
 /// Handles location-specific operations
 /// </summary>
-public class LocationMenu(
-    IConsoleDisplayService displayService,
-    IConsoleInputService inputService,
-    INavigationService navigationService,
-    ILogger<LocationMenu> logger,
-    ILocationService locationService)
-    : BaseMenu(displayService, inputService, navigationService, logger)
+public class LocationMenu : BaseMenu
 {
-    private readonly ILocationService _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
+    private readonly ILocationService _locationService;
+
+    public LocationMenu(
+        IConsoleDisplayService displayService,
+        IConsoleInputService inputService,
+        INavigationService navigationService,
+        ILogger<LocationMenu> logger,
+        ILocationService locationService)
+        : base(displayService, inputService, navigationService, logger)
+    {
+        _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
+    }
 
     public override string Title => "Location Management";
     public override string Context => "Location Management";

@@ -7,9 +7,14 @@ namespace ConsoleFrontEnd.Core.Infrastructure;
 /// Menu factory implementation following Dependency Inversion Principle
 /// Creates menu instances with proper dependency injection
 /// </summary>
-public class MenuFactory(IServiceProvider serviceProvider) : IMenuFactory
+public class MenuFactory : IMenuFactory
 {
-    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly IServiceProvider _serviceProvider;
+
+    public MenuFactory(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    }
 
     public IMenu CreateMainMenu()
     {

@@ -9,11 +9,16 @@ namespace ConsoleFrontEnd.MenuSystem;
 /// <summary>
 /// Refactored Worker UI implementation following SOLID principles with reduced code duplication
 /// </summary>
-public class WorkerUi(IConsoleDisplayService display, ILogger<WorkerUi> logger) : IWorkerUi
+public class WorkerUi : IWorkerUi
 {
-    private readonly UiHelper _uiHelper = new(display, logger);
+    private readonly UiHelper _uiHelper;
     private const string EntityName = "Worker";
     private const string EntityPluralName = "Workers";
+
+    public WorkerUi(IConsoleDisplayService display, ILogger<WorkerUi> logger)
+    {
+        _uiHelper = new UiHelper(display, logger);
+    }
 
     public Worker CreateWorkerUi()
     {
