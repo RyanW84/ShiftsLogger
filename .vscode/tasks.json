@@ -2,13 +2,10 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "wait-for-backend",
+			"label": "Run ShiftsLoggerV2.RyanW84 API",
 			"type": "shell",
-			"command": "sleep 5",
-			"args": [],
-			"isBackground": false,
-			"problemMatcher": [],
-			"group": "build"
+			"command": "dotnet run --project /home/ryanw/Documents/GitHub/ShiftsLogger/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84.csproj",
+			"isBackground": true
 		}
 	]
 }
