@@ -13,20 +13,12 @@ namespace ConsoleFrontEnd.Services;
 public class ShiftService : IShiftService
 {
     private readonly HttpClient _httpClient;
-    private readonly IConfiguration _configuration;
     private readonly ILogger<ShiftService> _logger;
 
-    public ShiftService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<ShiftService> logger)
+    public ShiftService(HttpClient httpClient, ILogger<ShiftService> logger)
     {
-        _httpClient = httpClientFactory.CreateClient("ShiftsLoggerApi");
-        _configuration = configuration;
-        _logger = logger;
-
-        // Set base address if not already set
-        if (_httpClient.BaseAddress == null)
-        {
-            _httpClient.BaseAddress = new Uri(_configuration.GetValue<string>("ApiBaseUrl") ?? "https://localhost:7009");
-        }
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<ApiResponseDto<List<Shift>>> GetShiftsByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter)

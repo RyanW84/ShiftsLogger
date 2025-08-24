@@ -18,8 +18,15 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection RegisterApplicationServices(this IServiceCollection services)
     {
-        // HTTP Client Factory
+        // HTTP Client Factory and typed clients
         services.AddHttpClient();
+        // Typed client for ShiftService - sets BaseAddress from configuration via named setting
+        services.AddHttpClient<ConsoleFrontEnd.Interfaces.IShiftService, ConsoleFrontEnd.Services.ShiftService>((sp, client) =>
+        {
+            var config = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+            var baseUrl = config.GetValue<string>("ApiBaseUrl") ?? "https://localhost:7009";
+            client.BaseAddress = new Uri(baseUrl);
+        });
 
     // Console services (Spectre.Console-based)
     services.AddSingleton<IConsoleDisplayService, SpectreConsoleDisplayService>();
@@ -31,7 +38,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IApplication, ConsoleApplication>();
 
         // API Services
-        services.AddScoped<IShiftService, ShiftService>();
         services.AddScoped<IWorkerService, WorkerService>();
         services.AddScoped<ILocationService, LocationService>();
 
