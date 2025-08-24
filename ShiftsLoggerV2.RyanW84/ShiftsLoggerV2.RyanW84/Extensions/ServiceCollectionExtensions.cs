@@ -1,5 +1,4 @@
-using ConsoleFrontEnd.Core.Abstractions;
-using ConsoleFrontEnd.Core.Infrastructure;
+// Removed ConsoleFrontEnd using directives - API should not depend on console UI types
 using ShiftsLoggerV2.RyanW84.Repositories;
 using ShiftsLoggerV2.RyanW84.Repositories.Interfaces;
 using ShiftsLoggerV2.RyanW84.Services;

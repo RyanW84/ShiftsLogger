@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ShiftsLoggerV2.RyanW84.Models;
 
 namespace ShiftsLoggerV2.RyanW84.Data;
@@ -33,7 +34,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             .IsUnique();
     }
 
-    public void SeedData()
+    public void SeedData(ILogger<ShiftsLoggerDbContext>? logger)
     {
         // Only seed data if tables are empty
         if (Workers.Any() || Locations.Any() || Shifts.Any())
@@ -124,8 +125,8 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             }
         };
 
-        try
-        {
+    try
+    {
             // Insert workers if they do not already exist (by email)
             foreach (var w in workers)
             {
@@ -145,6 +146,16 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             }
 
             SaveChanges();
+
+            // Optional: log summary of seeded counts (best-effort)
+            try
+            {
+                logger?.LogInformation("Seeded Workers: {WorkerCount}, Locations: {LocationCount}, Shifts: {ShiftCount}", Workers.Count(), Locations.Count(), Shifts.Count());
+            }
+            catch (Exception logEx)
+            {
+                try { Console.WriteLine($"Seeding summary log error: {logEx}"); } catch { }
+            }
 
             // Get the saved entities with their IDs
             var savedWorkers = Workers.ToList();
@@ -203,9 +214,17 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
 
             SaveChanges();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Swallow exceptions during seeding to avoid crashing dev startup; real apps should log this properly
+            // Use provided logger to log exceptions during seeding
+            try
+            {
+                logger?.LogError(ex, "An error occurred while seeding the database.");
+            }
+            catch
+            {
+                try { Console.WriteLine($"Seeding error: {ex}"); } catch { }
+            }
         }
     }
 }

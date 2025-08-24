@@ -35,7 +35,8 @@ if (app.Environment.IsDevelopment())
     var dbContext = scope.ServiceProvider.GetRequiredService<ShiftsLoggerDbContext>();
     dbContext.Database.EnsureDeleted();
     dbContext.Database.EnsureCreated();
-    dbContext.SeedData();
+    var logger = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ShiftsLoggerDbContext>>();
+    dbContext.SeedData(logger);
     Console.WriteLine("Database seeded");
 }
  
