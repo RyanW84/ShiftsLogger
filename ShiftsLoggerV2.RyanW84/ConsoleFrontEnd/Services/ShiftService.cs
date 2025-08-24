@@ -172,12 +172,30 @@ public class ShiftService : IShiftService
         try
         {
             var response = await _httpClient.PostAsJsonAsync("api/shifts", dto);
-            return await HttpResponseHelper.HandleHttpResponseAsync<Shift>(
+            var handled = await HttpResponseHelper.HandleHttpResponseAsync<Shift>(
                 response,
                 _logger,
                 "Create Shift",
                 shift
             );
+
+            // If server returned the created Shift but omitted navigation properties, fetch it by ID
+            if (!handled.RequestFailed && handled.Data != null && (handled.Data.Worker == null || handled.Data.Location == null))
+            {
+                var refreshed = await GetShiftByIdAsync(handled.Data.ShiftId);
+                if (!refreshed.RequestFailed && refreshed.Data != null)
+                {
+                    return new ApiResponseDto<Shift>(refreshed.Message ?? "Shift retrieved")
+                    {
+                        Data = refreshed.Data,
+                        RequestFailed = false,
+                        ResponseCode = refreshed.ResponseCode,
+                        TotalCount = refreshed.TotalCount
+                    };
+                }
+            }
+
+            return handled;
         }
         catch (Exception ex)
         {
@@ -214,12 +232,22 @@ public class ShiftService : IShiftService
         try
         {
             var response = await _httpClient.PutAsJsonAsync($"api/shifts/{id}", dto);
-            return await HttpResponseHelper.HandleHttpResponseAsync<Shift?>(
+            var handled = await HttpResponseHelper.HandleHttpResponseAsync<Shift?>(
                 response,
                 _logger,
                 $"Update Shift {id}",
                 updatedShift
             );
+
+            // If server returned only IDs (no navigation properties), fetch the fully populated shift
+            if (!handled.RequestFailed && handled.Data != null && (handled.Data.Worker == null || handled.Data.Location == null))
+            {
+                var refreshed = await GetShiftByIdAsync(id);
+                if (!refreshed.RequestFailed && refreshed.Data != null)
+                    return refreshed;
+            }
+
+            return handled;
         }
         catch (Exception ex)
         {

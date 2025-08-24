@@ -5,6 +5,7 @@ using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
 using ShiftsLoggerV2.RyanW84.Services;
 using ShiftsLoggerV2.RyanW84.Common;
+using System.Globalization;
 using Spectre.Console;
 
 namespace ShiftsLoggerV2.RyanW84.Controllers;
@@ -133,16 +134,26 @@ public class ShiftsController : ControllerBase
             }
 
             // Parse date/time strings to DateTimeOffset and map to typed DTO
-            if (!DateTimeOffset.TryParseExact(shift.StartTime, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedStart))
+            // Accept several formats (dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm) or standard/ISO formats from clients
+            DateTimeOffset parsedStart;
+            DateTimeOffset parsedEnd;
+            var acceptedFormats = new[] { "dd/MM/yyyy HH:mm", "dd/MM/yyyy H:mm", "dd-MM-yyyy HH:mm", "dd-MM-yyyy H:mm" };
+
+            var startParsed = DateTimeOffset.TryParseExact(shift.StartTime, acceptedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedStart)
+                              || DateTimeOffset.TryParse(shift.StartTime, out parsedStart);
+            if (!startParsed)
             {
                 Console.WriteLine($"[CreateShift] Invalid StartTime format: {shift.StartTime}");
-                ModelState.AddModelError("StartTime", "Invalid date format. Use dd/MM/yyyy HH:mm");
+                ModelState.AddModelError("StartTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
                 return BadRequest(ModelState);
             }
-            if (!DateTimeOffset.TryParseExact(shift.EndTime, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedEnd))
+
+            var endParsed = DateTimeOffset.TryParseExact(shift.EndTime, acceptedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedEnd)
+                            || DateTimeOffset.TryParse(shift.EndTime, out parsedEnd);
+            if (!endParsed)
             {
                 Console.WriteLine($"[CreateShift] Invalid EndTime format: {shift.EndTime}");
-                ModelState.AddModelError("EndTime", "Invalid date format. Use dd/MM/yyyy HH:mm");
+                ModelState.AddModelError("EndTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
                 return BadRequest(ModelState);
             }
 
@@ -208,14 +219,24 @@ public class ShiftsController : ControllerBase
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             // Parse date/time strings to DateTimeOffset and map to typed DTO
-            if (!DateTimeOffset.TryParseExact(shift.StartTime, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedStart))
+            // Accept several formats (dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm) or standard/ISO formats from clients
+            DateTimeOffset parsedStart;
+            DateTimeOffset parsedEnd;
+            var acceptedFormatsUpdate = new[] { "dd/MM/yyyy HH:mm", "dd/MM/yyyy H:mm", "dd-MM-yyyy HH:mm", "dd-MM-yyyy H:mm" };
+
+            var startParsedUpdate = DateTimeOffset.TryParseExact(shift.StartTime, acceptedFormatsUpdate, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedStart)
+                                    || DateTimeOffset.TryParse(shift.StartTime, out parsedStart);
+            if (!startParsedUpdate)
             {
-                ModelState.AddModelError("StartTime", "Invalid date format. Use dd/MM/yyyy HH:mm");
+                ModelState.AddModelError("StartTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
                 return BadRequest(ModelState);
             }
-            if (!DateTimeOffset.TryParseExact(shift.EndTime, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var parsedEnd))
+
+            var endParsedUpdate = DateTimeOffset.TryParseExact(shift.EndTime, acceptedFormatsUpdate, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedEnd)
+                                  || DateTimeOffset.TryParse(shift.EndTime, out parsedEnd);
+            if (!endParsedUpdate)
             {
-                ModelState.AddModelError("EndTime", "Invalid date format. Use dd/MM/yyyy HH:mm");
+                ModelState.AddModelError("EndTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
                 return BadRequest(ModelState);
             }
 

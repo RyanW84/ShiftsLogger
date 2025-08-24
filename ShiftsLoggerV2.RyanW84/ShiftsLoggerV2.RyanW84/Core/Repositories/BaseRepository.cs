@@ -13,7 +13,7 @@ namespace ShiftsLoggerV2.RyanW84.Core.Repositories;
 /// <typeparam name="TFilter">Filter options type</typeparam>
 /// <typeparam name="TCreateDto">Creation DTO type</typeparam>
 /// <typeparam name="TUpdateDto">Update DTO type</typeparam>
-public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto> 
+public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
     : IRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
     where TEntity : class, IEntity
 {
@@ -39,8 +39,8 @@ public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
             }
 
             return Result<List<TEntity>>.Success(
-                entities, 
-                $"{typeof(TEntity).Name}s retrieved successfully.", 
+                entities,
+                $"{typeof(TEntity).Name}s retrieved successfully.",
                 HttpStatusCode.OK
             );
         }
@@ -58,7 +58,7 @@ public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
         try
         {
             var entity = await GetEntityByIdAsync(id);
-            
+
             if (entity == null)
             {
                 return Result<TEntity>.NotFound($"{typeof(TEntity).Name} with ID {id} not found.");
@@ -104,11 +104,11 @@ public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
         }
         catch (Exception ex)
         {
-                Console.WriteLine($"[ERROR] Failed to create {typeof(TEntity).Name}: {ex.Message}\n{ex}");
-                return Result<TEntity>.Failure(
-                    $"Error creating {typeof(TEntity).Name.ToLower()}: {ex.Message}",
-                    HttpStatusCode.InternalServerError
-                );
+            Console.WriteLine($"[ERROR] Failed to create {typeof(TEntity).Name}: {ex.Message}\n{ex}");
+            return Result<TEntity>.Failure(
+                $"Error creating {typeof(TEntity).Name.ToLower()}: {ex.Message}",
+                HttpStatusCode.InternalServerError
+            );
         }
     }
 
@@ -117,7 +117,7 @@ public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
         try
         {
             var entity = await GetEntityByIdAsync(id);
-            
+
             if (entity == null)
             {
                 return Result<TEntity>.NotFound($"{typeof(TEntity).Name} with ID {id} not found.");
@@ -127,8 +127,15 @@ public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
             DbSet.Update(entity);
             await DbContext.SaveChangesAsync();
 
+            // Reload the entity via GetEntityByIdAsync so any navigation properties (Includes) are populated
+            var reloaded = await GetEntityByIdAsync(id);
+            if (reloaded == null)
+            {
+                return Result<TEntity>.Failure($"{typeof(TEntity).Name} updated but failed to reload.", HttpStatusCode.InternalServerError);
+            }
+
             return Result<TEntity>.Success(
-                entity,
+                reloaded,
                 $"{typeof(TEntity).Name} updated successfully.",
                 HttpStatusCode.OK
             );
@@ -147,7 +154,7 @@ public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
         try
         {
             var entity = await GetEntityByIdAsync(id);
-            
+
             if (entity == null)
             {
                 return Result.NotFound($"{typeof(TEntity).Name} with ID {id} not found.");

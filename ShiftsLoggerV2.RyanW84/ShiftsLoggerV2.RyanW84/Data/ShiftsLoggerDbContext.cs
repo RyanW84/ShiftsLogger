@@ -39,7 +39,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
         if (Workers.Any() || Locations.Any() || Shifts.Any())
             return;
 
-        // Seed Workers
+        // Seed Workers (idempotent: skip if worker with same email exists)
         var workers = new List<Worker>
         {
             new Worker
@@ -74,7 +74,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             }
         };
 
-        // Seed Locations
+        // Seed Locations (idempotent: skip if location with same name exists)
         var locations = new List<Location>
         {
             new Location
@@ -124,55 +124,88 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             }
         };
 
-        Workers.AddRange(workers);
-        Locations.AddRange(locations);
-        SaveChanges();
+        try
+        {
+            // Insert workers if they do not already exist (by email)
+            foreach (var w in workers)
+            {
+                if (string.IsNullOrWhiteSpace(w.Email))
+                    continue;
+                if (!Workers.Any(x => x.Email != null && x.Email.ToLower() == w.Email.ToLower()))
+                    Workers.Add(w);
+            }
 
-        // Get the saved entities with their IDs
-        var savedWorkers = Workers.ToList();
-        var savedLocations = Locations.ToList();
+            // Insert locations if not already present (by name)
+            foreach (var l in locations)
+            {
+                if (string.IsNullOrWhiteSpace(l.Name))
+                    continue;
+                if (!Locations.Any(x => x.Name.ToLower() == l.Name.ToLower()))
+                    Locations.Add(l);
+            }
 
-        // Seed Shifts (using the actual IDs from saved entities)
-        var shifts = new List<Shift>
+            SaveChanges();
+
+            // Get the saved entities with their IDs
+            var savedWorkers = Workers.ToList();
+            var savedLocations = Locations.ToList();
+
+            // Seed Shifts (using the actual IDs from saved entities)
+            // Seed Shifts (ensure referenced worker/location IDs exist and times are sensible)
+            var shifts = new List<Shift>
         {
             new Shift
             {
-                StartTime = DateTimeOffset.Now.AddHours(-2),
-                EndTime = DateTimeOffset.Now.AddHours(6),
-                WorkerId = savedWorkers[0].WorkerId,
-                LocationId = savedLocations[0].LocationId
+                    StartTime = DateTimeOffset.Now.AddHours(-2),
+                    EndTime = DateTimeOffset.Now.AddHours(6),
+                    WorkerId = savedWorkers.First().WorkerId,
+                    LocationId = savedLocations.First().LocationId
             },
             new Shift
             {
-                StartTime = DateTimeOffset.Now.AddDays(1).AddHours(8),
-                EndTime = DateTimeOffset.Now.AddDays(1).AddHours(16),
-                WorkerId = savedWorkers[1].WorkerId,
-                LocationId = savedLocations[1].LocationId
+                    StartTime = DateTimeOffset.Now.AddDays(1).AddHours(8),
+                    EndTime = DateTimeOffset.Now.AddDays(1).AddHours(16),
+                    WorkerId = savedWorkers.Skip(1).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
+                    LocationId = savedLocations.Skip(1).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
             },
             new Shift
             {
-                StartTime = DateTimeOffset.Now.AddDays(2).AddHours(7),
-                EndTime = DateTimeOffset.Now.AddDays(2).AddHours(15),
-                WorkerId = savedWorkers[2].WorkerId,
-                LocationId = savedLocations[2].LocationId
+                    StartTime = DateTimeOffset.Now.AddDays(2).AddHours(7),
+                    EndTime = DateTimeOffset.Now.AddDays(2).AddHours(15),
+                    WorkerId = savedWorkers.Skip(2).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
+                    LocationId = savedLocations.Skip(2).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
             },
             new Shift
             {
-                StartTime = DateTimeOffset.Now.AddDays(-1).AddHours(9),
-                EndTime = DateTimeOffset.Now.AddDays(-1).AddHours(17),
-                WorkerId = savedWorkers[3].WorkerId,
-                LocationId = savedLocations[3].LocationId
+                    StartTime = DateTimeOffset.Now.AddDays(-1).AddHours(9),
+                    EndTime = DateTimeOffset.Now.AddDays(-1).AddHours(17),
+                    WorkerId = savedWorkers.Skip(3).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
+                    LocationId = savedLocations.Skip(3).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
             },
             new Shift
             {
-                StartTime = DateTimeOffset.Now.AddDays(-2).AddHours(10),
-                EndTime = DateTimeOffset.Now.AddDays(-2).AddHours(18),
-                WorkerId = savedWorkers[4].WorkerId,
-                LocationId = savedLocations[4].LocationId
+                    StartTime = DateTimeOffset.Now.AddDays(-2).AddHours(10),
+                    EndTime = DateTimeOffset.Now.AddDays(-2).AddHours(18),
+                    WorkerId = savedWorkers.Skip(4).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
+                    LocationId = savedLocations.Skip(4).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
             }
         };
+            // Only add shifts that don't already exist (by StartTime, WorkerId, LocationId)
+            foreach (var s in shifts)
+            {
+                if (s.EndTime <= s.StartTime)
+                    continue; // skip invalid
 
-        Shifts.AddRange(shifts);
-        SaveChanges();
+                var exists = Shifts.Any(x => x.WorkerId == s.WorkerId && x.LocationId == s.LocationId && x.StartTime == s.StartTime);
+                if (!exists)
+                    Shifts.Add(s);
+            }
+
+            SaveChanges();
+        }
+        catch (Exception)
+        {
+            // Swallow exceptions during seeding to avoid crashing dev startup; real apps should log this properly
+        }
     }
 }

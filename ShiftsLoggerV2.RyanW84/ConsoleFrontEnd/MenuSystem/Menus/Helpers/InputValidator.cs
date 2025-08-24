@@ -163,4 +163,60 @@ public static class InputValidator
             return parsedDateTime;
         }
     }
+
+    /// <summary>
+    /// Prompts for an optional DateTime. Returns null when the user presses Enter without typing a value.
+    /// </summary>
+    public static DateTime? GetOptionalDateTime(string prompt, DateTime? minDate = null, DateTime? maxDate = null)
+    {
+        while (true)
+        {
+            var input = AnsiConsole.Ask<string>($"[green]{prompt}[/] [dim](dd/MM/yyyy HH:mm, leave blank for none)[/]");
+
+            if (string.IsNullOrWhiteSpace(input))
+                return null;
+
+            DateTime parsedDateTime = default;
+            var isValid = false;
+
+            string[] acceptedFormats =
+            {
+                "dd/MM/yyyy HH:mm",
+                "dd/MM/yyyy H:mm",
+                "d/MM/yyyy HH:mm",
+                "d/MM/yyyy H:mm"
+
+            };
+
+            foreach (var format in acceptedFormats)
+            {
+                if (DateTime.TryParseExact(input, format, CultureInfo.InvariantCulture, DateTimeStyles.None,
+                        out parsedDateTime))
+                {
+                    isValid = true;
+                    break;
+                }
+            }
+
+            if (!isValid)
+            {
+                AnsiConsole.MarkupLine("[red]Invalid date/time format. Please use dd/MM/yyyy HH:mm format.[/]");
+                continue;
+            }
+
+            if (minDate.HasValue && parsedDateTime < minDate.Value)
+            {
+                AnsiConsole.MarkupLine($"[red]Date must be after {minDate.Value:dd/MM/yyyy HH:mm}.[/]");
+                continue;
+            }
+
+            if (maxDate.HasValue && parsedDateTime > maxDate.Value)
+            {
+                AnsiConsole.MarkupLine($"[red]Date must be before {maxDate.Value:dd/MM/yyyy HH:mm}.[/]");
+                continue;
+            }
+
+            return parsedDateTime;
+        }
+    }
 }

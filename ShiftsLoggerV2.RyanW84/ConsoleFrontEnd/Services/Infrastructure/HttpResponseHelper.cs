@@ -15,8 +15,8 @@ public static class HttpResponseHelper
     /// Handles HTTP response with comprehensive error information from backend
     /// </summary>
     public static async Task<ApiResponseDto<T>> HandleHttpResponseAsync<T>(
-        HttpResponseMessage response, 
-        ILogger logger, 
+        HttpResponseMessage response,
+        ILogger logger,
         string operationName,
         T? fallbackData = default)
     {
@@ -25,10 +25,47 @@ public static class HttpResponseHelper
             // Success response
             if (response.IsSuccessStatusCode)
             {
-                var successResult = await response.Content.ReadFromJsonAsync<ApiResponseDto<T>>();
+                // Use case-insensitive options to be robust across API casing differences
+                var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+                var successResult = await response.Content.ReadFromJsonAsync<ApiResponseDto<T>>(jsonOptions);
                 if (successResult != null)
                 {
                     return successResult;
+                }
+
+                // Attempt a tolerant parse: read raw JSON and try to extract the "data" node then deserialize to T
+                var raw = await response.Content.ReadAsStringAsync();
+                if (!string.IsNullOrWhiteSpace(raw))
+                {
+                    try
+                    {
+                        var generic = JsonSerializer.Deserialize<ApiResponseDto<JsonElement>>(raw, jsonOptions);
+                        if (generic != null)
+                        {
+                            var dto = new ApiResponseDto<T>(generic.Message ?? $"{operationName} result")
+                            {
+                                RequestFailed = generic.RequestFailed,
+                                ResponseCode = generic.ResponseCode,
+                                Message = generic.Message,
+                                TotalCount = generic.TotalCount
+                            };
+
+                            if (generic.Data.ValueKind != JsonValueKind.Null)
+                            {
+                                try
+                                {
+                                    dto.Data = JsonSerializer.Deserialize<T>(generic.Data.GetRawText(), jsonOptions);
+                                }
+                                catch (JsonException) { /* fall through to fallback below */ }
+                            }
+
+                            dto.Data ??= fallbackData;
+                            dto.RequestFailed = false;
+                            return dto;
+                        }
+                    }
+                    catch (JsonException) { /* fall through to fallback below */ }
                 }
 
                 // Fallback if no structured response
@@ -42,8 +79,8 @@ public static class HttpResponseHelper
 
             // Error response - try to get detailed error from backend
             var errorDetails = await ExtractErrorDetailsAsync(response, logger);
-            
-            logger.LogError("HTTP Error in {Operation}: {StatusCode} - {Message}", 
+
+            logger.LogError("HTTP Error in {Operation}: {StatusCode} - {Message}",
                 operationName, response.StatusCode, errorDetails.Message);
 
             return new ApiResponseDto<T>(errorDetails.Message)
@@ -85,7 +122,7 @@ public static class HttpResponseHelper
         try
         {
             var content = await response.Content.ReadAsStringAsync();
-            
+
             if (string.IsNullOrWhiteSpace(content))
             {
                 return new ErrorDetail
@@ -171,7 +208,7 @@ public static class HttpResponseHelper
     {
         // Common error property names to check
         var errorKeys = new[] { "error", "message", "title", "detail", "errorMessage", "description" };
-        
+
         foreach (var key in errorKeys)
         {
             if (errorObj.TryGetValue(key, out var value) && value != null)

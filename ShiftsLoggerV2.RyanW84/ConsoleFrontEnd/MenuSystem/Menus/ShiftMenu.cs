@@ -29,6 +29,104 @@ public class ShiftMenu : BaseMenu
             StartTime = initial.StartTime,
             EndTime = initial.EndTime
         };
+        // If we're updating (existing provided) prompt the user for each field up-front
+        // allowing them to press Enter / choose "(Keep current)" to retain the existing value.
+        if (existing != null)
+        {
+            // Worker
+            var workersResponse = _workerService.GetAllWorkersAsync().Result;
+            var workers = workersResponse.Data ?? new List<Worker>();
+            var currentWorker = workers.FirstOrDefault(w => w.WorkerId == (existing?.WorkerId ?? dto.WorkerId));
+            var currentName = currentWorker?.Name ?? "None";
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine($"[yellow]Current worker:[/] {currentName}");
+            var workerChoices = new List<string> { "(Keep current)" };
+            workerChoices.AddRange(workers.Select(w => w.Name));
+            AnsiConsole.WriteLine();
+            var selectedWorkerName = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Select Worker:")
+                    .AddChoices(workerChoices)
+            );
+            if (selectedWorkerName != "(Keep current)")
+            {
+                var found = workers.FirstOrDefault(w => w.Name == selectedWorkerName);
+                if (found != null)
+                    dto.WorkerId = found.WorkerId;
+            }
+
+            // Location
+            var locationsResponse = _locationService.GetAllLocationsAsync().Result;
+            var locations = locationsResponse.Data ?? new List<Location>();
+            var currentLocation = locations.FirstOrDefault(l => l.LocationId == (existing?.LocationId ?? dto.LocationId));
+            var currentLocationName = currentLocation?.Name ?? "None";
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine($"[yellow]Current location:[/] {currentLocationName}");
+            var locationChoices = new List<string> { "(Keep current)" };
+            locationChoices.AddRange(locations.Select(l => l.Name));
+            AnsiConsole.WriteLine();
+            var selectedLocationName = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Select Location:")
+                    .AddChoices(locationChoices)
+            );
+            if (selectedLocationName != "(Keep current)")
+            {
+                var found = locations.FirstOrDefault(l => l.Name == selectedLocationName);
+                if (found != null)
+                    dto.LocationId = found.LocationId;
+            }
+
+            // Start time
+            while (true)
+            {
+                var prompt = existing != null
+                        ? $"Enter Start Time (current: {existing.StartTime:dd/MM/yyyy HH:mm}, press Enter to keep):"
+                    : "Enter Start Time (dd/MM/yyyy HH:mm):";
+                var input = AnsiConsole.Ask<string>(prompt, "");
+                if (string.IsNullOrWhiteSpace(input) && existing != null)
+                {
+                    dto.StartTime = existing.StartTime;
+                    break;
+                }
+                if (DateTime.TryParseExact(input, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var value))
+                {
+                    dto.StartTime = new DateTimeOffset(value);
+                    break;
+                }
+                if (DateTime.TryParse(input, out var any))
+                {
+                    dto.StartTime = new DateTimeOffset(any);
+                    break;
+                }
+                DisplayService.DisplayError("Invalid date format. Please use dd/MM/yyyy HH:mm or dd-MM-yyyy HH:mm");
+            }
+
+            // End time
+            while (true)
+            {
+                var prompt = existing != null
+                        ? $"Enter End Time (current: {existing.EndTime:dd/MM/yyyy HH:mm}, press Enter to keep):"
+                    : "Enter End Time (dd/MM/yyyy HH:mm):";
+                var input = AnsiConsole.Ask<string>(prompt, "");
+                if (string.IsNullOrWhiteSpace(input) && existing != null)
+                {
+                    dto.EndTime = existing.EndTime;
+                    break;
+                }
+                if (DateTime.TryParseExact(input, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var value))
+                {
+                    dto.EndTime = new DateTimeOffset(value);
+                    break;
+                }
+                if (DateTime.TryParse(input, out var any))
+                {
+                    dto.EndTime = new DateTimeOffset(any);
+                    break;
+                }
+                DisplayService.DisplayError("Invalid date format. Please use dd/MM/yyyy HH:mm or dd-MM-yyyy HH:mm");
+            }
+        }
         while (true)
         {
             var errors = ConsoleFrontEnd.Services.Validation.ShiftValidation.Validate(dto);
@@ -700,8 +798,8 @@ public class ShiftMenu : BaseMenu
                 locationId = int.Parse(selectedLocation.Split(':')[0]);
         }
 
-        var startDate = InputService.GetDateTimeInput("Filter start date (leave blank for any):");
-        var endDate = InputService.GetDateTimeInput("Filter end date (leave blank for any):");
+        var startDate = ConsoleFrontEnd.MenuSystem.InputValidator.GetOptionalDateTime("Filter start date (leave blank for any):");
+        var endDate = ConsoleFrontEnd.MenuSystem.InputValidator.GetOptionalDateTime("Filter end date (leave blank for any):");
         var filter = new ShiftFilterOptions
         {
             WorkerId = workerId,

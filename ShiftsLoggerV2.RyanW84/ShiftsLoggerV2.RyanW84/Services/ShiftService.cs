@@ -108,7 +108,10 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
 
     public async Task<ApiResponseDto<Shift>> GetShiftById(int id)
     {
-        var shift = await dbContext.Shifts.FirstOrDefaultAsync(s => s.ShiftId == id);
+        var shift = await dbContext.Shifts
+            .Include(s => s.Location)
+            .Include(s => s.Worker)
+            .FirstOrDefaultAsync(s => s.ShiftId == id);
 
         if (shift is null)
             return new ApiResponseDto<Shift>
@@ -141,13 +144,18 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
             };
             var savedShift = await dbContext.Shifts.AddAsync(newShift);
             await dbContext.SaveChangesAsync();
+            // Reload the entity including navigation properties so callers get Worker and Location populated
+            var created = await dbContext.Shifts
+                .Include(s => s.Location)
+                .Include(s => s.Worker)
+                .FirstOrDefaultAsync(s => s.ShiftId == savedShift.Entity.ShiftId);
 
             return new ApiResponseDto<Shift>
             {
                 RequestFailed = false,
                 ResponseCode = HttpStatusCode.Created,
                 Message = "Shift created successfully.",
-                Data = savedShift.Entity
+                Data = created
             };
         }
         catch (Exception ex)
@@ -184,12 +192,18 @@ public class ShiftService(ShiftsLoggerDbContext dbContext) : IShiftService
         dbContext.Shifts.Update(savedShift);
         await dbContext.SaveChangesAsync();
 
+        // Reload with navigation properties so the client receives Worker and Location data
+        var reloaded = await dbContext.Shifts
+            .Include(s => s.Location)
+            .Include(s => s.Worker)
+            .FirstOrDefaultAsync(s => s.ShiftId == id);
+
         return new ApiResponseDto<Shift>
         {
             RequestFailed = false,
             ResponseCode = HttpStatusCode.OK,
             Message = $"Shift with ID: {id} updated successfully.",
-            Data = savedShift
+            Data = reloaded
         };
     }
 
