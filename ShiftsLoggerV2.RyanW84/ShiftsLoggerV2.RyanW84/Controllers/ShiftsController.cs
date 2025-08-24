@@ -24,6 +24,21 @@ public class ShiftsController : ControllerBase
         _validation = validation;
     }
 
+    // Convert ModelState errors into a consistent ApiResponseDto shape
+    private ActionResult BadRequestModelState()
+    {
+        var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+        var message = errors.Any() ? "Validation failed: " + string.Join("; ", errors) : "Validation failed";
+        return BadRequest(new ApiResponseDto<object>
+        {
+            RequestFailed = true,
+            ResponseCode = System.Net.HttpStatusCode.BadRequest,
+            Message = message,
+            Data = null,
+            TotalCount = 0
+        });
+    }
+
     // This is the route for getting all shifts
     [HttpGet(Name = "Get All Shifts")]
     public async Task<ActionResult<ApiResponseDto<List<Shift>>>> GetAllShifts([FromQuery] ShiftFilterOptions shiftOptions)
@@ -130,7 +145,7 @@ public class ShiftsController : ControllerBase
             if (!ModelState.IsValid)
             {
                 Console.WriteLine($"[CreateShift] ModelState invalid: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
-                return BadRequest(ModelState);
+                return BadRequestModelState();
             }
 
             // Parse date/time strings to DateTimeOffset and map to typed DTO
@@ -145,7 +160,7 @@ public class ShiftsController : ControllerBase
             {
                 Console.WriteLine($"[CreateShift] Invalid StartTime format: {shift.StartTime}");
                 ModelState.AddModelError("StartTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
-                return BadRequest(ModelState);
+                return BadRequestModelState();
             }
 
             var endParsed = DateTimeOffset.TryParseExact(shift.EndTime, acceptedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedEnd)
@@ -154,14 +169,14 @@ public class ShiftsController : ControllerBase
             {
                 Console.WriteLine($"[CreateShift] Invalid EndTime format: {shift.EndTime}");
                 ModelState.AddModelError("EndTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
-                return BadRequest(ModelState);
+                return BadRequestModelState();
             }
 
             // Ensure end is after start
             if (parsedEnd <= parsedStart)
             {
                 ModelState.AddModelError("EndTime", "End time must be after start time.");
-                return BadRequest(ModelState);
+                return BadRequestModelState();
             }
 
             var typedDto = new ShiftApiRequestDto
@@ -216,7 +231,7 @@ public class ShiftsController : ControllerBase
     {
         try
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequestModelState();
 
             // Parse date/time strings to DateTimeOffset and map to typed DTO
             // Accept several formats (dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm) or standard/ISO formats from clients
@@ -229,7 +244,7 @@ public class ShiftsController : ControllerBase
             if (!startParsedUpdate)
             {
                 ModelState.AddModelError("StartTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
-                return BadRequest(ModelState);
+                return BadRequestModelState();
             }
 
             var endParsedUpdate = DateTimeOffset.TryParseExact(shift.EndTime, acceptedFormatsUpdate, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedEnd)
@@ -237,14 +252,14 @@ public class ShiftsController : ControllerBase
             if (!endParsedUpdate)
             {
                 ModelState.AddModelError("EndTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
-                return BadRequest(ModelState);
+                return BadRequestModelState();
             }
 
             // Ensure end is after start
             if (parsedEnd <= parsedStart)
             {
                 ModelState.AddModelError("EndTime", "End time must be after start time.");
-                return BadRequest(ModelState);
+                return BadRequestModelState();
             }
 
             var typedDto = new ShiftApiRequestDto

@@ -124,7 +124,19 @@ public class LocationsController : ControllerBase
     {
         try
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                var message = errors.Any() ? "Validation failed: " + string.Join("; ", errors) : "Validation failed";
+                return BadRequest(new ApiResponseDto<object>
+                {
+                    RequestFailed = true,
+                    ResponseCode = System.Net.HttpStatusCode.BadRequest,
+                    Message = message,
+                    Data = null,
+                    TotalCount = 0
+                });
+            }
 
             // Use the new SOLID business service for enhanced functionality
             var result = await _validation.CreateAsync(location);
