@@ -24,6 +24,14 @@
     }
     ,
     {
+      "label": "sleep-6",
+      "type": "shell",
+      "command": "sleep 6",
+      "isBackground": false,
+      "problemMatcher": [],
+      "presentation": { "reveal": "silent", "panel": "shared" }
+    },
+    {
       "label": "wait-for-backend",
       "type": "shell",
       "command": "${workspaceFolder}/.vscode/wait-for-backend.sh https://127.0.0.1:7009 60",
