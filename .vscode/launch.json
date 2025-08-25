@@ -5,18 +5,18 @@
       "name": "Backend (API) Debug",
       "type": "coreclr",
       "request": "launch",
-      "program": "${workspaceFolder}/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84/bin/Debug/net9.0/ShiftsLoggerV2.RyanW84.dll",
+      "program": "${workspaceFolder}/ShiftsLoggerV2.RyanW84/bin/Debug/net9.0/ShiftsLoggerV2.RyanW84.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84",
+      "cwd": "${workspaceFolder}/ShiftsLoggerV2.RyanW84",
       "console": "integratedTerminal"
     },
     {
       "name": "ConsoleFrontEnd Debug",
       "type": "coreclr",
       "request": "launch",
-      "program": "${workspaceFolder}/ShiftsLoggerV2.RyanW84/ConsoleFrontEnd/bin/Debug/net9.0/ConsoleFrontEnd.dll",
+      "program": "${workspaceFolder}/ConsoleFrontEnd/bin/Debug/net9.0/ConsoleFrontEnd.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/ShiftsLoggerV2.RyanW84/ConsoleFrontEnd",
+      "cwd": "${workspaceFolder}/ConsoleFrontEnd",
       "console": "integratedTerminal"
     }
   ],
@@ -24,7 +24,7 @@
     {
       "name": "Run Backend then Frontend",
       "configurations": ["Backend (API) Debug", "ConsoleFrontEnd Debug"],
-      "preLaunchTask": "Run ShiftsLogger API (background)"
+      "preLaunchTask": "Start API and wait"
     }
   ]
 }

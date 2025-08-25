@@ -22,5 +22,19 @@
       "dependsOn": ["Run ShiftsLogger API (background)", "Run ConsoleFrontEnd"],
       "dependsOrder": "sequence"
     }
+    ,
+    {
+      "label": "wait-for-backend",
+      "type": "shell",
+      "command": "${workspaceFolder}/.vscode/wait-for-backend.sh https://127.0.0.1:7009 60",
+      "isBackground": false,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Start API and wait",
+      "dependsOn": ["Run ShiftsLogger API (background)", "wait-for-backend"],
+      "dependsOrder": "sequence"
+    }
   ]
 }
