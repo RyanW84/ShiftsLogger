@@ -5,18 +5,18 @@
       "name": "Backend (API) Debug",
       "type": "coreclr",
       "request": "launch",
-      "program": "${workspaceFolder}/ShiftsLoggerV2.RyanW84/bin/Debug/net9.0/ShiftsLoggerV2.RyanW84.dll",
+      "program": "/home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ShiftsLoggerV2.RyanW84/bin/Debug/net9.0/ShiftsLoggerV2.RyanW84.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/ShiftsLoggerV2.RyanW84",
+      "cwd": "/home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ShiftsLoggerV2.RyanW84",
       "console": "integratedTerminal"
     },
     {
       "name": "ConsoleFrontEnd Debug",
       "type": "coreclr",
       "request": "launch",
-      "program": "${workspaceFolder}/ConsoleFrontEnd/bin/Debug/net9.0/ConsoleFrontEnd.dll",
+      "program": "/home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ConsoleFrontEnd/bin/Debug/net9.0/ConsoleFrontEnd.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/ConsoleFrontEnd",
+      "cwd": "/home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ConsoleFrontEnd",
       "console": "integratedTerminal"
     }
   ],
@@ -24,6 +24,11 @@
     {
       "name": "Run Backend then Frontend",
       "configurations": ["Backend (API) Debug", "ConsoleFrontEnd Debug"],
+      "preLaunchTask": "Start API and wait"
+    },
+    {
+      "name": "Run API in background then Frontend (Debug)",
+      "configurations": ["ConsoleFrontEnd Debug"],
       "preLaunchTask": "Start API and wait"
     }
   ]
