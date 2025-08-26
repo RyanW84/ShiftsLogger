@@ -54,7 +54,7 @@ public class ShiftValidation : BaseService<Shift, ShiftFilterOptions, ShiftApiRe
         if (hasOverlap)
             return Result.Failure("The requested shift overlaps an existing shift for the same worker or location.");
 
-    return Result.Success();
+        return Result.Success();
     }
 
     protected override async ValueTask<Result> ValidateForUpdateAsync(int id, ShiftApiRequestDto updateDto)
