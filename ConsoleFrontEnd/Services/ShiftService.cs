@@ -28,20 +28,20 @@ public class ShiftService : IShiftService
             var queryString = $"api/shifts?" + BuildShiftFilterQuery(filter);
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
-            var response = await _httpClient.GetAsync(queryString);
+            var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<List<Shift>>(
                 response,
                 _logger,
                 "Get Shifts By Filter",
-                new List<Shift>()
-            );
+                []
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error filtering shifts via API");
             return new ApiResponseDto<List<Shift>>($"Filter Error: {ex.Message}")
             {
-                Data = new List<Shift>(),
+                Data = [],
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.InternalServerError
             };
@@ -50,7 +50,7 @@ public class ShiftService : IShiftService
 
     private string BuildShiftFilterQuery(ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter)
     {
-        var query = new List<string>();
+        List<string> query = [];
         if (filter.ShiftId.HasValue) query.Add($"ShiftId={filter.ShiftId.Value}");
         if (filter.WorkerId.HasValue) query.Add($"WorkerId={filter.WorkerId.Value}");
         if (filter.LocationId.HasValue) query.Add($"LocationId={filter.LocationId.Value}");
@@ -63,7 +63,7 @@ public class ShiftService : IShiftService
 
     private static ApiResponseDto<List<Shift>> FilterShiftsLocally(ApiResponseDto<List<Shift>> allResponse, ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter)
     {
-        var filtered = (allResponse.Data ?? new List<Shift>()).AsQueryable();
+        var filtered = (allResponse.Data ?? []).AsQueryable();
 
         if (filter.ShiftId.HasValue)
             filtered = filtered.Where(s => s.ShiftId == filter.ShiftId.Value);
@@ -97,13 +97,13 @@ public class ShiftService : IShiftService
             var queryString = "api/shifts";
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
-            var response = await _httpClient.GetAsync(queryString);
+            var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<List<Shift>>(
                 response,
                 _logger,
                 "Get All Shifts",
-                new List<Shift>()
-            );
+                []
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -111,7 +111,7 @@ public class ShiftService : IShiftService
             return new ApiResponseDto<List<Shift>>($"Connection Error: {ex.Message}")
             {
                 ResponseCode = HttpStatusCode.InternalServerError,
-                Data = new List<Shift>(),
+                Data = [],
                 RequestFailed = true
             };
         }
@@ -121,13 +121,13 @@ public class ShiftService : IShiftService
     {
         try
         {
-            var response = await _httpClient.GetAsync($"api/shifts/{id}");
+            var response = await _httpClient.GetAsync($"api/shifts/{id}").ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<Shift?>(
                 response,
                 _logger,
                 $"Get Shift {id}",
                 null
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -147,18 +147,18 @@ public class ShiftService : IShiftService
         // Backend validation handles all checks now
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("api/shifts", shift);
+            var response = await _httpClient.PostAsJsonAsync("api/shifts", shift).ConfigureAwait(false);
             var handled = await HttpResponseHelper.HandleHttpResponseAsync<Shift>(
                 response,
                 _logger,
                 "Create Shift",
                 shift
-            );
+            ).ConfigureAwait(false);
 
             // If server returned the created Shift but omitted navigation properties, fetch it by ID
             if (!handled.RequestFailed && handled.Data != null && (handled.Data.Worker == null || handled.Data.Location == null))
             {
-                var refreshed = await GetShiftByIdAsync(handled.Data.ShiftId);
+                var refreshed = await GetShiftByIdAsync(handled.Data.ShiftId).ConfigureAwait(false);
                 if (!refreshed.RequestFailed && refreshed.Data != null)
                 {
                     return new ApiResponseDto<Shift>(refreshed.Message ?? "Shift retrieved")
@@ -207,13 +207,13 @@ public class ShiftService : IShiftService
         }
         try
         {
-            var response = await _httpClient.PutAsJsonAsync($"api/shifts/{id}", dto);
+            var response = await _httpClient.PutAsJsonAsync($"api/shifts/{id}", dto).ConfigureAwait(false);
             var handled = await HttpResponseHelper.HandleHttpResponseAsync<Shift?>(
                 response,
                 _logger,
                 $"Update Shift {id}",
                 updatedShift
-            );
+            ).ConfigureAwait(false);
 
             // If server returned only IDs (no navigation properties), fetch the fully populated shift
             if (!handled.RequestFailed && handled.Data != null && (handled.Data.Worker == null || handled.Data.Location == null))
@@ -241,13 +241,13 @@ public class ShiftService : IShiftService
     {
         try
         {
-            var response = await _httpClient.DeleteAsync($"api/shifts/{id}");
+            var response = await _httpClient.DeleteAsync($"api/shifts/{id}").ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<bool>(
                 response,
                 _logger,
                 $"Delete Shift {id}",
                 false
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

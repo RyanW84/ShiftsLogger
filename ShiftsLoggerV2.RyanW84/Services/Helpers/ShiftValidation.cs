@@ -66,7 +66,7 @@ public class ShiftValidation : BaseService<Shift, ShiftFilterOptions, ShiftApiRe
     protected override async Task<Result> ValidateForDeleteAsync(int id)
     {
         // Business logic validation for shift deletion
-        var shiftResult = await _shiftRepository.GetByIdAsync(id);
+        var shiftResult = await _shiftRepository.GetByIdAsync(id).ConfigureAwait(false);
         if (shiftResult.IsFailure)
             return shiftResult;
 

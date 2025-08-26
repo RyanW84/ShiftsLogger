@@ -50,7 +50,7 @@ public class LocationValidation : BaseService<Location, LocationFilterOptions, L
     protected override async Task<Result> ValidateForDeleteAsync(int id)
     {
         // Business logic validation for location deletion
-        var locationResult = await _locationRepository.GetByIdAsync(id);
+        var locationResult = await _locationRepository.GetByIdAsync(id).ConfigureAwait(false);
         if (locationResult.IsFailure)
             return locationResult;
 

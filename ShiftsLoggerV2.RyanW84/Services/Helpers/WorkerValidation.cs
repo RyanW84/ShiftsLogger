@@ -79,7 +79,7 @@ public class WorkerValidation : BaseService<Worker, WorkerFilterOptions, WorkerA
     protected override async Task<Result> ValidateForDeleteAsync(int id)
     {
         // Business logic validation for worker deletion
-        var workerResult = await _workerRepository.GetByIdAsync(id);
+        var workerResult = await _workerRepository.GetByIdAsync(id).ConfigureAwait(false);
         if (workerResult.IsFailure)
             return workerResult;
 

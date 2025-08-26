@@ -50,13 +50,13 @@ public abstract class BaseApiService<T, TFilter, TKey> : IApiService<T, TFilter,
         {
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{ApiEndpoint}");
 
-            var response = await _httpClient.GetAsync(ApiEndpoint);
+            var response = await _httpClient.GetAsync(ApiEndpoint).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<List<T>>(
                 response,
                 _logger,
                 $"Get All {EntityName}",
                 []
-            );
+            ).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)
         {
@@ -87,12 +87,12 @@ public abstract class BaseApiService<T, TFilter, TKey> : IApiService<T, TFilter,
             var endpoint = $"{ApiEndpoint}/{id}";
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{endpoint}");
 
-            var response = await _httpClient.GetAsync(endpoint);
+            var response = await _httpClient.GetAsync(endpoint).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<T>(
                 response,
                 _logger,
                 $"Get {EntityName} by ID"
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -107,12 +107,12 @@ public abstract class BaseApiService<T, TFilter, TKey> : IApiService<T, TFilter,
         {
             _logger.LogInformation("Making POST request to: {RequestUrl}", $"{_httpClient.BaseAddress}{ApiEndpoint}");
 
-            var response = await _httpClient.PostAsJsonAsync(ApiEndpoint, entity);
+            var response = await _httpClient.PostAsJsonAsync(ApiEndpoint, entity).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<T>(
                 response,
                 _logger,
                 $"Create {EntityName}"
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -128,12 +128,12 @@ public abstract class BaseApiService<T, TFilter, TKey> : IApiService<T, TFilter,
             var endpoint = $"{ApiEndpoint}/{id}";
             _logger.LogInformation("Making PUT request to: {RequestUrl}", $"{_httpClient.BaseAddress}{endpoint}");
 
-            var response = await _httpClient.PutAsJsonAsync(endpoint, entity);
+            var response = await _httpClient.PutAsJsonAsync(endpoint, entity).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<T>(
                 response,
                 _logger,
                 $"Update {EntityName}"
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -149,12 +149,12 @@ public abstract class BaseApiService<T, TFilter, TKey> : IApiService<T, TFilter,
             var endpoint = $"{ApiEndpoint}/{id}";
             _logger.LogInformation("Making DELETE request to: {RequestUrl}", $"{_httpClient.BaseAddress}{endpoint}");
 
-            var response = await _httpClient.DeleteAsync(endpoint);
+            var response = await _httpClient.DeleteAsync(endpoint).ConfigureAwait(false);
             var result = await HttpResponseHelper.HandleHttpResponseAsync<bool>(
                 response,
                 _logger,
                 $"Delete {EntityName}"
-            );
+            ).ConfigureAwait(false);
             
             // If no specific response body, mark as successful if status is success
             if (response.IsSuccessStatusCode && !result.RequestFailed && !result.Data)

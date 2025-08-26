@@ -29,20 +29,20 @@ public class LocationService : ILocationService
             var queryString = $"api/locations?" + BuildLocationFilterQuery(filter);
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
-            var response = await _httpClient.GetAsync(queryString);
+            var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<List<Location>>(
                 response,
                 _logger,
                 "Get Locations By Filter",
-                new List<Location>()
-            );
+                []
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error filtering locations via API");
             return new ApiResponseDto<List<Location>>($"Filter Error: {ex.Message}")
             {
-                Data = new List<Location>(),
+                Data = [],
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.InternalServerError
             };
@@ -51,7 +51,7 @@ public class LocationService : ILocationService
 
     private string BuildLocationFilterQuery(ConsoleFrontEnd.Models.FilterOptions.LocationFilterOptions filter)
     {
-        var query = new List<string>();
+        List<string> query = [];
         if (filter.LocationId.HasValue) query.Add($"LocationId={filter.LocationId.Value}");
         if (!string.IsNullOrWhiteSpace(filter.Name)) query.Add($"Name={Uri.EscapeDataString(filter.Name)}");
         if (!string.IsNullOrWhiteSpace(filter.Address)) query.Add($"Address={Uri.EscapeDataString(filter.Address)}");
@@ -70,13 +70,13 @@ public class LocationService : ILocationService
             var queryString = "api/locations";
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
-            var response = await _httpClient.GetAsync(queryString);
+            var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<List<Location>>(
                 response,
                 _logger,
                 "Get All Locations",
-                new List<Location>()
-            );
+                []
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -84,7 +84,7 @@ public class LocationService : ILocationService
             return new ApiResponseDto<List<Location>>($"Connection Error: {ex.Message}")
             {
                 ResponseCode = HttpStatusCode.InternalServerError,
-                Data = new List<Location>(),
+                Data = [],
                 RequestFailed = true
             };
         }
@@ -94,13 +94,13 @@ public class LocationService : ILocationService
     {
         try
         {
-            var response = await _httpClient.GetAsync($"api/locations/{id}");
+            var response = await _httpClient.GetAsync($"api/locations/{id}").ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<Location?>(
                 response,
                 _logger,
                 $"Get Location {id}",
                 null
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -174,13 +174,13 @@ public class LocationService : ILocationService
         }
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("api/locations", dto);
+            var response = await _httpClient.PostAsJsonAsync("api/locations", dto).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<Location>(
                 response,
                 _logger,
                 "Create Location",
                 location
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -218,13 +218,13 @@ public class LocationService : ILocationService
         }
         try
         {
-            var response = await _httpClient.PutAsJsonAsync($"api/locations/{id}", dto);
+            var response = await _httpClient.PutAsJsonAsync($"api/locations/{id}", dto).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<Location?>(
                 response,
                 _logger,
                 $"Update Location {id}",
                 updatedLocation
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -242,13 +242,13 @@ public class LocationService : ILocationService
     {
         try
         {
-            var response = await _httpClient.DeleteAsync($"api/locations/{id}");
+            var response = await _httpClient.DeleteAsync($"api/locations/{id}").ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<bool>(
                 response,
                 _logger,
                 $"Delete Location {id}",
                 false
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

@@ -267,7 +267,7 @@ public class WorkersController : ControllerBase
             }
 
             // Filter results to only those with the specified domain
-            var filteredWorkers = result.Data?.Where(w => !string.IsNullOrEmpty(w.Email) && w.Email.Contains($"@{domain}")).ToList() ?? new List<Worker>();
+            var filteredWorkers = result.Data?.Where(w => !string.IsNullOrEmpty(w.Email) && w.Email.Contains($"@{domain}")).ToList() ?? [];
             return Ok(new ApiResponseDto<List<Worker>>
             {
                 RequestFailed = false,

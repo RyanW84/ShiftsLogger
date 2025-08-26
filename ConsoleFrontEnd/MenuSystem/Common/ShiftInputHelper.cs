@@ -36,7 +36,7 @@ public class ShiftInputHelper
     /// </summary>
     public async Task<int> SelectWorkerAsync(int? currentWorkerId, bool allowKeepCurrent = false)
     {
-        var workersResponse = await _workerService.GetAllWorkersAsync();
+        var workersResponse = await _workerService.GetAllWorkersAsync().ConfigureAwait(false);
         var workers = workersResponse.Data ?? [];
 
         if (allowKeepCurrent && currentWorkerId.HasValue)
@@ -78,7 +78,7 @@ public class ShiftInputHelper
     /// </summary>
     public async Task<int> SelectLocationAsync(int? currentLocationId, bool allowKeepCurrent = false)
     {
-        var locationsResponse = await _locationService.GetAllLocationsAsync();
+        var locationsResponse = await _locationService.GetAllLocationsAsync().ConfigureAwait(false);
         var locations = locationsResponse.Data ?? [];
 
         if (allowKeepCurrent && currentLocationId.HasValue)

@@ -26,13 +26,13 @@ public class WorkerService : IWorkerService
             var queryString = $"api/workers?" + BuildWorkerFilterQuery(filter);
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
-            var response = await _httpClient.GetAsync(queryString);
+            var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<List<Worker>>(
                 response,
                 _logger,
                 "Get Workers By Filter",
                 []
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -64,13 +64,13 @@ public class WorkerService : IWorkerService
             var queryString = "api/workers";
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
-            var response = await _httpClient.GetAsync(queryString);
+            var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<List<Worker>>(
                 response,
                 _logger,
                 "Get All Workers",
-                new List<Worker>()
-            );
+                []
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -78,7 +78,7 @@ public class WorkerService : IWorkerService
             return new ApiResponseDto<List<Worker>>($"Connection Error: {ex.Message}")
             {
                 ResponseCode = HttpStatusCode.InternalServerError,
-                Data = new List<Worker>(),
+                Data = [],
                 RequestFailed = true
             };
         }
@@ -88,13 +88,13 @@ public class WorkerService : IWorkerService
     {
         try
         {
-            var response = await _httpClient.GetAsync($"api/workers/{id}");
+            var response = await _httpClient.GetAsync($"api/workers/{id}").ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<Worker?>(
                 response,
                 _logger,
                 $"Get Worker {id}",
                 null
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -165,13 +165,13 @@ public class WorkerService : IWorkerService
         }
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("api/workers", dto);
+            var response = await _httpClient.PostAsJsonAsync("api/workers", dto).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<Worker>(
                 response,
                 _logger,
                 "Create Worker",
                 worker
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -206,13 +206,13 @@ public class WorkerService : IWorkerService
         }
         try
         {
-            var response = await _httpClient.PutAsJsonAsync($"api/workers/{id}", dto);
+            var response = await _httpClient.PutAsJsonAsync($"api/workers/{id}", dto).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<Worker?>(
                 response,
                 _logger,
                 $"Update Worker {id}",
                 updatedWorker
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -230,13 +230,13 @@ public class WorkerService : IWorkerService
     {
         try
         {
-            var response = await _httpClient.DeleteAsync($"api/workers/{id}");
+            var response = await _httpClient.DeleteAsync($"api/workers/{id}").ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<bool>(
                 response,
                 _logger,
                 $"Delete Worker {id}",
                 false
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
