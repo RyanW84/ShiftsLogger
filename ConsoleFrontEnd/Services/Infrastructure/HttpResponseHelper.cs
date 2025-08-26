@@ -207,7 +207,7 @@ public static class HttpResponseHelper
     private static string ExtractErrorFromDictionary(Dictionary<string, object> errorObj)
     {
         // Common error property names to check
-        var errorKeys = new[] { "error", "message", "title", "detail", "errorMessage", "description" };
+        string[] errorKeys = ["error", "message", "title", "detail", "errorMessage", "description"];
 
         foreach (var key in errorKeys)
         {

@@ -43,32 +43,27 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
         // Seed Workers (idempotent: skip if worker with same email exists)
         var workers = new List<Worker>
         {
-            new Worker
-            {
+            new() {
                 Name = "John Smith",
                 Email = "john.smith@company.com",
                 PhoneNumber = "+44 7911 123456"
             },
-            new Worker
-            {
+            new() {
                 Name = "Sarah Johnson",
                 Email = "sarah.johnson@company.com",
                 PhoneNumber = "+44 7700 900123"
             },
-            new Worker
-            {
+            new() {
                 Name = "Mike Davis",
                 Email = "mike.davis@company.com",
                 PhoneNumber = "+44 7802 345678"
             },
-            new Worker
-            {
+            new() {
                 Name = "Emily Wilson",
                 Email = "emily.wilson@company.com",
                 PhoneNumber = "+44 7920 765432"
             },
-            new Worker
-            {
+            new() {
                 Name = "David Brown",
                 Email = "david.brown@company.com",
                 PhoneNumber = "+44 7555 123456"
@@ -78,8 +73,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
         // Seed Locations (idempotent: skip if location with same name exists)
         var locations = new List<Location>
         {
-            new Location
-            {
+            new() {
                 Name = "London Office",
                 Address = "1 Canary Wharf",
                 Town = "London",
@@ -87,8 +81,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
                 PostCode = "E14 5AB",
                 Country = "UK"
             },
-            new Location
-            {
+            new() {
                 Name = "Manchester Warehouse",
                 Address = "22 Trafford Park",
                 Town = "Manchester",
@@ -96,8 +89,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
                 PostCode = "M17 1AB",
                 Country = "UK"
             },
-            new Location
-            {
+            new() {
                 Name = "Birmingham Plant",
                 Address = "15 Aston Road",
                 Town = "Birmingham",
@@ -105,8 +97,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
                 PostCode = "B6 4DA",
                 Country = "UK"
             },
-            new Location
-            {
+            new() {
                 Name = "Leeds Service Centre",
                 Address = "8 Wellington Place",
                 Town = "Leeds",
@@ -114,8 +105,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
                 PostCode = "LS1 4AP",
                 Country = "UK"
             },
-            new Location
-            {
+            new() {
                 Name = "Bristol Research Lab",
                 Address = "3 Temple Quay",
                 Town = "Bristol",
@@ -165,36 +155,31 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             // Seed Shifts (ensure referenced worker/location IDs exist and times are sensible)
             var shifts = new List<Shift>
         {
-            new Shift
-            {
+            new() {
                     StartTime = DateTimeOffset.Now.AddHours(-2),
                     EndTime = DateTimeOffset.Now.AddHours(6),
                     WorkerId = savedWorkers.First().WorkerId,
                     LocationId = savedLocations.First().LocationId
             },
-            new Shift
-            {
+            new() {
                     StartTime = DateTimeOffset.Now.AddDays(1).AddHours(8),
                     EndTime = DateTimeOffset.Now.AddDays(1).AddHours(16),
                     WorkerId = savedWorkers.Skip(1).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
                     LocationId = savedLocations.Skip(1).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
             },
-            new Shift
-            {
+            new() {
                     StartTime = DateTimeOffset.Now.AddDays(2).AddHours(7),
                     EndTime = DateTimeOffset.Now.AddDays(2).AddHours(15),
                     WorkerId = savedWorkers.Skip(2).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
                     LocationId = savedLocations.Skip(2).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
             },
-            new Shift
-            {
+            new() {
                     StartTime = DateTimeOffset.Now.AddDays(-1).AddHours(9),
                     EndTime = DateTimeOffset.Now.AddDays(-1).AddHours(17),
                     WorkerId = savedWorkers.Skip(3).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
                     LocationId = savedLocations.Skip(3).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
             },
-            new Shift
-            {
+            new() {
                     StartTime = DateTimeOffset.Now.AddDays(-2).AddHours(10),
                     EndTime = DateTimeOffset.Now.AddDays(-2).AddHours(18),
                     WorkerId = savedWorkers.Skip(4).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,

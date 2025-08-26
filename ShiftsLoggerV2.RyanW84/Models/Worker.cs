@@ -14,7 +14,7 @@ public class Worker : IEntity
     [EmailAddress] public string? Email { get; set; }
 
     // Navigation property for related shifts
-    public virtual ICollection<Shift> Shifts { get; set; } = new List<Shift>();
+    public virtual ICollection<Shift> Shifts { get; set; } = [];
 
 	// For compatibility with UI layer
 	public int Id => WorkerId;

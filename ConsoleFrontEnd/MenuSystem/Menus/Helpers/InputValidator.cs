@@ -123,10 +123,10 @@ public static class InputValidator
 
             // Try multiple date formats with explicit culture
             string[] acceptedFormats =
-            {
-                    "dd/MM/yyyy HH:mm",
-                    "dd/MM/yyyy H:mm"
-            };
+            [
+                "dd/MM/yyyy HH:mm",
+                "dd/MM/yyyy H:mm"
+            ];
 
             foreach (var format in acceptedFormats)
             {
@@ -180,13 +180,12 @@ public static class InputValidator
             var isValid = false;
 
             string[] acceptedFormats =
-            {
+            [
                 "dd/MM/yyyy HH:mm",
                 "dd/MM/yyyy H:mm",
                 "d/MM/yyyy HH:mm",
                 "d/MM/yyyy H:mm"
-
-            };
+            ];
 
             foreach (var format in acceptedFormats)
             {

@@ -308,13 +308,13 @@ public class LocationMenu : BaseMenu
             var countries = allLocationsResponse.Data.Select(l => l.Country).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().OrderBy(c => c).ToList();
             if (counties.Any())
             {
-                var countyChoices = new[] { "Any" }.Concat(counties).Select(s => s!).ToArray();
+                string[] countyChoices = ["Any", ..counties.Select(s => s!)];
                 var selectedCounty = InputService.GetMenuChoice("Filter by County:", countyChoices);
                 if (selectedCounty != "Any") county = selectedCounty;
             }
             if (countries.Any())
             {
-                var countryChoices = new[] { "Any" }.Concat(countries).Select(s => s!).ToArray();
+                string[] countryChoices = ["Any", ..countries.Select(s => s!)];
                 var selectedCountry = InputService.GetMenuChoice("Filter by Country:", countryChoices);
                 if (selectedCountry != "Any") country = selectedCountry;
             }

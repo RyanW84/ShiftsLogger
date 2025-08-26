@@ -307,13 +307,13 @@ public class WorkerMenu : BaseMenu
             var emails = allWorkersResponse.Data.Select(w => w.Email).Where(e => !string.IsNullOrWhiteSpace(e)).Distinct().OrderBy(e => e).ToList();
             if (names.Any())
             {
-                var nameChoices = new[] { "Any" }.Concat(names).ToArray();
+                string[] nameChoices = ["Any", ..names];
                 var selectedName = InputService.GetMenuChoice("Filter by Name:", nameChoices);
                 if (selectedName != "Any") name = selectedName;
             }
             if (emails.Any())
             {
-                var emailChoices = new[] { "Any" }.Concat(emails).Select(s => s!).ToArray();
+                string[] emailChoices = ["Any", ..emails.Select(s => s!)];
                 var selectedEmail = InputService.GetMenuChoice("Filter by Email:", emailChoices);
                 if (selectedEmail != "Any") email = selectedEmail;
             }
