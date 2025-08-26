@@ -17,6 +17,24 @@ public class ShiftRepository : BaseRepository<Shift, ShiftFilterOptions, ShiftAp
     {
     }
 
+    /// <summary>
+    /// Detects whether a given time range overlaps any existing shift for the same worker or at the same location.
+    /// </summary>
+    public async Task<bool> HasOverlappingShiftAsync(int workerId, int locationId, DateTimeOffset startTime, DateTimeOffset endTime, int? excludeShiftId = null)
+    {
+        // Two intervals [A,B) and [C,D) overlap when A < D && C < B
+        var query = DbSet.AsQueryable();
+
+        if (excludeShiftId is not null)
+            query = query.Where(s => s.ShiftId != excludeShiftId.Value);
+
+        // Check either same worker overlapping OR same location overlapping
+        return await query.AnyAsync(s =>
+            (s.WorkerId == workerId || s.LocationId == locationId) &&
+            s.StartTime < endTime && startTime < s.EndTime
+        ).ConfigureAwait(false);
+    }
+
     protected override IQueryable<Shift> BuildQuery(ShiftFilterOptions filterOptions)
     {
         var query = DbSet
