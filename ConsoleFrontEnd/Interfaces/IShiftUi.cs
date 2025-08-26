@@ -1,13 +1,14 @@
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.FilterOptions;
+using System.Threading.Tasks;
 
 namespace ConsoleFrontEnd.MenuSystem;
 
 public interface IShiftUi
 {
-    Shift CreateShiftUi(int workerId);
-    Shift UpdateShiftUi(Shift existingShift);
-    ShiftFilterOptions FilterShiftsUi();
+    Task<Shift> CreateShiftUi(int workerId);
+    Task<Shift> UpdateShiftUi(Shift existingShift);
+    Task<ShiftFilterOptions> FilterShiftsUi();
     void DisplayShiftsTable(IEnumerable<Shift> shifts);
-    int GetShiftByIdUi();
+    Task<int> GetShiftByIdUi();
 }

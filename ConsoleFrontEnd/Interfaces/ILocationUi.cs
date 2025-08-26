@@ -9,6 +9,6 @@ public interface ILocationUi
     Location UpdateLocationUi(Location existingLocation);
     LocationFilterOptions FilterLocationsUi();
     void DisplayLocationsTable(IEnumerable<Location> locations);
-    int GetLocationByIdUi();
-    int SelectLocation();
+    Task<int> GetLocationByIdUi();
+    Task<int> SelectLocation();
 }

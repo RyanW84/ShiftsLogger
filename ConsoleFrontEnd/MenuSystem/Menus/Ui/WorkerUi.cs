@@ -2,7 +2,10 @@ using ConsoleFrontEnd.Core.Abstractions;
 using ConsoleFrontEnd.MenuSystem.Common;
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.FilterOptions;
+using ConsoleFrontEnd.Interfaces;
+using ConsoleFrontEnd.Services;
 using Microsoft.Extensions.Logging;
+using Spectre.Console;
 
 namespace ConsoleFrontEnd.MenuSystem;
 
@@ -12,12 +15,16 @@ namespace ConsoleFrontEnd.MenuSystem;
 public class WorkerUi : IWorkerUi
 {
     private readonly UiHelper _uiHelper;
+    private readonly IWorkerService _workerService;
+    private readonly IConsoleDisplayService _display;
     private const string EntityName = "Worker";
     private const string EntityPluralName = "Workers";
 
-    public WorkerUi(IConsoleDisplayService display, ILogger<WorkerUi> logger)
+    public WorkerUi(IConsoleDisplayService display, ILogger<WorkerUi> logger, IWorkerService workerService)
     {
         _uiHelper = new UiHelper(display, logger);
+        _workerService = workerService;
+        _display = display;
     }
 
     public Worker CreateWorkerUi()
@@ -89,13 +96,30 @@ public class WorkerUi : IWorkerUi
         _uiHelper.DisplayEntitiesTable(workers, EntityPluralName);
     }
 
-    public int GetWorkerByIdUi()
+    public async Task<int> GetWorkerByIdUi()
     {
-        return _uiHelper.GetEntityIdInput(EntityName);
+        _display.DisplayHeader("Select Worker", "blue");
+        
+        var response = await _workerService.GetAllWorkersAsync();
+        if (response.RequestFailed || response.Data?.Any() != true)
+        {
+            AnsiConsole.MarkupLine("[red]No workers available or failed to fetch workers.[/]");
+            return -1;
+        }
+
+        var workers = response.Data!;
+        var selectedWorker = AnsiConsole.Prompt(
+            new SelectionPrompt<Worker>()
+                .Title("[green]Select a worker:[/]")
+                .PageSize(10)
+                .AddChoices(workers)
+                .UseConverter(worker => $"{worker.Name} (ID: {worker.WorkerId})"));
+        
+        return selectedWorker.WorkerId;
     }
 
-    public int SelectWorker()
+    public async Task<int> SelectWorker()
     {
-        return _uiHelper.SelectEntityInput(EntityName);
+        return await GetWorkerByIdUi();
     }
 }

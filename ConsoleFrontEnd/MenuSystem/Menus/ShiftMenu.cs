@@ -610,18 +610,60 @@ public class ShiftMenu : BaseMenu
 
     private async Task FilterShiftsAsync()
     {
-        // Use the new ShiftUI filtering approach for consistent UX
-        var filter = _shiftUi.FilterShiftsUi();
-        
-        // Convert the filter to match the API expectations
+        DisplayService.DisplayHeader("Filter Shifts", "blue");
+
+        // Decide whether to filter by worker
+        int? workerId = null;
+        var filterByWorker = InputService.GetMenuChoice("Filter by worker?", "No", "Yes");
+        if (filterByWorker == "Yes")
+        {
+            workerId = await _shiftInputHelper.SelectWorkerAsync(null, false).ConfigureAwait(false);
+            if (workerId <= 0)
+            {
+                DisplayService.DisplayError("No worker selected.");
+                InputService.WaitForKeyPress();
+                return;
+            }
+        }
+
+        // Decide whether to filter by location
+        int? locationId = null;
+        var filterByLocation = InputService.GetMenuChoice("Filter by location?", "No", "Yes");
+        if (filterByLocation == "Yes")
+        {
+            locationId = await _shiftInputHelper.SelectLocationAsync(null, false).ConfigureAwait(false);
+            if (locationId <= 0)
+            {
+                DisplayService.DisplayError("No location selected.");
+                InputService.WaitForKeyPress();
+                return;
+            }
+        }
+
+        // Date filters
+        DateTime? startDate = null;
+        DateTime? endDate = null;
+        var wantDates = InputService.GetMenuChoice("Filter by date range?", "No", "Yes");
+        if (wantDates == "Yes")
+        {
+            startDate = _shiftInputHelper.GetDateTimeInput("Start Date").DateTime;
+            endDate = _shiftInputHelper.GetDateTimeInput("End Date").DateTime;
+            if (endDate <= startDate)
+            {
+                DisplayService.DisplayError("End date must be after start date.");
+                InputService.WaitForKeyPress();
+                return;
+            }
+        }
+
         var apiFilter = new ShiftFilterOptions
         {
-            WorkerId = filter.WorkerId,
-            LocationId = filter.LocationId,
-            StartTime = filter.StartDate,
-            EndTime = filter.EndDate
+            WorkerId = workerId,
+            LocationId = locationId,
+            StartDate = startDate,
+            EndDate = endDate
         };
-        
+
         var response = await _shiftService.GetShiftsByFilterAsync(apiFilter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())
         {

@@ -2,6 +2,8 @@ using ConsoleFrontEnd.Core.Abstractions;
 using ConsoleFrontEnd.MenuSystem.Common;
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.FilterOptions;
+using ConsoleFrontEnd.Interfaces;
+using ConsoleFrontEnd.Services;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 
@@ -11,11 +13,13 @@ public class LocationUI : ILocationUi
 {
     private readonly IConsoleDisplayService _display;
     private readonly UiHelper _uiHelper;
+    private readonly ILocationService _locationService;
 
-    public LocationUI(IConsoleDisplayService display, ILogger<LocationUI> logger)
+    public LocationUI(IConsoleDisplayService display, ILogger<LocationUI> logger, ILocationService locationService)
     {
         _display = display;
         _uiHelper = new UiHelper(display, logger);
+        _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
     }
 
     public Location CreateLocationUi()
@@ -81,13 +85,53 @@ public class LocationUI : ILocationUi
         _display.DisplayTable(locations, "Locations");
     }
 
-    public int GetLocationByIdUi()
+    public async Task<int> GetLocationByIdUi()
     {
-        return AnsiConsole.Ask<int>("[green]Enter location ID:[/]");
+        _display.DisplayHeader("Select Location", "blue");
+
+        var response = await _locationService.GetAllLocationsAsync().ConfigureAwait(false);
+        if (response.RequestFailed || response.Data == null || !response.Data.Any())
+        {
+            _uiHelper.DisplayValidationError(response.Message ?? "No locations available.");
+            // Fallback to manual entry
+            return AnsiConsole.Ask<int>("[green]Enter location ID:[/]");
+        }
+
+        var choices = response.Data
+            .Select(l => $"{l.LocationId}: {l.Name} - {l.Town}, {l.Country}")
+            .ToArray();
+
+        var selected = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Select Location:")
+                .AddChoices(choices)
+        );
+
+        return UiHelper.ExtractIdFromChoice(selected);
     }
 
-    public int SelectLocation()
+    public async Task<int> SelectLocation()
     {
-        return AnsiConsole.Ask<int>("[green]Select location ID:[/]");
+        _display.DisplayHeader("Select Location", "blue");
+
+        var response = await _locationService.GetAllLocationsAsync().ConfigureAwait(false);
+        if (response.RequestFailed || response.Data == null || !response.Data.Any())
+        {
+            _uiHelper.DisplayValidationError(response.Message ?? "No locations available.");
+            // Fallback to manual entry
+            return AnsiConsole.Ask<int>("[green]Select location ID:[/]");
+        }
+
+        var choices = response.Data
+            .Select(l => $"{l.LocationId}: {l.Name} - {l.Town}, {l.Country}")
+            .ToArray();
+
+        var selected = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Select Location:")
+                .AddChoices(choices)
+        );
+
+        return UiHelper.ExtractIdFromChoice(selected);
     }
 }

@@ -4,6 +4,7 @@ using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.FilterOptions;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
+using System.Threading.Tasks;
 
 namespace ConsoleFrontEnd.MenuSystem;
 
@@ -11,20 +12,24 @@ public class ShiftUI : IShiftUi
 {
     private readonly IConsoleDisplayService _display;
     private readonly UiHelper _uiHelper;
+    private readonly ShiftInputHelper _shiftInputHelper;
+    private readonly ConsoleFrontEnd.Interfaces.IShiftService _shiftService;
 
-    public ShiftUI(IConsoleDisplayService display, ILogger<ShiftUI> logger)
+    public ShiftUI(IConsoleDisplayService display, ILogger<ShiftUI> logger, ShiftInputHelper shiftInputHelper, ConsoleFrontEnd.Interfaces.IShiftService shiftService)
     {
         _display = display;
         _uiHelper = new UiHelper(display, logger);
+        _shiftInputHelper = shiftInputHelper ?? throw new ArgumentNullException(nameof(shiftInputHelper));
+        _shiftService = shiftService ?? throw new ArgumentNullException(nameof(shiftService));
     }
 
-    public Shift CreateShiftUi(int workerId)
+    public async Task<Shift> CreateShiftUi(int workerId)
     {
         _display.DisplayHeader("Create New Shift");
 
-        var start = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift start (dd/MM/yyyy HH:mm):[/]");
-        var end = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift end (dd/MM/yyyy HH:mm):[/]");
-        var locationId = AnsiConsole.Ask<int>("[green]Enter location ID:[/]");
+        var start = _shiftInputHelper.GetDateTimeInput("Start Time");
+        var end = _shiftInputHelper.GetDateTimeInput("End Time");
+        var locationId = await _shiftInputHelper.SelectLocationAsync(null, false).ConfigureAwait(false);
 
         return new Shift
         {
@@ -36,13 +41,13 @@ public class ShiftUI : IShiftUi
         };
     }
 
-    public Shift UpdateShiftUi(Shift existingShift)
+    public async Task<Shift> UpdateShiftUi(Shift existingShift)
     {
         _display.DisplayHeader($"Update Shift ID: {existingShift.Id}");
 
-        var start = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift start (dd/MM/yyyy HH:mm):[/]", existingShift.Start);
-        var end = AnsiConsole.Ask<DateTimeOffset>("[green]Enter shift end (dd/MM/yyyy HH:mm):[/]", existingShift.End);
-        var locationId = AnsiConsole.Ask<int>("[green]Enter location ID:[/]", existingShift.LocationId);
+        var start = _shiftInputHelper.GetDateTimeInput("Start Time", existingShift.Start, true);
+        var end = _shiftInputHelper.GetDateTimeInput("End Time", existingShift.End, true);
+        var locationId = await _shiftInputHelper.SelectLocationAsync(existingShift.LocationId, true).ConfigureAwait(false);
 
         return new Shift
         {
@@ -54,14 +59,40 @@ public class ShiftUI : IShiftUi
         };
     }
 
-    public ShiftFilterOptions FilterShiftsUi()
+    public async Task<ShiftFilterOptions> FilterShiftsUi()
     {
         _display.DisplayHeader("Filter Shifts");
 
-        var workerId = _uiHelper.GetOptionalIntInput("Filter by worker ID");
-        var locationId = _uiHelper.GetOptionalIntInput("Filter by location ID");
-        var startDate = _uiHelper.GetOptionalDateTimeInput("Filter by start date");
-        var endDate = _uiHelper.GetOptionalDateTimeInput("Filter by end date");
+        int? workerId = null;
+        var filterByWorker = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Filter by worker?")
+                .AddChoices(new[] { "No", "Yes" })
+        );
+        if (filterByWorker == "Yes")
+            workerId = await _shiftInputHelper.SelectWorkerAsync(null, false).ConfigureAwait(false);
+
+        int? locationId = null;
+        var filterByLocation = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Filter by location?")
+                .AddChoices(new[] { "No", "Yes" })
+        );
+        if (filterByLocation == "Yes")
+            locationId = await _shiftInputHelper.SelectLocationAsync(null, false).ConfigureAwait(false);
+
+        DateTime? startDate = null;
+        DateTime? endDate = null;
+        var wantDates = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Filter by date range?")
+                .AddChoices(new[] { "No", "Yes" })
+        );
+        if (wantDates == "Yes")
+        {
+            startDate = _shiftInputHelper.GetDateTimeInput("Start Date").DateTime;
+            endDate = _shiftInputHelper.GetDateTimeInput("End Date").DateTime;
+        }
 
         return new ShiftFilterOptions
         {
@@ -77,8 +108,28 @@ public class ShiftUI : IShiftUi
         _display.DisplayTable(shifts, "Shifts");
     }
 
-    public int GetShiftByIdUi()
+    public async Task<int> GetShiftByIdUi()
     {
-        return AnsiConsole.Ask<int>("[green]Enter shift ID:[/]");
+    _display.DisplayHeader("Select Shift", "blue");
+
+        var response = await _shiftService.GetAllShiftsAsync().ConfigureAwait(false);
+        if (response.RequestFailed || response.Data == null || !response.Data.Any())
+        {
+            _uiHelper.DisplayValidationError(response.Message ?? "No shifts available.");
+            // Fallback to manual entry
+            return AnsiConsole.Ask<int>("[green]Enter shift ID:[/]");
+        }
+
+        var choices = response.Data
+            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm}")
+            .ToArray();
+
+        var selected = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Select Shift:")
+                .AddChoices(choices)
+        );
+
+        return UiHelper.ExtractIdFromChoice(selected);
     }
 }

@@ -9,6 +9,6 @@ public interface IWorkerUi
     Worker UpdateWorkerUi(Worker existingWorker);
     WorkerFilterOptions FilterWorkersUi();
     void DisplayWorkersTable(IEnumerable<Worker> workers);
-    int GetWorkerByIdUi();
-    int SelectWorker();
+    Task<int> GetWorkerByIdUi();
+    Task<int> SelectWorker();
 }
