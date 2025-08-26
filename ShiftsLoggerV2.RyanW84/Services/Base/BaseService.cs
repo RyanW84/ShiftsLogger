@@ -24,7 +24,7 @@ public abstract class BaseService<TEntity, TFilter, TCreateDto, TUpdateDto>
     public virtual async Task<Result<List<TEntity>>> GetAllAsync(TFilter filterOptions)
     {
         // Add any business logic validation here if needed
-        return await Repository.GetAllAsync(filterOptions);
+        return await Repository.GetAllAsync(filterOptions).ConfigureAwait(false);
     }
 
     public virtual async Task<Result<TEntity>> GetByIdAsync(int id)
@@ -33,7 +33,7 @@ public abstract class BaseService<TEntity, TFilter, TCreateDto, TUpdateDto>
         if (id <= 0)
             return Result<TEntity>.Failure("ID must be greater than zero.");
 
-        return await Repository.GetByIdAsync(id);
+        return await Repository.GetByIdAsync(id).ConfigureAwait(false);
     }
 
     public virtual async Task<Result<TEntity>> CreateAsync(TCreateDto createDto)
@@ -65,11 +65,11 @@ public abstract class BaseService<TEntity, TFilter, TCreateDto, TUpdateDto>
         if (id <= 0)
             return Result.Failure("ID must be greater than zero.");
 
-        var validationResult = await ValidateForDeleteAsync(id);
+        var validationResult = await ValidateForDeleteAsync(id).ConfigureAwait(false);
         if (validationResult.IsFailure)
             return Result.Failure(validationResult.Message);
 
-        return await Repository.DeleteAsync(id);
+        return await Repository.DeleteAsync(id).ConfigureAwait(false);
     }
 
     // Virtual methods for business logic validation - can be overridden by derived classes

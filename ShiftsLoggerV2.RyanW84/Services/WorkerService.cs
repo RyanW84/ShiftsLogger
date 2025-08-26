@@ -16,7 +16,7 @@ public class WorkerService(IWorkerRepository workerRepository) : IWorkerService
         WorkerFilterOptions workerOptions
     )
     {
-        var result = await _workerRepository.GetAllAsync(workerOptions);
+        var result = await _workerRepository.GetAllAsync(workerOptions).ConfigureAwait(false);
         return new ApiResponseDto<List<Worker>>
         {
             RequestFailed = result.IsFailure,
@@ -28,7 +28,7 @@ public class WorkerService(IWorkerRepository workerRepository) : IWorkerService
 
     public async Task<ApiResponseDto<Worker>> GetWorkerById(int id)
     {
-        var result = await _workerRepository.GetByIdAsync(id);
+        var result = await _workerRepository.GetByIdAsync(id).ConfigureAwait(false);
         if (result.IsFailure || result.Data is null)
             return new ApiResponseDto<Worker>
             {
@@ -51,7 +51,7 @@ public class WorkerService(IWorkerRepository workerRepository) : IWorkerService
     {
         try
         {
-            var result = await _workerRepository.CreateAsync(worker);
+            var result = await _workerRepository.CreateAsync(worker).ConfigureAwait(false);
             if (result.IsFailure)
                 return new ApiResponseDto<Worker>
                 {
@@ -88,7 +88,7 @@ public class WorkerService(IWorkerRepository workerRepository) : IWorkerService
         WorkerApiRequestDto updatedWorker
     )
     {
-        var result = await _workerRepository.UpdateAsync(id, updatedWorker);
+        var result = await _workerRepository.UpdateAsync(id, updatedWorker).ConfigureAwait(false);
         if (result.IsFailure)
             return new ApiResponseDto<Worker?>
             {
@@ -109,7 +109,7 @@ public class WorkerService(IWorkerRepository workerRepository) : IWorkerService
 
     public async Task<ApiResponseDto<string?>> DeleteWorker(int id)
     {
-        var result = await _workerRepository.DeleteAsync(id);
+        var result = await _workerRepository.DeleteAsync(id).ConfigureAwait(false);
         return new ApiResponseDto<string?>
         {
             RequestFailed = result.IsFailure,

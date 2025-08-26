@@ -82,12 +82,12 @@ public class ApiServiceHelper
             var fullEndpoint = $"{endpoint}/{id}";
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{fullEndpoint}");
 
-            var response = await _httpClient.GetAsync(fullEndpoint);
+            var response = await _httpClient.GetAsync(fullEndpoint).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<T>(
                 response,
                 _logger,
                 $"Get {entityName} by ID"
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -105,12 +105,12 @@ public class ApiServiceHelper
         {
             _logger.LogInformation("Making POST request to: {RequestUrl}", $"{_httpClient.BaseAddress}{endpoint}");
 
-            var response = await _httpClient.PostAsJsonAsync(endpoint, entity);
+            var response = await _httpClient.PostAsJsonAsync(endpoint, entity).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<T>(
                 response,
                 _logger,
                 $"Create {entityName}"
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -129,12 +129,12 @@ public class ApiServiceHelper
             var fullEndpoint = $"{endpoint}/{id}";
             _logger.LogInformation("Making PUT request to: {RequestUrl}", $"{_httpClient.BaseAddress}{fullEndpoint}");
 
-            var response = await _httpClient.PutAsJsonAsync(fullEndpoint, entity);
+            var response = await _httpClient.PutAsJsonAsync(fullEndpoint, entity).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<T>(
                 response,
                 _logger,
                 $"Update {entityName}"
-            );
+            ).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -153,12 +153,12 @@ public class ApiServiceHelper
             var fullEndpoint = $"{endpoint}/{id}";
             _logger.LogInformation("Making DELETE request to: {RequestUrl}", $"{_httpClient.BaseAddress}{fullEndpoint}");
 
-            var response = await _httpClient.DeleteAsync(fullEndpoint);
+            var response = await _httpClient.DeleteAsync(fullEndpoint).ConfigureAwait(false);
             var result = await HttpResponseHelper.HandleHttpResponseAsync<bool>(
                 response,
                 _logger,
                 $"Delete {entityName}"
-            );
+            ).ConfigureAwait(false);
 
             // If no specific response body, mark as successful if status is success
             if (response.IsSuccessStatusCode && !result.RequestFailed && !result.Data)

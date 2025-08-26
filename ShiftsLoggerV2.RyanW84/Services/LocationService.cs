@@ -16,7 +16,7 @@ public class LocationService(ILocationRepository locationRepository) : ILocation
         LocationFilterOptions locationOptions
     )
     {
-        var result = await _locationRepository.GetAllAsync(locationOptions);
+        var result = await _locationRepository.GetAllAsync(locationOptions).ConfigureAwait(false);
         return new ApiResponseDto<List<Location>>
         {
             RequestFailed = result.IsFailure,
@@ -28,7 +28,7 @@ public class LocationService(ILocationRepository locationRepository) : ILocation
 
     public async Task<ApiResponseDto<Location>> GetLocationById(int id)
     {
-        var result = await _locationRepository.GetByIdAsync(id);
+        var result = await _locationRepository.GetByIdAsync(id).ConfigureAwait(false);
     if (result.IsFailure || result.Data is null)
             return new ApiResponseDto<Location>
             {
@@ -51,7 +51,7 @@ public class LocationService(ILocationRepository locationRepository) : ILocation
     {
         try
         {
-            var result = await _locationRepository.CreateAsync(location);
+            var result = await _locationRepository.CreateAsync(location).ConfigureAwait(false);
             if (result.IsFailure)
                 return new ApiResponseDto<Location>
                 {
@@ -88,7 +88,7 @@ public class LocationService(ILocationRepository locationRepository) : ILocation
         LocationApiRequestDto updatedLocation
     )
     {
-        var result = await _locationRepository.UpdateAsync(id, updatedLocation);
+        var result = await _locationRepository.UpdateAsync(id, updatedLocation).ConfigureAwait(false);
         if (result.IsFailure)
             return new ApiResponseDto<Location>
             {
@@ -109,7 +109,7 @@ public class LocationService(ILocationRepository locationRepository) : ILocation
 
     public async Task<ApiResponseDto<string?>> DeleteLocation(int id)
     {
-        var result = await _locationRepository.DeleteAsync(id);
+        var result = await _locationRepository.DeleteAsync(id).ConfigureAwait(false);
         return new ApiResponseDto<string?>
         {
             RequestFailed = result.IsFailure,

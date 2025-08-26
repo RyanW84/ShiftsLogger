@@ -32,7 +32,7 @@ public class ShiftService : IShiftService
             return await HttpResponseHelper.HandleHttpResponseAsync<List<Shift>>(
                 response,
                 _logger,
-                "Get Shifts By Filter",
+                "Get Shifts by Filter",
                 []
             ).ConfigureAwait(false);
         }

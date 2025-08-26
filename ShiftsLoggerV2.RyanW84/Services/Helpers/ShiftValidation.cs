@@ -55,7 +55,7 @@ public class ShiftValidation : BaseService<Shift, ShiftFilterOptions, ShiftApiRe
     protected override async ValueTask<Result> ValidateForUpdateAsync(int id, ShiftApiRequestDto updateDto)
     {
         // Business logic validation for shift updates
-        var createValidation = await ValidateForCreateAsync(updateDto);
+        var createValidation = await ValidateForCreateAsync(updateDto).ConfigureAwait(false);
         if (createValidation.IsFailure)
             return createValidation;
 
