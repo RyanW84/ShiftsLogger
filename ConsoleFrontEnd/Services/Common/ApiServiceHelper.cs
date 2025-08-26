@@ -42,18 +42,33 @@ public class ApiServiceHelper
         {
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{endpoint}");
 
-            var response = await _httpClient.GetAsync(endpoint);
+            var response = await _httpClient.GetAsync(endpoint).ConfigureAwait(false);
             return await HttpResponseHelper.HandleHttpResponseAsync<List<T>>(
                 response,
                 _logger,
                 $"Get All {entityName}",
                 []
-            );
+            ).ConfigureAwait(false);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "HTTP request failed while fetching {EntityName} from API", entityName);
+            return CreateErrorResponse<List<T>>($"Network Error: {ex.Message}", []);
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            _logger.LogError(ex, "Request timeout while fetching {EntityName} from API", entityName);
+            return CreateErrorResponse<List<T>>($"Request timed out while fetching {entityName}", []);
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Request was cancelled while fetching {EntityName} from API", entityName);
+            return CreateErrorResponse<List<T>>($"Request was cancelled", []);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while fetching {EntityName} from API", entityName);
-            return CreateErrorResponse<List<T>>($"Connection Error: {ex.Message}", []);
+            _logger.LogError(ex, "Unexpected error occurred while fetching {EntityName} from API", entityName);
+            return CreateErrorResponse<List<T>>($"Unexpected Error: {ex.Message}", []);
         }
     }
 

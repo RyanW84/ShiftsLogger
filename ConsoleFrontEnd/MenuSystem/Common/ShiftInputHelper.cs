@@ -37,7 +37,7 @@ public class ShiftInputHelper
     public async Task<int> SelectWorkerAsync(int? currentWorkerId, bool allowKeepCurrent = false)
     {
         var workersResponse = await _workerService.GetAllWorkersAsync();
-        var workers = workersResponse.Data ?? new List<Worker>();
+        var workers = workersResponse.Data ?? [];
 
         if (allowKeepCurrent && currentWorkerId.HasValue)
         {
@@ -46,7 +46,7 @@ public class ShiftInputHelper
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine($"[yellow]Current worker:[/] {currentName}");
             
-            var choices = new List<string> { "(Keep current)" };
+            List<string> choices = ["(Keep current)"];
             choices.AddRange(workers.Select(w => w.Name));
             
             var selected = AnsiConsole.Prompt(
@@ -79,7 +79,7 @@ public class ShiftInputHelper
     public async Task<int> SelectLocationAsync(int? currentLocationId, bool allowKeepCurrent = false)
     {
         var locationsResponse = await _locationService.GetAllLocationsAsync();
-        var locations = locationsResponse.Data ?? new List<Location>();
+        var locations = locationsResponse.Data ?? [];
 
         if (allowKeepCurrent && currentLocationId.HasValue)
         {
@@ -88,7 +88,7 @@ public class ShiftInputHelper
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine($"[yellow]Current location:[/] {currentName}");
             
-            var choices = new List<string> { "(Keep current)" };
+            List<string> choices = ["(Keep current)"];
             choices.AddRange(locations.Select(l => l.Name));
             
             var selected = AnsiConsole.Prompt(

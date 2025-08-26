@@ -55,13 +55,28 @@ public abstract class BaseApiService<T, TFilter, TKey> : IApiService<T, TFilter,
                 response,
                 _logger,
                 $"Get All {EntityName}",
-                new List<T>()
+                []
             );
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "HTTP request error while fetching {EntityName} from API", EntityName);
+            return CreateErrorResponse<List<T>>($"Connection Error: {ex.Message}", []);
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            _logger.LogError(ex, "Request timeout while fetching {EntityName} from API", EntityName);
+            return CreateErrorResponse<List<T>>("Request timed out. Please try again.", []);
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Request was cancelled while fetching {EntityName} from API", EntityName);
+            return CreateErrorResponse<List<T>>("Request was cancelled.", []);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while fetching {EntityName} from API", EntityName);
-            return CreateErrorResponse<List<T>>($"Connection Error: {ex.Message}", new List<T>());
+            _logger.LogError(ex, "Unexpected error occurred while fetching {EntityName} from API", EntityName);
+            return CreateErrorResponse<List<T>>($"Unexpected Error: {ex.Message}", []);
         }
     }
 
@@ -178,7 +193,7 @@ public abstract class BaseApiService<T, TFilter, TKey> : IApiService<T, TFilter,
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error filtering {EntityName}", EntityName);
-            return CreateErrorResponse<List<T>>($"Filter Error: {ex.Message}", new List<T>());
+            return CreateErrorResponse<List<T>>($"Filter Error: {ex.Message}", []);
         }
     }
 

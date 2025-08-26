@@ -39,11 +39,11 @@ public abstract class BaseService<TEntity, TFilter, TCreateDto, TUpdateDto>
     public virtual async Task<Result<TEntity>> CreateAsync(TCreateDto createDto)
     {
         // Add any business logic validation here if needed
-        var validationResult = await ValidateForCreateAsync(createDto);
+        var validationResult = await ValidateForCreateAsync(createDto).ConfigureAwait(false);
         if (validationResult.IsFailure)
             return Result<TEntity>.Failure(validationResult.Message);
 
-        return await Repository.CreateAsync(createDto);
+        return await Repository.CreateAsync(createDto).ConfigureAwait(false);
     }
 
     public virtual async Task<Result<TEntity>> UpdateAsync(int id, TUpdateDto updateDto)
@@ -52,11 +52,11 @@ public abstract class BaseService<TEntity, TFilter, TCreateDto, TUpdateDto>
         if (id <= 0)
             return Result<TEntity>.Failure("ID must be greater than zero.");
 
-        var validationResult = await ValidateForUpdateAsync(id, updateDto);
+        var validationResult = await ValidateForUpdateAsync(id, updateDto).ConfigureAwait(false);
         if (validationResult.IsFailure)
             return Result<TEntity>.Failure(validationResult.Message);
 
-        return await Repository.UpdateAsync(id, updateDto);
+        return await Repository.UpdateAsync(id, updateDto).ConfigureAwait(false);
     }
 
     public virtual async Task<Result> DeleteAsync(int id)
@@ -73,16 +73,14 @@ public abstract class BaseService<TEntity, TFilter, TCreateDto, TUpdateDto>
     }
 
     // Virtual methods for business logic validation - can be overridden by derived classes
-    protected virtual async Task<Result> ValidateForCreateAsync(TCreateDto createDto)
+    protected virtual ValueTask<Result> ValidateForCreateAsync(TCreateDto createDto)
     {
-        await Task.CompletedTask; // Placeholder for async consistency
-        return Result.Success();
+        return ValueTask.FromResult(Result.Success());
     }
 
-    protected virtual async Task<Result> ValidateForUpdateAsync(int id, TUpdateDto updateDto)
+    protected virtual ValueTask<Result> ValidateForUpdateAsync(int id, TUpdateDto updateDto)
     {
-        await Task.CompletedTask; // Placeholder for async consistency
-        return Result.Success();
+        return ValueTask.FromResult(Result.Success());
     }
 
     protected virtual async Task<Result> ValidateForDeleteAsync(int id)

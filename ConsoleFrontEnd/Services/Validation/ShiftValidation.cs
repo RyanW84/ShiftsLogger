@@ -9,7 +9,7 @@ public static class ShiftValidation
 {
     public static List<string> Validate(ShiftApiRequestDto dto)
     {
-        var errors = new List<string>();
+        List<string> errors = [];
         if (dto.WorkerId <= 0)
             errors.Add("WorkerId must be greater than zero.");
         if (dto.LocationId <= 0)

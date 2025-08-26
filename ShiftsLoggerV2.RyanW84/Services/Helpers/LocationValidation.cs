@@ -21,25 +21,25 @@ public class LocationValidation : BaseService<Location, LocationFilterOptions, L
         _locationRepository = locationRepository;
     }
 
-    protected override Task<Result> ValidateForCreateAsync(LocationApiRequestDto createDto)
+    protected override ValueTask<Result> ValidateForCreateAsync(LocationApiRequestDto createDto)
     {
         // Business logic validation for location creation
         var validationResult = ValidateLocationData(createDto);
         if (validationResult.IsFailure)
-            return Task.FromResult(validationResult);
+            return ValueTask.FromResult(validationResult);
 
-        return Task.FromResult(Result.Success());
+        return ValueTask.FromResult(Result.Success());
     }
 
-    protected override async Task<Result> ValidateForUpdateAsync(int id, LocationApiRequestDto updateDto)
+    protected override async ValueTask<Result> ValidateForUpdateAsync(int id, LocationApiRequestDto updateDto)
     {
         // Business logic validation for location updates
-        var createValidation = await ValidateForCreateAsync(updateDto);
+        var createValidation = await ValidateForCreateAsync(updateDto).ConfigureAwait(false);
         if (createValidation.IsFailure)
             return createValidation;
 
         // Check if location has active shifts before major updates
-        var locationResult = await _locationRepository.GetByIdAsync(id);
+        var locationResult = await _locationRepository.GetByIdAsync(id).ConfigureAwait(false);
         if (locationResult.IsFailure)
             return locationResult;
 

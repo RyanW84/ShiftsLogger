@@ -21,54 +21,54 @@ public class WorkerValidation : BaseService<Worker, WorkerFilterOptions, WorkerA
         _workerRepository = workerRepository;
     }
 
-    protected override Task<Result> ValidateForCreateAsync(WorkerApiRequestDto createDto)
+    protected override ValueTask<Result> ValidateForCreateAsync(WorkerApiRequestDto createDto)
     {
         // Business logic validation for worker creation
         if (string.IsNullOrWhiteSpace(createDto.Name))
-            return Task.FromResult(Result.Failure("Worker name is required."));
+            return ValueTask.FromResult(Result.Failure("Worker name is required."));
 
         if (createDto.Name.Length < 1)
-            return Task.FromResult(Result.Failure("Worker name must be at least 1 character long."));
+            return ValueTask.FromResult(Result.Failure("Worker name must be at least 1 character long."));
 
         if (createDto.Name.Length > 100)
-            return Task.FromResult(Result.Failure("Worker name cannot exceed 100 characters."));
+            return ValueTask.FromResult(Result.Failure("Worker name cannot exceed 100 characters."));
 
         // Email validation - more forgiving
         if (!string.IsNullOrWhiteSpace(createDto.Email))
         {
             if (!IsValidEmail(createDto.Email))
-                return Task.FromResult(Result.Failure("Email must be in basic format: user@domain.extension"));
+                return ValueTask.FromResult(Result.Failure("Email must be in basic format: user@domain.extension"));
 
             if (createDto.Email.Length > 254)
-                return Task.FromResult(Result.Failure("Email address cannot exceed 254 characters."));
+                return ValueTask.FromResult(Result.Failure("Email address cannot exceed 254 characters."));
         }
 
         // Phone number validation - more forgiving
         if (!string.IsNullOrWhiteSpace(createDto.PhoneNumber))
         {
             if (!IsValidPhoneNumber(createDto.PhoneNumber))
-                return Task.FromResult(Result.Failure("Phone number must contain at least 10 digits."));
+                return ValueTask.FromResult(Result.Failure("Phone number must contain at least 10 digits."));
 
             if (createDto.PhoneNumber.Length > 20)
-                return Task.FromResult(Result.Failure("Phone number cannot exceed 20 characters."));
+                return ValueTask.FromResult(Result.Failure("Phone number cannot exceed 20 characters."));
         }
 
         // At least one contact method required
         if (string.IsNullOrWhiteSpace(createDto.Email) && string.IsNullOrWhiteSpace(createDto.PhoneNumber))
-            return Task.FromResult(Result.Failure("At least one contact method (email or phone) is required."));
+            return ValueTask.FromResult(Result.Failure("At least one contact method (email or phone) is required."));
 
-        return Task.FromResult(Result.Success());
+        return ValueTask.FromResult(Result.Success());
     }
 
-    protected override async Task<Result> ValidateForUpdateAsync(int id, WorkerApiRequestDto updateDto)
+    protected override async ValueTask<Result> ValidateForUpdateAsync(int id, WorkerApiRequestDto updateDto)
     {
         // Business logic validation for worker updates
-        var createValidation = await ValidateForCreateAsync(updateDto);
+        var createValidation = await ValidateForCreateAsync(updateDto).ConfigureAwait(false);
         if (createValidation.IsFailure)
             return createValidation;
 
         // Check if worker has active shifts before major updates
-        var workerResult = await _workerRepository.GetByIdAsync(id);
+        var workerResult = await _workerRepository.GetByIdAsync(id).ConfigureAwait(false);
         if (workerResult.IsFailure)
             return workerResult;
 

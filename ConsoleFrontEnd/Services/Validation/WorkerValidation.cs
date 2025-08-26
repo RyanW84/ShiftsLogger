@@ -9,7 +9,7 @@ public static class WorkerValidation
 {
     public static List<string> Validate(WorkerApiRequestDto dto)
     {
-        var errors = new List<string>();
+        List<string> errors = [];
         if (string.IsNullOrWhiteSpace(dto.Name))
             errors.Add("Worker name is required.");
         if (dto.Name.Length < 1)

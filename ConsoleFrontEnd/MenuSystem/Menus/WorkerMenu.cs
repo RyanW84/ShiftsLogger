@@ -1,5 +1,6 @@
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Core.Abstractions;
+using ConsoleFrontEnd.MenuSystem.Common;
 using ConsoleFrontEnd.Services;
 using ConsoleFrontEnd.Models.FilterOptions;
 using Microsoft.Extensions.Logging;
@@ -172,7 +173,7 @@ public class WorkerMenu : BaseMenu
         }
         var workerChoices = allWorkersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
         var selected = InputService.GetMenuChoice("Select a worker by ID:", workerChoices);
-        var workerId = int.Parse(selected.Split(':')[0]);
+        var workerId = UiHelper.ExtractIdFromChoice(selected);
         var response = await _workerService.GetWorkerByIdAsync(workerId);
         DisplayService.DisplayHeader($"Worker Details (ID: {workerId})", "blue");
         if (response.RequestFailed || response.Data == null)
@@ -181,7 +182,7 @@ public class WorkerMenu : BaseMenu
         }
         else
         {
-            DisplayService.DisplayTable(new List<Worker> { response.Data }, "Worker Details");
+            DisplayService.DisplayTable([response.Data], "Worker Details");
             DisplayService.DisplaySuccess("Worker details loaded successfully.");
         }
         InputService.WaitForKeyPress();
@@ -235,7 +236,7 @@ public class WorkerMenu : BaseMenu
         }
         var workerChoices = allWorkersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
         var selected = InputService.GetMenuChoice("Select a worker to update:", workerChoices);
-        var workerId = int.Parse(selected.Split(':')[0]);
+        var workerId = UiHelper.ExtractIdFromChoice(selected);
         var worker = allWorkersResponse.Data.First(w => w.WorkerId == workerId);
         var name = InputService.GetTextInput($"Enter new name (current: {worker.Name}):", false);
         var email = InputService.GetTextInput($"Enter new email (current: {worker.Email}):", false);
@@ -255,7 +256,7 @@ public class WorkerMenu : BaseMenu
         else
         {
             DisplayService.DisplaySuccess("Worker updated successfully.");
-            DisplayService.DisplayTable(new List<Worker> { response.Data }, "Updated Worker");
+            DisplayService.DisplayTable([response.Data], "Updated Worker");
         }
         InputService.WaitForKeyPress();
     }
@@ -272,7 +273,7 @@ public class WorkerMenu : BaseMenu
         }
         var workerChoices = allWorkersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
         var selected = InputService.GetMenuChoice("Select a worker to delete:", workerChoices);
-        var workerId = int.Parse(selected.Split(':')[0]);
+        var workerId = UiHelper.ExtractIdFromChoice(selected);
         if (InputService.GetConfirmation($"Are you sure you want to delete worker {workerId}?"))
         {
             var response = await _workerService.DeleteWorkerAsync(workerId);

@@ -1,5 +1,6 @@
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Core.Abstractions;
+using ConsoleFrontEnd.MenuSystem.Common;
 using ConsoleFrontEnd.Services;
 using ConsoleFrontEnd.Models.FilterOptions;
 using Microsoft.Extensions.Logging;
@@ -172,7 +173,7 @@ public class LocationMenu : BaseMenu
         }
         var locationChoices = allLocationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
         var selected = InputService.GetMenuChoice("Select a location by ID:", locationChoices);
-        var locationId = int.Parse(selected.Split(':')[0]);
+        var locationId = UiHelper.ExtractIdFromChoice(selected);
         var response = await _locationService.GetLocationByIdAsync(locationId);
         DisplayService.DisplayHeader($"Location Details (ID: {locationId})", "blue");
         if (response.RequestFailed || response.Data == null)
@@ -181,7 +182,7 @@ public class LocationMenu : BaseMenu
         }
         else
         {
-            DisplayService.DisplayTable(new List<Location> { response.Data }, "Location Details");
+            DisplayService.DisplayTable([response.Data], "Location Details");
             DisplayService.DisplaySuccess("Location details loaded successfully.");
         }
         InputService.WaitForKeyPress();
@@ -230,7 +231,7 @@ public class LocationMenu : BaseMenu
         }
         var locationChoices = allLocationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
         var selected = InputService.GetMenuChoice("Select a location to update:", locationChoices);
-        var locationId = int.Parse(selected.Split(':')[0]);
+        var locationId = UiHelper.ExtractIdFromChoice(selected);
         var location = allLocationsResponse.Data.First(l => l.LocationId == locationId);
         var name = InputService.GetTextInput($"Enter new name (current: {location.Name}):", false);
         var address = InputService.GetTextInput($"Enter new address (current: {location.Address}):", false);
@@ -256,7 +257,7 @@ public class LocationMenu : BaseMenu
         else
         {
             DisplayService.DisplaySuccess("Location updated successfully.");
-            DisplayService.DisplayTable(new List<Location> { response.Data }, "Updated Location");
+            DisplayService.DisplayTable([response.Data], "Updated Location");
         }
         InputService.WaitForKeyPress();
     }
@@ -273,7 +274,7 @@ public class LocationMenu : BaseMenu
         }
         var locationChoices = allLocationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
         var selected = InputService.GetMenuChoice("Select a location to delete:", locationChoices);
-        var locationId = int.Parse(selected.Split(':')[0]);
+        var locationId = UiHelper.ExtractIdFromChoice(selected);
         if (InputService.GetConfirmation($"Are you sure you want to delete location {locationId}?"))
         {
             var response = await _locationService.DeleteLocationAsync(locationId);

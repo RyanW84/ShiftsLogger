@@ -31,7 +31,7 @@ public class WorkerService : IWorkerService
                 response,
                 _logger,
                 "Get Workers By Filter",
-                new List<Worker>()
+                []
             );
         }
         catch (Exception ex)
@@ -39,7 +39,7 @@ public class WorkerService : IWorkerService
             _logger.LogError(ex, "Error filtering workers via API");
             return new ApiResponseDto<List<Worker>>($"Filter Error: {ex.Message}")
             {
-                Data = new List<Worker>(),
+                Data = [],
                 RequestFailed = true,
                 ResponseCode = System.Net.HttpStatusCode.InternalServerError
             };
@@ -48,7 +48,7 @@ public class WorkerService : IWorkerService
 
     private string BuildWorkerFilterQuery(ConsoleFrontEnd.Models.FilterOptions.WorkerFilterOptions filter)
     {
-        var query = new List<string>();
+        List<string> query = [];
         if (filter.WorkerId.HasValue) query.Add($"WorkerId={filter.WorkerId.Value}");
         if (!string.IsNullOrWhiteSpace(filter.Name)) query.Add($"Name={Uri.EscapeDataString(filter.Name)}");
         if (!string.IsNullOrWhiteSpace(filter.Email)) query.Add($"Email={Uri.EscapeDataString(filter.Email)}");

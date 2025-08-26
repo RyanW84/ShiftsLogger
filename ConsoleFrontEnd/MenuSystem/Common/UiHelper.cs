@@ -227,4 +227,17 @@ public class UiHelper
     {
         return GetRequiredIntInput($"Select {entityName.ToLower()} ID");
     }
+
+    /// <summary>
+    /// Extract ID from menu choice string using ReadOnlySpan for better performance
+    /// </summary>
+    public static int ExtractIdFromChoice(string choice)
+    {
+        var span = choice.AsSpan();
+        var colonIndex = span.IndexOf(':');
+        if (colonIndex == -1)
+            throw new ArgumentException("Invalid choice format. Expected 'ID: Name' format.");
+        
+        return int.Parse(span[..colonIndex]);
+    }
 }

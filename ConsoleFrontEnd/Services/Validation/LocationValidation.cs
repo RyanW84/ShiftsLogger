@@ -9,7 +9,7 @@ public static class LocationValidation
 {
     public static List<string> Validate(LocationApiRequestDto dto)
     {
-        var errors = new List<string>();
+        List<string> errors = [];
         if (string.IsNullOrWhiteSpace(dto.Name))
             errors.Add("Location name is required.");
         if (dto.Name.Length < 1)
