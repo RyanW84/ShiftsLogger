@@ -34,11 +34,12 @@ public class WorkersControllerIntegrationTests : IClassFixture<WebApplicationFac
     [Fact]
     public async Task CreateWorker_WithValidData_ShouldCreateWorker()
     {
-        // Arrange
+        // Arrange - Use unique email to avoid conflicts
+        var uniqueId = Guid.NewGuid().ToString("N")[..8];
         var newWorker = new WorkerApiRequestDto
         {
-            Name = "John Doe",
-            Email = "john@example.com"
+            Name = $"Test Worker {uniqueId}",
+            Email = $"test.{uniqueId}@example.com"
         };
 
         // Act
