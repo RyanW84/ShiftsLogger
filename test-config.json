@@ -1,0 +1,29 @@
+{
+  "TestSettings": {
+    "DefaultTimeout": 30000,
+    "DatabaseName": "TestDatabase",
+    "LogLevel": "Information"
+  },
+  "IntegrationTests": {
+    "Enabled": false,
+    "Reason": "Database provider conflicts - need to resolve EF Core registration issue"
+  },
+  "TestCategories": {
+    "Models": {
+      "Enabled": true,
+      "Pattern": "FullyQualifiedName~Models"
+    },
+    "Services": {
+      "Enabled": true,
+      "Pattern": "FullyQualifiedName~Services"
+    },
+    "Controllers": {
+      "Enabled": true,
+      "Pattern": "FullyQualifiedName~Controllers"
+    },
+    "Integration": {
+      "Enabled": false,
+      "Pattern": "FullyQualifiedName~Integration"
+    }
+  }
+}
