@@ -47,13 +47,13 @@ public class ApiServiceHelper
                 response,
                 _logger,
                 $"Get All {entityName}",
-                new List<T>()
+                []
             );
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while fetching {EntityName} from API", entityName);
-            return CreateErrorResponse<List<T>>($"Connection Error: {ex.Message}", new List<T>());
+            return CreateErrorResponse<List<T>>($"Connection Error: {ex.Message}", []);
         }
     }
 
@@ -188,7 +188,7 @@ public class ApiServiceHelper
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error filtering {EntityName}", entityName);
-            return CreateErrorResponse<List<T>>($"Filter Error: {ex.Message}", new List<T>());
+            return CreateErrorResponse<List<T>>($"Filter Error: {ex.Message}", []);
         }
     }
 

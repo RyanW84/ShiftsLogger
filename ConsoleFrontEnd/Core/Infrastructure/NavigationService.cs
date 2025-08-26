@@ -95,10 +95,10 @@ public class NavigationService : INavigationService
         }
     }
 
-    public async Task ExitApplicationAsync()
+    public Task ExitApplicationAsync()
     {
         _logger.LogInformation("Application exit requested");
         _shouldExit = true;
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }

@@ -141,7 +141,7 @@ public class ShiftMenu : BaseMenu
 
         var workerChoices = workersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
         var selectedWorkerChoice = InputService.GetMenuChoice("Select Worker:", workerChoices);
-        var workerId = int.Parse(selectedWorkerChoice.Split(':')[0]);
+        var workerId = int.Parse(selectedWorkerChoice.AsSpan().Slice(0, selectedWorkerChoice.IndexOf(':')));
         var filter = new ShiftFilterOptions { WorkerId = workerId };
         var response = await _shiftService.GetShiftsByFilterAsync(filter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())
@@ -160,8 +160,10 @@ public class ShiftMenu : BaseMenu
     private async Task ViewShiftsByDateRangeAsync()
     {
         DisplayService.DisplayHeader("Shifts by Date Range", "blue");
-        var startDate = InputService.GetDateTimeInput("Enter start date (dd/MM/yyyy HH:mm):");
-        var endDate = InputService.GetDateTimeInput("Enter end date (dd/MM/yyyy HH:mm):");
+        
+        var startDate = _shiftInputHelper.GetDateTimeInput("Enter start date");
+        var endDate = _shiftInputHelper.GetDateTimeInput("Enter end date");
+        
         if (endDate <= startDate)
         {
             DisplayService.DisplayError("End date must be after start date.");
@@ -171,6 +173,7 @@ public class ShiftMenu : BaseMenu
 
         var filter = new ShiftFilterOptions { StartTime = startDate, EndTime = endDate };
         var response = await _shiftService.GetShiftsByFilterAsync(filter);
+        
         if (response.RequestFailed || response.Data == null || !response.Data.Any())
         {
             DisplayService.DisplayError(response.Message ?? "No shifts found in date range.");
@@ -178,7 +181,7 @@ public class ShiftMenu : BaseMenu
         else
         {
             _shiftUi.DisplayShiftsTable(response.Data);
-            DisplayService.DisplaySuccess($"Total shifts: {response.TotalCount}");
+            DisplayService.DisplaySuccess($"Found {response.Data.Count()} shifts in date range");
         }
 
         InputService.WaitForKeyPress();
