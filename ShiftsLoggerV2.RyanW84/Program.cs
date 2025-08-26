@@ -23,10 +23,20 @@ builder.Services.AddControllers()
         opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles
     );
 
-// Configure DbContext based on OS platform
-var connectionString = GetConnectionString(builder.Configuration);
-builder.Services.AddDbContext<ShiftsLoggerDbContext>(options => 
-    options.UseSqlServer(connectionString));
+// Configure DbContext based on environment and OS platform
+if (builder.Environment.EnvironmentName == "Testing")
+{
+    // Use In-Memory database for testing
+    builder.Services.AddDbContext<ShiftsLoggerDbContext>(options =>
+        options.UseInMemoryDatabase("InMemoryTestDb"));
+}
+else
+{
+    // Use SQL Server for development and production
+    var connectionString = GetConnectionString(builder.Configuration);
+    builder.Services.AddDbContext<ShiftsLoggerDbContext>(options => 
+        options.UseSqlServer(connectionString));
+}
 
 // Register all application services
 builder.Services.AddApplicationServices();
