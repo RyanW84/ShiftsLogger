@@ -607,40 +607,19 @@ public class ShiftMenu : BaseMenu
 
     private async Task FilterShiftsAsync()
     {
-        DisplayService.DisplayHeader("Filter Shifts", "blue");
-
-        // Get workers for selection
-        var workersResponse = await _workerService.GetAllWorkersAsync();
-        int? workerId = null;
-        if (workersResponse.Data != null && workersResponse.Data.Any())
+        // Use the new ShiftUI filtering approach for consistent UX
+        var filter = _shiftUi.FilterShiftsUi();
+        
+        // Convert the filter to match the API expectations
+        var apiFilter = new ShiftFilterOptions
         {
-            var workerChoices = new[] { "Any" }.Concat(workersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}")).ToArray();
-            var selectedWorker = InputService.GetMenuChoice("Filter by Worker:", workerChoices);
-            if (selectedWorker != "Any")
-                workerId = int.Parse(selectedWorker.Split(':')[0]);
-        }
-
-        // Get locations for selection
-        var locationsResponse = await _locationService.GetAllLocationsAsync();
-        int? locationId = null;
-        if (locationsResponse.Data != null && locationsResponse.Data.Any())
-        {
-            var locationChoices = new[] { "Any" }.Concat(locationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}")).ToArray();
-            var selectedLocation = InputService.GetMenuChoice("Filter by Location:", locationChoices);
-            if (selectedLocation != "Any")
-                locationId = int.Parse(selectedLocation.Split(':')[0]);
-        }
-
-        var startDate = ConsoleFrontEnd.MenuSystem.InputValidator.GetOptionalDateTime("Filter start date (leave blank for any):");
-        var endDate = ConsoleFrontEnd.MenuSystem.InputValidator.GetOptionalDateTime("Filter end date (leave blank for any):");
-        var filter = new ShiftFilterOptions
-        {
-            WorkerId = workerId,
-            LocationId = locationId,
-            StartTime = startDate,
-            EndTime = endDate
+            WorkerId = filter.WorkerId,
+            LocationId = filter.LocationId,
+            StartTime = filter.StartDate,
+            EndTime = filter.EndDate
         };
-        var response = await _shiftService.GetShiftsByFilterAsync(filter);
+        
+        var response = await _shiftService.GetShiftsByFilterAsync(apiFilter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())
         {
             DisplayService.DisplayError(response.Message ?? "No shifts found matching filter.");

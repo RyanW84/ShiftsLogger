@@ -1,6 +1,8 @@
 using ConsoleFrontEnd.Core.Abstractions;
+using ConsoleFrontEnd.MenuSystem.Common;
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.FilterOptions;
+using Microsoft.Extensions.Logging;
 using Spectre.Console;
 
 namespace ConsoleFrontEnd.MenuSystem;
@@ -8,10 +10,12 @@ namespace ConsoleFrontEnd.MenuSystem;
 public class ShiftUI : IShiftUi
 {
     private readonly IConsoleDisplayService _display;
+    private readonly UiHelper _uiHelper;
 
-    public ShiftUI(IConsoleDisplayService display)
+    public ShiftUI(IConsoleDisplayService display, ILogger<ShiftUI> logger)
     {
         _display = display;
+        _uiHelper = new UiHelper(display, logger);
     }
 
     public Shift CreateShiftUi(int workerId)
@@ -54,10 +58,10 @@ public class ShiftUI : IShiftUi
     {
         _display.DisplayHeader("Filter Shifts");
 
-        var workerId = AnsiConsole.Ask<int?>("[yellow]Filter by worker ID (press Enter to skip):[/]", null);
-        var locationId = AnsiConsole.Ask<int?>("[yellow]Filter by location ID (press Enter to skip):[/]", null);
-        var startDate = AnsiConsole.Ask<DateTime?>("[yellow]Filter by start date (dd/MM/yyyy HH:mm, press Enter to skip):[/]", null);
-        var endDate = AnsiConsole.Ask<DateTime?>("[yellow]Filter by end date (dd/MM/yyyy HH:mm, press Enter to skip):[/]", null);
+        var workerId = _uiHelper.GetOptionalIntInput("Filter by worker ID");
+        var locationId = _uiHelper.GetOptionalIntInput("Filter by location ID");
+        var startDate = _uiHelper.GetOptionalDateTimeInput("Filter by start date");
+        var endDate = _uiHelper.GetOptionalDateTimeInput("Filter by end date");
 
         return new ShiftFilterOptions
         {

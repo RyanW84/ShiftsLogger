@@ -1,6 +1,8 @@
 using ConsoleFrontEnd.Core.Abstractions;
+using ConsoleFrontEnd.MenuSystem.Common;
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.FilterOptions;
+using Microsoft.Extensions.Logging;
 using Spectre.Console;
 
 namespace ConsoleFrontEnd.MenuSystem;
@@ -8,10 +10,12 @@ namespace ConsoleFrontEnd.MenuSystem;
 public class LocationUI : ILocationUi
 {
     private readonly IConsoleDisplayService _display;
+    private readonly UiHelper _uiHelper;
 
-    public LocationUI(IConsoleDisplayService display)
+    public LocationUI(IConsoleDisplayService display, ILogger<LocationUI> logger)
     {
         _display = display;
+        _uiHelper = new UiHelper(display, logger);
     }
 
     public Location CreateLocationUi()
@@ -64,11 +68,11 @@ public class LocationUI : ILocationUi
     {
         _display.DisplayHeader("Filter Locations");
         
-        var name = AnsiConsole.Ask<string>("[yellow]Filter by name (press Enter to skip):[/]", string.Empty);
+        var name = _uiHelper.GetOptionalStringInput("Filter by name");
         
         return new LocationFilterOptions
         {
-            Name = string.IsNullOrWhiteSpace(name) ? null : name
+            Name = name
         };
     }
 

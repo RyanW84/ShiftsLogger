@@ -63,7 +63,12 @@ public class UiHelper
     /// </summary>
     public string? GetOptionalStringInput(string prompt, string? defaultValue = null)
     {
-        var input = AnsiConsole.Ask<string>($"[yellow]{prompt} (press Enter to skip):[/]", defaultValue ?? string.Empty);
+        var fullPrompt = $"[yellow]{prompt} (or press Enter to skip):[/]";
+        var input = AnsiConsole.Prompt(
+            new TextPrompt<string>(fullPrompt)
+                .AllowEmpty()
+                .DefaultValue(defaultValue ?? string.Empty)
+        );
         return string.IsNullOrWhiteSpace(input) ? null : input.Trim();
     }
 
@@ -90,7 +95,14 @@ public class UiHelper
     {
         try
         {
-            var input = AnsiConsole.Ask<string>($"[yellow]{prompt} (dd/MM/yyyy HH:mm, press Enter to skip):[/]", string.Empty);
+            // Use a more explicit prompt to make it clear that Enter skips
+            var fullPrompt = $"[yellow]{prompt} (format: dd/MM/yyyy HH:mm, or press Enter to skip):[/]";
+            var input = AnsiConsole.Prompt(
+                new TextPrompt<string>(fullPrompt)
+                    .AllowEmpty()
+                    .DefaultValue(string.Empty)
+            );
+            
             if (string.IsNullOrWhiteSpace(input))
                 return null;
 
@@ -103,6 +115,36 @@ public class UiHelper
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error getting DateTime input for prompt: {Prompt}", prompt);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Get optional integer input with validation
+    /// </summary>
+    public int? GetOptionalIntInput(string prompt)
+    {
+        try
+        {
+            var fullPrompt = $"[yellow]{prompt} (or press Enter to skip):[/]";
+            var input = AnsiConsole.Prompt(
+                new TextPrompt<string>(fullPrompt)
+                    .AllowEmpty()
+                    .DefaultValue(string.Empty)
+            );
+            
+            if (string.IsNullOrWhiteSpace(input))
+                return null;
+
+            if (int.TryParse(input, out var result))
+                return result;
+
+            DisplayValidationError("Invalid number format. Please enter a valid integer.");
+            return GetOptionalIntInput(prompt); // Retry
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error getting integer input for prompt: {Prompt}", prompt);
             return null;
         }
     }
