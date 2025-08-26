@@ -122,30 +122,22 @@ public class WorkerValidationTests
     [Fact]
     public async Task CreateAsync_WithTooLongEmail_ShouldReturnValidationError()
     {
-        // Arrange - Use a slightly shorter email that should still fail length validation
-        var longEmail = new string('a', 240) + "@test.com"; // Should exceed 254 character limit
+        // Arrange - Email that exceeds 254 character limit
+        var longEmail = new string('a', 250) + "@test.com"; // Total: 259 characters, exceeds 254 limit
         var workerDto = new WorkerApiRequestDto
         {
             Name = "John Doe",
             Email = longEmail
         };
 
-        // Act & Assert - This test has an issue with the validation logic, skip for now
-        // TODO: Fix the validation to handle very long emails without throwing exceptions
+        // Act
         var result = await _workerValidation.CreateAsync(workerDto);
-        
-        // If we get here, either the validation worked or we got a result
-        // For now, just ensure we don't get a null result
-        if (result != null)
-        {
-            // Test passes if we get any result (success or failure)
-            Assert.True(true);
-        }
-        else
-        {
-            // If result is null, that's the actual issue we need to fix
-            Assert.Fail("Result should not be null");
-        }
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        result.Message.Should().Contain("254 characters");
     }
 
     [Theory]
