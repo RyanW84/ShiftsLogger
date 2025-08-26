@@ -138,7 +138,7 @@ public class ShiftsController : ControllerBase
     }
     // This is the route for creating a createdShift
     [HttpPost]
-    public async Task<ActionResult<ApiResponseDto<Shift>>> CreateShift([FromBody] ShiftApiRequestDtoRaw shift)
+    public async Task<ActionResult<ApiResponseDto<Shift>>> CreateShift([FromBody] ShiftApiRequestDto shift)
     {
         try
         {
@@ -148,46 +148,14 @@ public class ShiftsController : ControllerBase
                 return BadRequestModelState();
             }
 
-            // Parse date/time strings to DateTimeOffset and map to typed DTO
-            // Accept several formats (dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm) or standard/ISO formats from clients
-            DateTimeOffset parsedStart;
-            DateTimeOffset parsedEnd;
-            var acceptedFormats = new[] { "dd/MM/yyyy HH:mm", "dd/MM/yyyy H:mm", "dd-MM-yyyy HH:mm", "dd-MM-yyyy H:mm" };
-
-            var startParsed = DateTimeOffset.TryParseExact(shift.StartTime, acceptedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedStart)
-                              || DateTimeOffset.TryParse(shift.StartTime, out parsedStart);
-            if (!startParsed)
-            {
-                Console.WriteLine($"[CreateShift] Invalid StartTime format: {shift.StartTime}");
-                ModelState.AddModelError("StartTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
-                return BadRequestModelState();
-            }
-
-            var endParsed = DateTimeOffset.TryParseExact(shift.EndTime, acceptedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedEnd)
-                            || DateTimeOffset.TryParse(shift.EndTime, out parsedEnd);
-            if (!endParsed)
-            {
-                Console.WriteLine($"[CreateShift] Invalid EndTime format: {shift.EndTime}");
-                ModelState.AddModelError("EndTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
-                return BadRequestModelState();
-            }
-
-            // Ensure end is after start
-            if (parsedEnd <= parsedStart)
+            // Ensure end is after start (JSON converter handles parsing automatically)
+            if (shift.EndTime <= shift.StartTime)
             {
                 ModelState.AddModelError("EndTime", "End time must be after start time.");
                 return BadRequestModelState();
             }
 
-            var typedDto = new ShiftApiRequestDto
-            {
-                WorkerId = shift.WorkerId,
-                LocationId = shift.LocationId,
-                StartTime = parsedStart,
-                EndTime = parsedEnd
-            };
-
-            var result = await _validation.CreateAsync(typedDto);
+            var result = await _validation.CreateAsync(shift);
 
             if (!result.IsSuccess)
             {
@@ -201,7 +169,7 @@ public class ShiftsController : ControllerBase
                 });
             }
 
-            Console.WriteLine($"[CreateShift] Shift created successfully for WorkerId={typedDto.WorkerId}, LocationId={typedDto.LocationId}, Start={typedDto.StartTime}, End={typedDto.EndTime}");
+            Console.WriteLine($"[CreateShift] Shift created successfully for WorkerId={shift.WorkerId}, LocationId={shift.LocationId}, Start={shift.StartTime}, End={shift.EndTime}");
             return StatusCode(201, new ApiResponseDto<Shift>
             {
                 RequestFailed = false,
@@ -227,50 +195,20 @@ public class ShiftsController : ControllerBase
 
     // This is the route for updating a createdShift
     [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponseDto<Shift>>> UpdateShift([FromRoute] int id, [FromBody] ShiftApiRequestDtoRaw shift)
+    public async Task<ActionResult<ApiResponseDto<Shift>>> UpdateShift([FromRoute] int id, [FromBody] ShiftApiRequestDto shift)
     {
         try
         {
             if (!ModelState.IsValid) return BadRequestModelState();
 
-            // Parse date/time strings to DateTimeOffset and map to typed DTO
-            // Accept several formats (dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm) or standard/ISO formats from clients
-            DateTimeOffset parsedStart;
-            DateTimeOffset parsedEnd;
-            var acceptedFormatsUpdate = new[] { "dd/MM/yyyy HH:mm", "dd/MM/yyyy H:mm", "dd-MM-yyyy HH:mm", "dd-MM-yyyy H:mm" };
-
-            var startParsedUpdate = DateTimeOffset.TryParseExact(shift.StartTime, acceptedFormatsUpdate, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedStart)
-                                    || DateTimeOffset.TryParse(shift.StartTime, out parsedStart);
-            if (!startParsedUpdate)
-            {
-                ModelState.AddModelError("StartTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
-                return BadRequestModelState();
-            }
-
-            var endParsedUpdate = DateTimeOffset.TryParseExact(shift.EndTime, acceptedFormatsUpdate, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedEnd)
-                                  || DateTimeOffset.TryParse(shift.EndTime, out parsedEnd);
-            if (!endParsedUpdate)
-            {
-                ModelState.AddModelError("EndTime", "Invalid date format. Use dd/MM/yyyy HH:mm, dd-MM-yyyy HH:mm, or ISO date format");
-                return BadRequestModelState();
-            }
-
-            // Ensure end is after start
-            if (parsedEnd <= parsedStart)
+            // Ensure end is after start (JSON converter handles parsing automatically)
+            if (shift.EndTime <= shift.StartTime)
             {
                 ModelState.AddModelError("EndTime", "End time must be after start time.");
                 return BadRequestModelState();
             }
 
-            var typedDto = new ShiftApiRequestDto
-            {
-                WorkerId = shift.WorkerId,
-                LocationId = shift.LocationId,
-                StartTime = parsedStart,
-                EndTime = parsedEnd
-            };
-
-            var result = await _validation.UpdateAsync(id, typedDto);
+            var result = await _validation.UpdateAsync(id, shift);
 
             if (!result.IsSuccess)
             {

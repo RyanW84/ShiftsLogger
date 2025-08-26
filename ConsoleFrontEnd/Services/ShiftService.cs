@@ -143,27 +143,11 @@ public class ShiftService : IShiftService
 
     public async Task<ApiResponseDto<Shift>> CreateShiftAsync(Shift shift)
     {
-        var dto = new ConsoleFrontEnd.Models.Dtos.ShiftApiRequestDto
-        {
-            WorkerId = shift.WorkerId,
-            StartTime = shift.StartTime,
-            EndTime = shift.EndTime,
-            LocationId = shift.LocationId
-        };
-        var errors = Services.Validation.ShiftValidation.Validate(dto);
-        if (errors.Count > 0)
-        {
-            return new ApiResponseDto<Shift>("Validation failed")
-            {
-                RequestFailed = true,
-                ResponseCode = HttpStatusCode.BadRequest,
-                Data = null,
-                Message = string.Join("; ", errors)
-            };
-        }
+        // No DTO conversion needed - send the model directly!
+        // Backend validation handles all checks now
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("api/shifts", dto);
+            var response = await _httpClient.PostAsJsonAsync("api/shifts", shift);
             var handled = await HttpResponseHelper.HandleHttpResponseAsync<Shift>(
                 response,
                 _logger,
@@ -253,26 +237,26 @@ public class ShiftService : IShiftService
         }
     }
 
-    public async Task<ApiResponseDto<string?>> DeleteShiftAsync(int id)
+    public async Task<ApiResponseDto<bool>> DeleteShiftAsync(int id)
     {
         try
         {
             var response = await _httpClient.DeleteAsync($"api/shifts/{id}");
-            return await HttpResponseHelper.HandleHttpResponseAsync<string?>(
+            return await HttpResponseHelper.HandleHttpResponseAsync<bool>(
                 response,
                 _logger,
                 $"Delete Shift {id}",
-                $"Deleted shift with ID {id}"
+                false
             );
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while deleting shift {ShiftId}", id);
-            return new ApiResponseDto<string?>($"Connection Error: {ex.Message}")
+            return new ApiResponseDto<bool>($"Connection Error: {ex.Message}")
             {
                 ResponseCode = HttpStatusCode.InternalServerError,
                 RequestFailed = true,
-                Data = null
+                Data = false
             };
         }
     }

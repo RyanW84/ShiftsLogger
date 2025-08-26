@@ -114,6 +114,42 @@ public class LocationService : ILocationService
         }
     }
 
+    public async Task<ApiResponseDto<Location?>> GetLocationByNameAsync(string name)
+    {
+        try
+        {
+            // Use filter to find location by name efficiently
+            var filter = new ConsoleFrontEnd.Models.FilterOptions.LocationFilterOptions { Name = name };
+            var response = await GetLocationsByFilterAsync(filter);
+            
+            if (response.RequestFailed || response.Data == null)
+                return new ApiResponseDto<Location?>(response.Message ?? "Location not found") 
+                { 
+                    RequestFailed = true, 
+                    ResponseCode = response.ResponseCode,
+                    Data = null 
+                };
+
+            var location = response.Data.FirstOrDefault();
+            return new ApiResponseDto<Location?>(location != null ? "Location found" : "Location not found")
+            {
+                Data = location,
+                RequestFailed = location == null,
+                ResponseCode = location != null ? HttpStatusCode.OK : HttpStatusCode.NotFound
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while fetching location by name {LocationName}", name);
+            return new ApiResponseDto<Location?>($"Connection Error: {ex.Message}")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                RequestFailed = true,
+                Data = null
+            };
+        }
+    }
+
     public async Task<ApiResponseDto<Location>> CreateLocationAsync(Location location)
     {
         var dto = new ConsoleFrontEnd.Models.Dtos.LocationApiRequestDto
@@ -202,26 +238,26 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task<ApiResponseDto<string?>> DeleteLocationAsync(int id)
+    public async Task<ApiResponseDto<bool>> DeleteLocationAsync(int id)
     {
         try
         {
             var response = await _httpClient.DeleteAsync($"api/locations/{id}");
-            return await HttpResponseHelper.HandleHttpResponseAsync<string?>(
+            return await HttpResponseHelper.HandleHttpResponseAsync<bool>(
                 response,
                 _logger,
                 $"Delete Location {id}",
-                $"Deleted location with ID {id}"
+                false
             );
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while deleting location {LocationId}", id);
-            return new ApiResponseDto<string?>($"Connection Error: {ex.Message}")
+            return new ApiResponseDto<bool>($"Connection Error: {ex.Message}")
             {
                 ResponseCode = HttpStatusCode.InternalServerError,
                 RequestFailed = true,
-                Data = null
+                Data = false
             };
         }
     }

@@ -27,27 +27,27 @@ public class WorkerValidation : BaseService<Worker, WorkerFilterOptions, WorkerA
         if (string.IsNullOrWhiteSpace(createDto.Name))
             return Task.FromResult(Result.Failure("Worker name is required."));
 
-        if (createDto.Name.Length < 2)
-            return Task.FromResult(Result.Failure("Worker name must be at least 2 characters long."));
+        if (createDto.Name.Length < 1)
+            return Task.FromResult(Result.Failure("Worker name must be at least 1 character long."));
 
         if (createDto.Name.Length > 100)
             return Task.FromResult(Result.Failure("Worker name cannot exceed 100 characters."));
 
-        // Email validation
+        // Email validation - more forgiving
         if (!string.IsNullOrWhiteSpace(createDto.Email))
         {
             if (!IsValidEmail(createDto.Email))
-                return Task.FromResult(Result.Failure("Invalid email format."));
+                return Task.FromResult(Result.Failure("Email must be in basic format: user@domain.extension"));
 
             if (createDto.Email.Length > 254)
                 return Task.FromResult(Result.Failure("Email address cannot exceed 254 characters."));
         }
 
-        // Phone number validation
+        // Phone number validation - more forgiving
         if (!string.IsNullOrWhiteSpace(createDto.PhoneNumber))
         {
             if (!IsValidPhoneNumber(createDto.PhoneNumber))
-                return Task.FromResult(Result.Failure("Invalid phone number format."));
+                return Task.FromResult(Result.Failure("Phone number must contain at least 10 digits."));
 
             if (createDto.PhoneNumber.Length > 20)
                 return Task.FromResult(Result.Failure("Phone number cannot exceed 20 characters."));
@@ -112,8 +112,11 @@ public class WorkerValidation : BaseService<Worker, WorkerFilterOptions, WorkerA
         if (string.IsNullOrWhiteSpace(phoneNumber))
             return false;
 
-        // Allow digits, spaces, dashes, parentheses, and plus sign
-        var phonePattern = @"^[\d\s\-\(\)\+]+$";
-        return Regex.IsMatch(phoneNumber, phonePattern) && phoneNumber.Any(char.IsDigit);
+        // Remove formatting characters for validation
+        var cleanPhone = phoneNumber.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace(".", "");
+        
+        // Must contain at least 10 digits
+        var digitCount = cleanPhone.Count(char.IsDigit);
+        return digitCount >= 10 && digitCount <= 15;
     }
 }

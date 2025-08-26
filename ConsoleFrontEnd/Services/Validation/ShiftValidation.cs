@@ -16,21 +16,21 @@ public static class ShiftValidation
             errors.Add("LocationId must be greater than zero.");
         if (dto.StartTime >= dto.EndTime)
             errors.Add("Start time must be before end time.");
-        if (dto.StartTime < DateTimeOffset.Now.AddYears(-1) || dto.StartTime > DateTimeOffset.Now.AddYears(1))
-            errors.Add("Start time is out of allowed range.");
-        if (dto.EndTime < DateTimeOffset.Now.AddYears(-1) || dto.EndTime > DateTimeOffset.Now.AddYears(1))
-            errors.Add("End time is out of allowed range.");
+        if (dto.StartTime < DateTimeOffset.Now.AddYears(-5) || dto.StartTime > DateTimeOffset.Now.AddYears(5))
+            errors.Add("Start time is out of allowed range (5 years past/future).");
+        if (dto.EndTime < DateTimeOffset.Now.AddYears(-5) || dto.EndTime > DateTimeOffset.Now.AddYears(5))
+            errors.Add("End time is out of allowed range (5 years past/future).");
 
         // Additional business rules:
-        if ((dto.EndTime - dto.StartTime).TotalMinutes < 15)
-            errors.Add("Shift duration must be at least 15 minutes.");
+        if ((dto.EndTime - dto.StartTime).TotalMinutes < 5)
+            errors.Add("Shift duration must be at least 5 minutes.");
         // Allow shifts up to 24 hours (can span midnight)
         if ((dto.EndTime - dto.StartTime).TotalHours > 24)
             errors.Add("Shift duration cannot exceed 24 hours.");
         // Allow shifts to span multiple calendar days (e.g., overnight shifts)
-        // Keep a small tolerance for past-start to prevent accidental past dates
-        if (dto.StartTime < DateTimeOffset.Now.AddMinutes(-5))
-            errors.Add("Shift cannot start in the past (with more than 5 minutes tolerance).");
+        // More forgiving tolerance for past-start (30 minutes instead of 5)
+        if (dto.StartTime < DateTimeOffset.Now.AddMinutes(-30))
+            errors.Add("Shift cannot start more than 30 minutes in the past.");
 
         // Add more rules as needed for your business logic
         return errors;

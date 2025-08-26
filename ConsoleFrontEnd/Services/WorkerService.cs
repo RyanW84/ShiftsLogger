@@ -108,6 +108,42 @@ public class WorkerService : IWorkerService
         }
     }
 
+    public async Task<ApiResponseDto<Worker?>> GetWorkerByNameAsync(string name)
+    {
+        try
+        {
+            // Use filter to find worker by name efficiently
+            var filter = new ConsoleFrontEnd.Models.FilterOptions.WorkerFilterOptions { Name = name };
+            var response = await GetWorkersByFilterAsync(filter);
+            
+            if (response.RequestFailed || response.Data == null)
+                return new ApiResponseDto<Worker?>(response.Message ?? "Worker not found") 
+                { 
+                    RequestFailed = true, 
+                    ResponseCode = response.ResponseCode,
+                    Data = null 
+                };
+
+            var worker = response.Data.FirstOrDefault();
+            return new ApiResponseDto<Worker?>(worker != null ? "Worker found" : "Worker not found")
+            {
+                Data = worker,
+                RequestFailed = worker == null,
+                ResponseCode = worker != null ? HttpStatusCode.OK : HttpStatusCode.NotFound
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while fetching worker by name {WorkerName}", name);
+            return new ApiResponseDto<Worker?>($"Connection Error: {ex.Message}")
+            {
+                ResponseCode = HttpStatusCode.InternalServerError,
+                RequestFailed = true,
+                Data = null
+            };
+        }
+    }
+
     public async Task<ApiResponseDto<Worker>> CreateWorkerAsync(Worker worker)
     {
         var dto = new ConsoleFrontEnd.Models.Dtos.WorkerApiRequestDto
@@ -190,26 +226,26 @@ public class WorkerService : IWorkerService
         }
     }
 
-    public async Task<ApiResponseDto<string?>> DeleteWorkerAsync(int id)
+    public async Task<ApiResponseDto<bool>> DeleteWorkerAsync(int id)
     {
         try
         {
             var response = await _httpClient.DeleteAsync($"api/workers/{id}");
-            return await HttpResponseHelper.HandleHttpResponseAsync<string?>(
+            return await HttpResponseHelper.HandleHttpResponseAsync<bool>(
                 response,
                 _logger,
                 $"Delete Worker {id}",
-                $"Deleted worker with ID {id}"
+                false
             );
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while deleting worker {WorkerId}", id);
-            return new ApiResponseDto<string?>($"Connection Error: {ex.Message}")
+            return new ApiResponseDto<bool>($"Connection Error: {ex.Message}")
             {
                 ResponseCode = HttpStatusCode.InternalServerError,
                 RequestFailed = true,
-                Data = null
+                Data = false
             };
         }
     }

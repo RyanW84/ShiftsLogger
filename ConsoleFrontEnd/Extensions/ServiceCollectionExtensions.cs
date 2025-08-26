@@ -2,6 +2,7 @@ using ConsoleFrontEnd.Core.Abstractions;
 using ConsoleFrontEnd.Core.Infrastructure;
 using ConsoleFrontEnd.Interfaces;
 using ConsoleFrontEnd.MenuSystem;
+using ConsoleFrontEnd.MenuSystem.Common;
 using ConsoleFrontEnd.MenuSystem.Menus;
 using ConsoleFrontEnd.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,6 +64,9 @@ public static class ServiceCollectionExtensions
     services.AddScoped<IShiftUi, ShiftUI>();
     services.AddScoped<IWorkerUi, WorkerUi>();
     services.AddScoped<ILocationUi, LocationUI>();
+
+    // Helper Services
+    services.AddScoped<ShiftInputHelper>();
 
     // Register concrete menu types for MenuFactory
     services.AddScoped<MainMenu>();

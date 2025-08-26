@@ -33,19 +33,19 @@ public class ShiftValidation : BaseService<Shift, ShiftFilterOptions, ShiftApiRe
         if (createDto.StartTime >= createDto.EndTime)
             return Task.FromResult(Result.Failure("Start time must be before end time."));
 
-        // Allowed date range: +/- 1 year from now
-        if (createDto.StartTime < DateTimeOffset.Now.AddYears(-1) || createDto.StartTime > DateTimeOffset.Now.AddYears(1))
-            return Task.FromResult(Result.Failure("Start time is out of allowed range."));
-        if (createDto.EndTime < DateTimeOffset.Now.AddYears(-1) || createDto.EndTime > DateTimeOffset.Now.AddYears(1))
-            return Task.FromResult(Result.Failure("End time is out of allowed range."));
+        // Allowed date range: +/- 5 years from now (more forgiving)
+        if (createDto.StartTime < DateTimeOffset.Now.AddYears(-5) || createDto.StartTime > DateTimeOffset.Now.AddYears(5))
+            return Task.FromResult(Result.Failure("Start time is out of allowed range (5 years past/future)."));
+        if (createDto.EndTime < DateTimeOffset.Now.AddYears(-5) || createDto.EndTime > DateTimeOffset.Now.AddYears(5))
+            return Task.FromResult(Result.Failure("End time is out of allowed range (5 years past/future)."));
 
-        // Prevent small-past mistakes: don't allow starts more than 5 minutes in the past
-        if (createDto.StartTime < DateTimeOffset.Now.AddMinutes(-5))
-            return Task.FromResult(Result.Failure("Shift cannot start in the past (with more than 5 minutes tolerance)."));
+        // More forgiving past-start tolerance: 30 minutes instead of 5
+        if (createDto.StartTime < DateTimeOffset.Now.AddMinutes(-30))
+            return Task.FromResult(Result.Failure("Shift cannot start more than 30 minutes in the past."));
 
         var shiftDuration = createDto.EndTime - createDto.StartTime;
-        if (shiftDuration.TotalMinutes < 15)
-            return Task.FromResult(Result.Failure("Shift duration must be at least 15 minutes."));
+        if (shiftDuration.TotalMinutes < 5)
+            return Task.FromResult(Result.Failure("Shift duration must be at least 5 minutes."));
         if (shiftDuration.TotalHours > 24)
             return Task.FromResult(Result.Failure("Shift duration cannot exceed 24 hours."));
 
@@ -72,9 +72,9 @@ public class ShiftValidation : BaseService<Shift, ShiftFilterOptions, ShiftApiRe
 
         var shift = shiftResult.Data!;
 
-        // Don't allow deletion of shifts that have already started
-        if (shift.StartTime <= DateTimeOffset.Now)
-            return Result.Failure("Cannot delete shifts that have already started.");
+        // More forgiving: only prevent deletion of shifts that started more than 1 hour ago
+        if (shift.StartTime <= DateTimeOffset.Now.AddHours(-1))
+            return Result.Failure("Cannot delete shifts that started more than 1 hour ago.");
 
         return Result.Success();
     }

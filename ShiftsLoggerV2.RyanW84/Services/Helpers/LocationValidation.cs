@@ -63,22 +63,22 @@ public class LocationValidation : BaseService<Location, LocationFilterOptions, L
 
     private static Result ValidateLocationData(LocationApiRequestDto dto)
     {
-        // Name validation
+        // Name validation - more forgiving
         if (string.IsNullOrWhiteSpace(dto.Name))
             return Result.Failure("Location name is required.");
 
-        if (dto.Name.Length < 2)
-            return Result.Failure("Location name must be at least 2 characters long.");
+        if (dto.Name.Length < 1)
+            return Result.Failure("Location name must be at least 1 character long.");
 
         if (dto.Name.Length > 100)
             return Result.Failure("Location name cannot exceed 100 characters.");
 
-        // Address validation
+        // Address validation - more forgiving
         if (string.IsNullOrWhiteSpace(dto.Address))
             return Result.Failure("Location address is required.");
 
-        if (dto.Address.Length < 5)
-            return Result.Failure("Location address must be at least 5 characters long.");
+        if (dto.Address.Length < 3)
+            return Result.Failure("Location address must be at least 3 characters long.");
 
         if (dto.Address.Length > 200)
             return Result.Failure("Location address cannot exceed 200 characters.");
@@ -87,8 +87,8 @@ public class LocationValidation : BaseService<Location, LocationFilterOptions, L
         if (string.IsNullOrWhiteSpace(dto.Town))
             return Result.Failure("Location town is required.");
 
-        if (dto.Town.Length < 2)
-            return Result.Failure("Location town must be at least 2 characters long.");
+        if (dto.Town.Length < 1)
+            return Result.Failure("Location town must be at least 1 character long.");
 
         if (dto.Town.Length > 100)
             return Result.Failure("Location town cannot exceed 100 characters.");
@@ -97,18 +97,18 @@ public class LocationValidation : BaseService<Location, LocationFilterOptions, L
         if (string.IsNullOrWhiteSpace(dto.County))
             return Result.Failure("Location county is required.");
 
-        if (dto.County.Length < 2)
-            return Result.Failure("Location county must be at least 2 characters long.");
+        if (dto.County.Length < 1)
+            return Result.Failure("Location county must be at least 1 character long.");
 
         if (dto.County.Length > 100)
             return Result.Failure("Location county cannot exceed 100 characters.");
 
-        // Post code validation
+        // Post code validation - more forgiving
         if (string.IsNullOrWhiteSpace(dto.PostCode))
             return Result.Failure("Location post code is required.");
 
         if (!IsValidPostCode(dto.PostCode))
-            return Result.Failure("Invalid post code format.");
+            return Result.Failure("Post code must be at least 3 characters with letters or digits.");
 
         if (dto.PostCode.Length > 20)
             return Result.Failure("Location post code cannot exceed 20 characters.");

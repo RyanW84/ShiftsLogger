@@ -1,6 +1,7 @@
 using System.Net;
 using ConsoleFrontEnd.Core.Abstractions;
 using ConsoleFrontEnd.Interfaces;
+using ConsoleFrontEnd.MenuSystem.Common;
 using ConsoleFrontEnd.Models;
 using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Models.FilterOptions;
@@ -18,9 +19,9 @@ namespace ConsoleFrontEnd.MenuSystem.Menus;
 public class ShiftMenu : BaseMenu
 {
     /// <summary>
-    /// Interactive validation and correction for shift creation/update
+    /// Interactive validation and correction for shift creation/update using helper to eliminate duplication
     /// </summary>
-    private ShiftApiRequestDto GetValidatedShiftInput(ShiftApiRequestDto initial, ShiftApiRequestDto? existing = null)
+    private async Task<ShiftApiRequestDto> GetValidatedShiftInputAsync(ShiftApiRequestDto initial, ShiftApiRequestDto? existing = null)
     {
         var dto = new ShiftApiRequestDto
         {
@@ -29,104 +30,17 @@ public class ShiftMenu : BaseMenu
             StartTime = initial.StartTime,
             EndTime = initial.EndTime
         };
+
         // If we're updating (existing provided) prompt the user for each field up-front
-        // allowing them to press Enter / choose "(Keep current)" to retain the existing value.
         if (existing != null)
         {
-            // Worker
-            var workersResponse = _workerService.GetAllWorkersAsync().Result;
-            var workers = workersResponse.Data ?? new List<Worker>();
-            var currentWorker = workers.FirstOrDefault(w => w.WorkerId == (existing?.WorkerId ?? dto.WorkerId));
-            var currentName = currentWorker?.Name ?? "None";
-            AnsiConsole.WriteLine();
-            AnsiConsole.MarkupLine($"[yellow]Current worker:[/] {currentName}");
-            var workerChoices = new List<string> { "(Keep current)" };
-            workerChoices.AddRange(workers.Select(w => w.Name));
-            AnsiConsole.WriteLine();
-            var selectedWorkerName = AnsiConsole.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("Select Worker:")
-                    .AddChoices(workerChoices)
-            );
-            if (selectedWorkerName != "(Keep current)")
-            {
-                var found = workers.FirstOrDefault(w => w.Name == selectedWorkerName);
-                if (found != null)
-                    dto.WorkerId = found.WorkerId;
-            }
-
-            // Location
-            var locationsResponse = _locationService.GetAllLocationsAsync().Result;
-            var locations = locationsResponse.Data ?? new List<Location>();
-            var currentLocation = locations.FirstOrDefault(l => l.LocationId == (existing?.LocationId ?? dto.LocationId));
-            var currentLocationName = currentLocation?.Name ?? "None";
-            AnsiConsole.WriteLine();
-            AnsiConsole.MarkupLine($"[yellow]Current location:[/] {currentLocationName}");
-            var locationChoices = new List<string> { "(Keep current)" };
-            locationChoices.AddRange(locations.Select(l => l.Name));
-            AnsiConsole.WriteLine();
-            var selectedLocationName = AnsiConsole.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("Select Location:")
-                    .AddChoices(locationChoices)
-            );
-            if (selectedLocationName != "(Keep current)")
-            {
-                var found = locations.FirstOrDefault(l => l.Name == selectedLocationName);
-                if (found != null)
-                    dto.LocationId = found.LocationId;
-            }
-
-            // Start time
-            while (true)
-            {
-                var prompt = existing != null
-                        ? $"Enter Start Time (current: {existing.StartTime:dd/MM/yyyy HH:mm}, press Enter to keep):"
-                    : "Enter Start Time (dd/MM/yyyy HH:mm):";
-                var input = AnsiConsole.Ask<string>(prompt, "");
-                if (string.IsNullOrWhiteSpace(input) && existing != null)
-                {
-                    dto.StartTime = existing.StartTime;
-                    break;
-                }
-                if (DateTime.TryParseExact(input, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var value))
-                {
-                    dto.StartTime = new DateTimeOffset(value);
-                    break;
-                }
-                if (DateTime.TryParse(input, out var any))
-                {
-                    dto.StartTime = new DateTimeOffset(any);
-                    break;
-                }
-                DisplayService.DisplayError("Invalid date format. Please use dd/MM/yyyy HH:mm or dd-MM-yyyy HH:mm");
-            }
-
-            // End time
-            while (true)
-            {
-                var prompt = existing != null
-                        ? $"Enter End Time (current: {existing.EndTime:dd/MM/yyyy HH:mm}, press Enter to keep):"
-                    : "Enter End Time (dd/MM/yyyy HH:mm):";
-                var input = AnsiConsole.Ask<string>(prompt, "");
-                if (string.IsNullOrWhiteSpace(input) && existing != null)
-                {
-                    dto.EndTime = existing.EndTime;
-                    break;
-                }
-                if (DateTime.TryParseExact(input, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var value))
-                {
-                    dto.EndTime = new DateTimeOffset(value);
-                    break;
-                }
-                if (DateTime.TryParse(input, out var any))
-                {
-                    dto.EndTime = new DateTimeOffset(any);
-                    break;
-                }
-                DisplayService.DisplayError("Invalid date format. Please use dd/MM/yyyy HH:mm or dd-MM-yyyy HH:mm");
-            }
+            dto.WorkerId = await _shiftInputHelper.SelectWorkerAsync(existing.WorkerId, true);
+            dto.LocationId = await _shiftInputHelper.SelectLocationAsync(existing.LocationId, true);
+            dto.StartTime = _shiftInputHelper.GetDateTimeInput("Start Time", existing.StartTime, true);
+            dto.EndTime = _shiftInputHelper.GetDateTimeInput("End Time", existing.EndTime, true);
         }
+
+        // Validation loop
         while (true)
         {
             var errors = ConsoleFrontEnd.Services.Validation.ShiftValidation.Validate(dto);
@@ -137,108 +51,24 @@ public class ShiftMenu : BaseMenu
             foreach (var error in errors)
                 DisplayService.DisplayError(error);
 
-            // For each invalid field, prompt for correction or use existing value
+            // For each invalid field, prompt for correction using the helper
             foreach (var error in errors)
             {
                 if (error.Contains("WorkerId"))
                 {
-                    var workersResponse = _workerService.GetAllWorkersAsync().Result;
-                    var workers = workersResponse.Data ?? new List<Worker>();
-                    var currentWorker = workers.FirstOrDefault(w => w.WorkerId == (existing?.WorkerId ?? dto.WorkerId));
-                    var currentName = currentWorker?.Name ?? "None";
-                    // Build a single selection list; if updating, include a "(Keep current)" option
-                    AnsiConsole.WriteLine();
-                    if (existing != null)
-                        AnsiConsole.MarkupLine($"[yellow]Current worker:[/] {currentName}");
-                    var workerChoices = new List<string>();
-                    if (existing != null)
-                        workerChoices.Add("(Keep current)");
-                    workerChoices.AddRange(workers.Select(w => w.Name));
-                    // Add spacing before the prompt to avoid visual overwrite
-                    AnsiConsole.WriteLine();
-                    var selectedWorkerName = AnsiConsole.Prompt(
-                        new SelectionPrompt<string>()
-                            .Title("Select Worker:")
-                            .AddChoices(workerChoices)
-                    );
-                    if (!(existing != null && selectedWorkerName == "(Keep current)"))
-                    {
-                        var found = workers.FirstOrDefault(w => w.Name == selectedWorkerName);
-                        if (found != null)
-                            dto.WorkerId = found.WorkerId;
-                    }
+                    dto.WorkerId = await _shiftInputHelper.SelectWorkerAsync(existing?.WorkerId, existing != null);
                 }
                 else if (error.Contains("LocationId"))
                 {
-                    var locationsResponse = _locationService.GetAllLocationsAsync().Result;
-                    var locations = locationsResponse.Data ?? new List<Location>();
-                    var currentLocation = locations.FirstOrDefault(l => l.LocationId == (existing?.LocationId ?? dto.LocationId));
-                    var currentName = currentLocation?.Name ?? "None";
-                    // Build a single selection list; if updating, include a "(Keep current)" option
-                    AnsiConsole.WriteLine();
-                    if (existing != null)
-                        AnsiConsole.MarkupLine($"[yellow]Current location:[/] {currentName}");
-                    var locationChoices = new List<string>();
-                    if (existing != null)
-                        locationChoices.Add("(Keep current)");
-                    locationChoices.AddRange(locations.Select(l => l.Name));
-                    // Add spacing before the prompt to avoid visual overwrite
-                    AnsiConsole.WriteLine();
-                    var selectedLocationName = AnsiConsole.Prompt(
-                        new SelectionPrompt<string>()
-                            .Title("Select Location:")
-                            .AddChoices(locationChoices)
-                    );
-                    if (!(existing != null && selectedLocationName == "(Keep current)"))
-                    {
-                        var found = locations.FirstOrDefault(l => l.Name == selectedLocationName);
-                        if (found != null)
-                            dto.LocationId = found.LocationId;
-                    }
+                    dto.LocationId = await _shiftInputHelper.SelectLocationAsync(existing?.LocationId, existing != null);
                 }
                 else if (error.Contains("Start time"))
                 {
-                    // ...existing code for StartTime correction...
-                    while (true)
-                    {
-                        var prompt = existing != null
-                                ? $"Enter Start Time (current: {existing.StartTime:dd/MM/yyyy HH:mm}, press Enter to keep):"
-                            : "Enter Start Time (dd/MM/yyyy HH:mm):";
-                        var input = AnsiConsole.Ask<string>(prompt, "");
-                        if (string.IsNullOrWhiteSpace(input) && existing != null)
-                        {
-                            dto.StartTime = existing.StartTime;
-                            break;
-                        }
-                        if (DateTime.TryParseExact(input, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var value))
-                        {
-                            dto.StartTime = new DateTimeOffset(value);
-                            break;
-                        }
-                        DisplayService.DisplayError("Invalid date format. Please use dd/MM/yyyy HH:mm");
-                    }
+                    dto.StartTime = _shiftInputHelper.GetDateTimeInput("Start Time", existing?.StartTime, existing != null);
                 }
                 else if (error.Contains("End time"))
                 {
-                    // ...existing code for EndTime correction...
-                    while (true)
-                    {
-                        var prompt = existing != null
-                                ? $"Enter End Time (current: {existing.EndTime:dd/MM/yyyy HH:mm}, press Enter to keep):"
-                            : "Enter End Time (dd/MM/yyyy HH:mm):";
-                        var input = AnsiConsole.Ask<string>(prompt, "");
-                        if (string.IsNullOrWhiteSpace(input) && existing != null)
-                        {
-                            dto.EndTime = existing.EndTime;
-                            break;
-                        }
-                        if (DateTime.TryParseExact(input, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out var value))
-                        {
-                            dto.EndTime = new DateTimeOffset(value);
-                            break;
-                        }
-                        DisplayService.DisplayError("Invalid date format. Please use dd/MM/yyyy HH:mm");
-                    }
+                    dto.EndTime = _shiftInputHelper.GetDateTimeInput("End Time", existing?.EndTime, existing != null);
                 }
                 else
                 {
@@ -272,6 +102,7 @@ public class ShiftMenu : BaseMenu
     private readonly IWorkerService _workerService;
     private readonly ILocationService _locationService;
     private readonly IShiftUi _shiftUi;
+    private readonly ShiftInputHelper _shiftInputHelper;
 
     public ShiftMenu(
         IConsoleDisplayService displayService,
@@ -281,7 +112,8 @@ public class ShiftMenu : BaseMenu
         IShiftService shiftService,
         IWorkerService workerService,
         ILocationService locationService,
-        IShiftUi shiftUi)
+        IShiftUi shiftUi,
+        ShiftInputHelper shiftInputHelper)
         : base(displayService, inputService, navigationService, logger)
     {
         // base constructor sets DisplayService, InputService, NavigationService and Logger
@@ -289,6 +121,7 @@ public class ShiftMenu : BaseMenu
         _workerService = workerService ?? throw new ArgumentNullException(nameof(workerService));
         _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
         _shiftUi = shiftUi ?? throw new ArgumentNullException(nameof(shiftUi));
+        _shiftInputHelper = shiftInputHelper ?? throw new ArgumentNullException(nameof(shiftInputHelper));
     }
 
     public override string Title => "Shift Management";
@@ -720,7 +553,7 @@ public class ShiftMenu : BaseMenu
             EndTime = shift.EndTime
         };
 
-        var validated = GetValidatedShiftInput(initialDto, existingDto);
+        var validated = await GetValidatedShiftInputAsync(initialDto, existingDto);
 
         var updatedShift = new Shift
         {
