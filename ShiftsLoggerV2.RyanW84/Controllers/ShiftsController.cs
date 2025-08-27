@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
@@ -13,10 +14,12 @@ namespace ShiftsLoggerV2.RyanW84.Controllers;
 public class ShiftsController : BaseController
 {
     private readonly IShiftBusinessService _shiftBusinessService;
+    private readonly ILogger<ShiftsController> _logger;
 
-    public ShiftsController(IShiftBusinessService shiftBusinessService)
+    public ShiftsController(IShiftBusinessService shiftBusinessService, ILogger<ShiftsController> logger)
     {
         _shiftBusinessService = shiftBusinessService;
+        _logger = logger;
     }
 
 
@@ -33,7 +36,7 @@ public class ShiftsController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get All Shifts failed, see Exception {ex}");
+            _logger.LogError(ex, "Failed to retrieve all shifts");
             var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<List<Shift>>
             {
@@ -57,7 +60,7 @@ public class ShiftsController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get by ID failed, see Exception {ex}");
+            _logger.LogError(ex, "Failed to retrieve shift by ID {ShiftId}", id);
             var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<Shift>
             {
@@ -76,7 +79,8 @@ public class ShiftsController : BaseController
         {
             if (!ModelState.IsValid)
             {
-                Console.WriteLine($"[CreateShift] ModelState invalid: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
+                _logger.LogWarning("CreateShift failed due to invalid model state: {Errors}",
+                    string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
                 return BadRequestModelState();
             }
 
@@ -91,7 +95,7 @@ public class ShiftsController : BaseController
 
             if (!result.IsSuccess)
             {
-                Console.WriteLine($"[CreateShift] Validation failed: {result.Message}");
+                _logger.LogWarning("CreateShift validation failed: {Message}", result.Message);
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<Shift>
                 {
                     RequestFailed = true,
@@ -101,7 +105,8 @@ public class ShiftsController : BaseController
                 });
             }
 
-            Console.WriteLine($"[CreateShift] Shift created successfully for WorkerId={shift.WorkerId}, LocationId={shift.LocationId}, Start={shift.StartTime}, End={shift.EndTime}");
+            _logger.LogInformation("Shift created successfully for WorkerId={WorkerId}, LocationId={LocationId}, Start={StartTime}, End={EndTime}",
+                shift.WorkerId, shift.LocationId, shift.StartTime, shift.EndTime);
             return StatusCode(201, new ApiResponseDto<Shift>
             {
                 RequestFailed = false,
@@ -113,7 +118,7 @@ public class ShiftsController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[CreateShift] Exception: {ex}");
+            _logger.LogError(ex, "CreateShift failed with exception");
             var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<Shift>
             {

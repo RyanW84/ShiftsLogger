@@ -67,6 +67,66 @@ public abstract class BaseController : ControllerBase
     }
 
     /// <summary>
+    /// Creates a standardized success response
+    /// </summary>
+    protected ActionResult<ApiResponseDto<T>> Success<T>(T data, string message = "Operation completed successfully", int totalCount = 1)
+    {
+        return Ok(new ApiResponseDto<T>
+        {
+            RequestFailed = false,
+            ResponseCode = HttpStatusCode.OK,
+            Message = message,
+            Data = data,
+            TotalCount = data is IEnumerable<object> enumerable ? enumerable.Count() : totalCount
+        });
+    }
+
+    /// <summary>
+    /// Creates a standardized success response for operations without data
+    /// </summary>
+    protected ActionResult<ApiResponseDto<string>> Success(string message = "Operation completed successfully")
+    {
+        return Ok(new ApiResponseDto<string>
+        {
+            RequestFailed = false,
+            ResponseCode = HttpStatusCode.OK,
+            Message = message,
+            Data = string.Empty,
+            TotalCount = 0
+        });
+    }
+
+    /// <summary>
+    /// Creates a standardized error response
+    /// </summary>
+    protected ActionResult<ApiResponseDto<T>> Error<T>(string message, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
+    {
+        return StatusCode((int)statusCode, new ApiResponseDto<T>
+        {
+            RequestFailed = true,
+            ResponseCode = statusCode,
+            Message = message,
+            Data = default,
+            TotalCount = 0
+        });
+    }
+
+    /// <summary>
+    /// Creates a standardized error response for operations without data
+    /// </summary>
+    protected ActionResult<ApiResponseDto<string>> Error(string message, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
+    {
+        return StatusCode((int)statusCode, new ApiResponseDto<string>
+        {
+            RequestFailed = true,
+            ResponseCode = statusCode,
+            Message = message,
+            Data = string.Empty,
+            TotalCount = 0
+        });
+    }
+
+    /// <summary>
     /// Converts ModelState errors into a consistent ApiResponseDto shape
     /// </summary>
     protected ActionResult BadRequestModelState()

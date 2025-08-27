@@ -25,6 +25,20 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             .OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Worker>().HasIndex(w => w.Email).IsUnique(); // Ensure unique email addresses for workers
         modelBuilder.Entity<Worker>().HasIndex(w => w.PhoneNumber).IsUnique();
+
+        // Performance indexes for frequently queried fields
+        modelBuilder.Entity<Shift>().HasIndex(s => s.StartTime); // For date range queries
+        modelBuilder.Entity<Shift>().HasIndex(s => s.EndTime); // For date range queries
+        modelBuilder.Entity<Shift>().HasIndex(s => s.WorkerId); // For filtering shifts by worker
+        modelBuilder.Entity<Shift>().HasIndex(s => s.LocationId); // For filtering shifts by location
+        modelBuilder.Entity<Shift>().HasIndex(s => new { s.WorkerId, s.StartTime }); // Composite index for worker + date queries
+        modelBuilder.Entity<Shift>().HasIndex(s => new { s.LocationId, s.StartTime }); // Composite index for location + date queries
+
+        modelBuilder.Entity<Worker>().HasIndex(w => w.Name); // For searching workers by name
+
+        modelBuilder.Entity<Location>().HasIndex(l => l.Name); // For searching locations by name
+        modelBuilder.Entity<Location>().HasIndex(l => l.Town); // For searching locations by town
+        modelBuilder.Entity<Location>().HasIndex(l => l.PostCode); // For searching locations by postcode
     }
 
     public void SeedData(ILogger<ShiftsLoggerDbContext>? logger)

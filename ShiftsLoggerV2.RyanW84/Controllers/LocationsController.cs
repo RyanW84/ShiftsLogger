@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
@@ -13,10 +14,12 @@ namespace ShiftsLoggerV2.RyanW84.Controllers;
 public class LocationsController : BaseController
 {
     private readonly ILocationBusinessService _locationBusinessService;
+    private readonly ILogger<LocationsController> _logger;
 
-    public LocationsController(ILocationBusinessService locationBusinessService)
+    public LocationsController(ILocationBusinessService locationBusinessService, ILogger<LocationsController> logger)
     {
         _locationBusinessService = locationBusinessService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -29,7 +32,7 @@ public class LocationsController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get All Locations failed, see Exception {ex}");
+            _logger.LogError(ex, "Failed to retrieve all locations");
             var (status, message) = ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<List<Location>>
             {
@@ -51,7 +54,7 @@ public class LocationsController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get Location by ID failed, see Exception {ex}");
+            _logger.LogError(ex, "Failed to retrieve location by ID {LocationId}", id);
             var (status, message) = ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<Location>
             {
@@ -78,7 +81,7 @@ public class LocationsController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Create Location failed, see Exception {ex}");
+            _logger.LogError(ex, "CreateLocation failed with exception");
             var (status, message) = ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<Location>
             {
@@ -105,7 +108,7 @@ public class LocationsController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Update Location failed, see Exception {ex}");
+            _logger.LogError(ex, "UpdateLocation failed for ID {LocationId}", id);
             var (status, message) = ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<Location>
             {
@@ -127,7 +130,7 @@ public class LocationsController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Delete Location failed, see Exception {ex}");
+            _logger.LogError(ex, "DeleteLocation failed for ID {LocationId}", id);
             var (status, message) = ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<string>
             {

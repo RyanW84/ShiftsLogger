@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using ShiftsLoggerV2.RyanW84.Controllers;
 using ShiftsLoggerV2.RyanW84.Dtos;
@@ -15,12 +16,14 @@ namespace ShiftsLoggerV2.RyanW84.Tests.Controllers;
 public class WorkersControllerTests
 {
     private readonly Mock<IWorkerBusinessService> _mockWorkerBusinessService;
+    private readonly Mock<ILogger<WorkersController>> _mockLogger;
     private readonly WorkersController _controller;
 
     public WorkersControllerTests()
     {
         _mockWorkerBusinessService = new Mock<IWorkerBusinessService>();
-        _controller = new WorkersController(_mockWorkerBusinessService.Object);
+        _mockLogger = new Mock<ILogger<WorkersController>>();
+        _controller = new WorkersController(_mockWorkerBusinessService.Object, _mockLogger.Object);
     }
 
     [Fact]

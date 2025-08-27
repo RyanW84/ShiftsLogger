@@ -5,6 +5,7 @@ using Scalar.AspNetCore;
 using ShiftsLoggerV2.RyanW84.Data;
 using ShiftsLoggerV2.RyanW84.Extensions;
 using ShiftsLoggerV2.RyanW84.Mappings;
+using ShiftsLoggerV2.RyanW84.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +45,11 @@ else
 // Register all application services
 builder.Services.AddApplicationServices();
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
+
+// Add health checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ShiftsLoggerDbContext>("database", tags: new[] { "database", "sql" })
+    .AddCheck<CustomHealthCheck>("custom", tags: new[] { "custom" });
 static string GetConnectionString(IConfiguration configuration)
 {
     var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
@@ -106,6 +112,17 @@ app.MapScalarApiReference(options =>
         .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
         .WithModels()
         .WithLayout(ScalarLayout.Classic);
+});
+
+// Map health check endpoints
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/database", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("database")
+});
+app.MapHealthChecks("/health/custom", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("custom")
 });
 
 app.MapControllers();

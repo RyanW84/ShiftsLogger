@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
@@ -13,10 +14,12 @@ namespace ShiftsLoggerV2.RyanW84.Controllers;
 public class WorkersController : BaseController
 {
     private readonly IWorkerBusinessService _workerBusinessService;
+    private readonly ILogger<WorkersController> _logger;
 
-    public WorkersController(IWorkerBusinessService workerBusinessService)
+    public WorkersController(IWorkerBusinessService workerBusinessService, ILogger<WorkersController> logger)
     {
         _workerBusinessService = workerBusinessService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -29,7 +32,7 @@ public class WorkersController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get All Workers failed, see Exception {ex}");
+            _logger.LogError(ex, "Failed to retrieve all workers");
             var (status, message) = ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<List<Worker>>
             {
@@ -51,7 +54,7 @@ public class WorkersController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get Worker by ID failed, see Exception {ex}");
+            _logger.LogError(ex, "Failed to retrieve worker by ID {WorkerId}", id);
             var (status, message) = ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<Worker>
             {
@@ -78,7 +81,7 @@ public class WorkersController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Create Worker failed, see Exception {ex}");
+            _logger.LogError(ex, "CreateWorker failed with exception");
             var (status, message) = ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<Worker>
             {
@@ -105,7 +108,7 @@ public class WorkersController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Update Worker failed, see Exception {ex}");
+            _logger.LogError(ex, "UpdateWorker failed for ID {WorkerId}", id);
             var (status, message) = ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<Worker>
             {
@@ -127,7 +130,7 @@ public class WorkersController : BaseController
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Delete Worker failed, see Exception {ex}");
+            _logger.LogError(ex, "DeleteWorker failed for ID {WorkerId}", id);
             var (status, message) = ErrorMapper.Map(ex);
             return StatusCode((int)status, new ApiResponseDto<string>
             {
