@@ -21,6 +21,10 @@ public class ShiftFilterOptions
     [FromQuery(Name = "locationName")]
     public string LocationName { get; set; } = string.Empty; // Use string for location name filtering
 
+    [FromQuery(Name = "minDurationMinutes")] public int? MinDurationMinutes { get; set; } // Minimum duration in minutes
+
+    [FromQuery(Name = "maxDurationMinutes")] public int? MaxDurationMinutes { get; set; } // Maximum duration in minutes
+
     [FromQuery(Name = "sortBy")] public string SortBy { get; set; } = string.Empty;
 
     [FromQuery(Name = "sortOrder")] public string SortOrder { get; set; } = string.Empty;

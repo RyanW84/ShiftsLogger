@@ -211,6 +211,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         table.AddColumn(new TableColumn("[bold]Location Name[/]").Centered());
         table.AddColumn(new TableColumn("[bold]Start Time[/]").Centered());
         table.AddColumn(new TableColumn("[bold]End Time[/]").Centered());
+        table.AddColumn(new TableColumn("[bold]Duration[/]").Centered());
 
         // Add rows with row number instead of shift ID
         var rowCount = 1;
@@ -220,6 +221,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
             var locationName = shift.Location?.Name ?? "N/A";
             var startTime = FormatPropertyValue(shift.StartTime);
             var endTime = FormatPropertyValue(shift.EndTime);
+            var duration = FormatDuration(shift.Duration);
 
             TableExtensions.AddRow(
                 table,
@@ -230,6 +232,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
                     Markup.Escape(locationName),
                     startTime,
                     endTime,
+                    duration.ToString(),
                 }
             );
             rowCount++;
@@ -408,6 +411,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
             "ShiftId" => "Shift ID",
             "StartTime" => "Start Time",
             "EndTime" => "End Time",
+            "Duration" => "Duration",
             "PhoneNumber" => "Phone",
             "PostCode" => "Post Code",
             _ => propertyName,
@@ -424,6 +428,23 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
             string str when string.IsNullOrWhiteSpace(str) => "N/A",
             _ => Markup.Escape(value.ToString() ?? "N/A"),
         };
+    }
+
+    private static string FormatDuration(object? value)
+    {
+        if (value is TimeSpan timeSpan)
+        {
+            // Format duration as HH:mm or D days HH:mm if longer than 24 hours
+            if (timeSpan.TotalDays >= 1)
+            {
+                return $"{(int)timeSpan.TotalDays}d {timeSpan.Hours:00}:{timeSpan.Minutes:00}";
+            }
+            else
+            {
+                return $"{timeSpan.Hours:00}:{timeSpan.Minutes:00}";
+            }
+        }
+        return "N/A";
     }
 
     public void DisplaySeparator()

@@ -18,6 +18,9 @@ public class Shift : IEntity
     // Navigation property to the Worker entity
     public virtual Worker? Worker { get; set; }
 
+    // Computed property for shift duration
+    public TimeSpan Duration => EndTime - StartTime;
+
     // IEntity implementation
     public int Id => ShiftId;
 }

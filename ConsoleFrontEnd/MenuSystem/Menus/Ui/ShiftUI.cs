@@ -94,12 +94,36 @@ public class ShiftUI : IShiftUi
             endDate = _shiftInputHelper.GetDateTimeInput("End Date").DateTime;
         }
 
+        int? minDurationMinutes = null;
+        int? maxDurationMinutes = null;
+        var wantDuration = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Filter by duration?")
+                .AddChoices(new[] { "No", "Yes" })
+        );
+        if (wantDuration == "Yes")
+        {
+            var minDurationInput = AnsiConsole.Ask<string>("Minimum duration in minutes (press Enter to skip):", "");
+            if (!string.IsNullOrWhiteSpace(minDurationInput) && int.TryParse(minDurationInput, out var minDuration) && minDuration > 0)
+            {
+                minDurationMinutes = minDuration;
+            }
+
+            var maxDurationInput = AnsiConsole.Ask<string>("Maximum duration in minutes (press Enter to skip):", "");
+            if (!string.IsNullOrWhiteSpace(maxDurationInput) && int.TryParse(maxDurationInput, out var maxDuration) && maxDuration > 0)
+            {
+                maxDurationMinutes = maxDuration;
+            }
+        }
+
         return new ShiftFilterOptions
         {
             WorkerId = workerId,
             LocationId = locationId,
             StartDate = startDate,
-            EndDate = endDate
+            EndDate = endDate,
+            MinDurationMinutes = minDurationMinutes,
+            MaxDurationMinutes = maxDurationMinutes
         };
     }
 
@@ -121,7 +145,7 @@ public class ShiftUI : IShiftUi
         }
 
         var choices = response.Data
-            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm}")
+            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)")
             .ToArray();
 
         var selected = AnsiConsole.Prompt(

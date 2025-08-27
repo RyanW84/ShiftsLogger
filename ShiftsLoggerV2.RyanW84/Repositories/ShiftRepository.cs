@@ -63,6 +63,13 @@ public class ShiftRepository : BaseRepository<Shift, ShiftFilterOptions, ShiftAp
         if (filterOptions.EndTime is not null)
             query = query.Where(s => s.EndTime.Date <= filterOptions.EndTime.Value.Date);
 
+        // Duration filters
+        if (filterOptions.MinDurationMinutes is not null and > 0)
+            query = query.Where(s => EF.Functions.DateDiffMinute(s.StartTime, s.EndTime) >= filterOptions.MinDurationMinutes);
+
+        if (filterOptions.MaxDurationMinutes is not null and > 0)
+            query = query.Where(s => EF.Functions.DateDiffMinute(s.StartTime, s.EndTime) <= filterOptions.MaxDurationMinutes);
+
         // Search implementation
         if (!string.IsNullOrWhiteSpace(filterOptions.Search))
             query = query.Where(s =>
@@ -100,6 +107,9 @@ public class ShiftRepository : BaseRepository<Shift, ShiftFilterOptions, ShiftAp
                 "locationname" => sortOrder == "asc"
                     ? query.OrderBy(s => s.Location != null ? s.Location.Name : "")
                     : query.OrderByDescending(s => s.Location != null ? s.Location.Name : ""),
+                "duration" => sortOrder == "asc"
+                    ? query.OrderBy(s => EF.Functions.DateDiffMinute(s.StartTime, s.EndTime))
+                    : query.OrderByDescending(s => EF.Functions.DateDiffMinute(s.StartTime, s.EndTime)),
                 _ => sortOrder == "asc"
                     ? query.OrderBy(s => s.ShiftId)
                     : query.OrderByDescending(s => s.ShiftId)

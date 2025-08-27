@@ -58,6 +58,8 @@ public class ShiftService : IShiftService
         if (filter.EndTime.HasValue) query.Add($"EndTime={Uri.EscapeDataString(filter.EndTime.Value.ToString("o"))}");
         if (!string.IsNullOrWhiteSpace(filter.LocationName)) query.Add($"LocationName={Uri.EscapeDataString(filter.LocationName)}");
         if (!string.IsNullOrWhiteSpace(filter.WorkerName)) query.Add($"WorkerName={Uri.EscapeDataString(filter.WorkerName)}");
+        if (filter.MinDurationMinutes.HasValue) query.Add($"MinDurationMinutes={filter.MinDurationMinutes.Value}");
+        if (filter.MaxDurationMinutes.HasValue) query.Add($"MaxDurationMinutes={filter.MaxDurationMinutes.Value}");
         return string.Join("&", query);
     }
 
@@ -79,6 +81,10 @@ public class ShiftService : IShiftService
             filtered = filtered.Where(s => s.Location != null && s.Location.Name.Contains(filter.LocationName, StringComparison.OrdinalIgnoreCase));
         if (!string.IsNullOrWhiteSpace(filter.WorkerName))
             filtered = filtered.Where(s => s.Worker != null && s.Worker.Name.Contains(filter.WorkerName, StringComparison.OrdinalIgnoreCase));
+        if (filter.MinDurationMinutes.HasValue)
+            filtered = filtered.Where(s => s.Duration.TotalMinutes >= filter.MinDurationMinutes.Value);
+        if (filter.MaxDurationMinutes.HasValue)
+            filtered = filtered.Where(s => s.Duration.TotalMinutes <= filter.MaxDurationMinutes.Value);
 
         var resultList = filtered.ToList();
         return new ApiResponseDto<List<Shift>>("Filtered shifts successfully")

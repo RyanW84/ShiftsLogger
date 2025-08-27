@@ -27,6 +27,9 @@ public class Shift
         set => EndTime = value;
     }
 
+    // Computed property for shift duration
+    public TimeSpan Duration => EndTime - StartTime;
+
     // Navigation property to the Location entity
     public virtual Location? Location { get; set; }
 

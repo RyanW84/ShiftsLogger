@@ -335,7 +335,7 @@ public class ShiftMenu : BaseMenu
         }
 
         var shiftChoices = allShiftsResponse.Data
-            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm}").ToArray();
+            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)").ToArray();
         var selectedShiftChoice = InputService.GetMenuChoice("Select Shift:", shiftChoices);
         var shiftId = UiHelper.ExtractIdFromChoice(selectedShiftChoice);
 
@@ -513,6 +513,7 @@ public class ShiftMenu : BaseMenu
             DisplayService.DisplayInfo($"Location: {locationsResponse.Data.First(l => l.LocationId == locationId).Name}");
             DisplayService.DisplayInfo($"Start: {startTime}");
             DisplayService.DisplayInfo($"End: {endTime}");
+            DisplayService.DisplayInfo($"Duration: {(endTime - startTime).TotalHours:F1} hours ({(endTime - startTime).TotalMinutes:F0} minutes)");
         }
         catch (Exception ex)
         {
@@ -534,7 +535,7 @@ public class ShiftMenu : BaseMenu
         }
 
         var shiftChoices = allShiftsResponse.Data
-            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm}").ToArray();
+            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)").ToArray();
         var selectedShiftChoice = InputService.GetMenuChoice("Select Shift to update:", shiftChoices);
         var shiftId = UiHelper.ExtractIdFromChoice(selectedShiftChoice);
         var shift = allShiftsResponse.Data.First(s => s.ShiftId == shiftId);
@@ -592,7 +593,7 @@ public class ShiftMenu : BaseMenu
         }
 
         var shiftChoices = allShiftsResponse.Data
-            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm}").ToArray();
+            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)").ToArray();
         var selectedShiftChoice = InputService.GetMenuChoice("Select Shift to delete:", shiftChoices);
         var shiftId = UiHelper.ExtractIdFromChoice(selectedShiftChoice);
         var shift = allShiftsResponse.Data.First(s => s.ShiftId == shiftId);
@@ -656,12 +657,40 @@ public class ShiftMenu : BaseMenu
             }
         }
 
+        // Duration filters
+        int? minDurationMinutes = null;
+        int? maxDurationMinutes = null;
+        var wantDuration = InputService.GetMenuChoice("Filter by duration?", "No", "Yes");
+        if (wantDuration == "Yes")
+        {
+            var minDurationInput = AnsiConsole.Ask<string>("Minimum duration in minutes (press Enter to skip):", "");
+            if (!string.IsNullOrWhiteSpace(minDurationInput) && int.TryParse(minDurationInput, out var minDuration) && minDuration > 0)
+            {
+                minDurationMinutes = minDuration;
+            }
+
+            var maxDurationInput = AnsiConsole.Ask<string>("Maximum duration in minutes (press Enter to skip):", "");
+            if (!string.IsNullOrWhiteSpace(maxDurationInput) && int.TryParse(maxDurationInput, out var maxDuration) && maxDuration > 0)
+            {
+                maxDurationMinutes = maxDuration;
+            }
+
+            if (minDurationMinutes.HasValue && maxDurationMinutes.HasValue && minDurationMinutes > maxDurationMinutes)
+            {
+                DisplayService.DisplayError("Minimum duration cannot be greater than maximum duration.");
+                InputService.WaitForKeyPress();
+                return;
+            }
+        }
+
         var apiFilter = new ShiftFilterOptions
         {
             WorkerId = workerId,
             LocationId = locationId,
             StartDate = startDate,
-            EndDate = endDate
+            EndDate = endDate,
+            MinDurationMinutes = minDurationMinutes,
+            MaxDurationMinutes = maxDurationMinutes
         };
 
         var response = await _shiftService.GetShiftsByFilterAsync(apiFilter);

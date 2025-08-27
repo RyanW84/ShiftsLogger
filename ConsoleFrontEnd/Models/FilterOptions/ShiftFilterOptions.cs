@@ -16,6 +16,10 @@ public class ShiftFilterOptions
     public string? LocationName { get; set; }
     public string? WorkerName { get; set; }
 
+    // Duration filtering
+    public int? MinDurationMinutes { get; set; } // Minimum duration in minutes
+    public int? MaxDurationMinutes { get; set; } // Maximum duration in minutes
+
     // Sorting options
     public string? SortBy { get; set; }
     public string? SortOrder { get; set; }
