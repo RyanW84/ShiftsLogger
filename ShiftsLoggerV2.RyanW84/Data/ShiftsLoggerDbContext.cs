@@ -23,27 +23,26 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             .WithMany(w => w.Shifts)
             .HasForeignKey(s => s.WorkerId)
             .OnDelete(DeleteBehavior.Cascade);
-        modelBuilder.Entity<Worker>().HasIndex(w => w.Email).IsUnique(); // Ensure unique email addresses for workers
+        modelBuilder.Entity<Worker>().HasIndex(w => w.Email).IsUnique();
         modelBuilder.Entity<Worker>().HasIndex(w => w.PhoneNumber).IsUnique();
 
         // Performance indexes for frequently queried fields
-        modelBuilder.Entity<Shift>().HasIndex(s => s.StartTime); // For date range queries
-        modelBuilder.Entity<Shift>().HasIndex(s => s.EndTime); // For date range queries
-        modelBuilder.Entity<Shift>().HasIndex(s => s.WorkerId); // For filtering shifts by worker
-        modelBuilder.Entity<Shift>().HasIndex(s => s.LocationId); // For filtering shifts by location
-        modelBuilder.Entity<Shift>().HasIndex(s => new { s.WorkerId, s.StartTime }); // Composite index for worker + date queries
-        modelBuilder.Entity<Shift>().HasIndex(s => new { s.LocationId, s.StartTime }); // Composite index for location + date queries
+        modelBuilder.Entity<Shift>().HasIndex(s => s.StartTime);
+        modelBuilder.Entity<Shift>().HasIndex(s => s.EndTime);
+        modelBuilder.Entity<Shift>().HasIndex(s => s.WorkerId);
+        modelBuilder.Entity<Shift>().HasIndex(s => s.LocationId);
+        modelBuilder.Entity<Shift>().HasIndex(s => new { s.WorkerId, s.StartTime });
+        modelBuilder.Entity<Shift>().HasIndex(s => new { s.LocationId, s.StartTime });
 
-        modelBuilder.Entity<Worker>().HasIndex(w => w.Name); // For searching workers by name
+        modelBuilder.Entity<Worker>().HasIndex(w => w.Name);
 
-        modelBuilder.Entity<Location>().HasIndex(l => l.Name); // For searching locations by name
-        modelBuilder.Entity<Location>().HasIndex(l => l.Town); // For searching locations by town
-        modelBuilder.Entity<Location>().HasIndex(l => l.PostCode); // For searching locations by postcode
+        modelBuilder.Entity<Location>().HasIndex(l => l.Name);
+        modelBuilder.Entity<Location>().HasIndex(l => l.Town);
+        modelBuilder.Entity<Location>().HasIndex(l => l.PostCode);
     }
 
     public void SeedData(ILogger<ShiftsLoggerDbContext>? logger)
     {
-        // Seed workers and locations if they don't exist
         if (!Workers.Any())
         {
             SeedWorkers(logger);
@@ -54,122 +53,80 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             SeedLocations(logger);
         }
 
-        // Always try to seed some varied duration shifts for testing
-        SeedVariedDurationShifts(logger);
+        SeedRandomShifts(logger);
     }
 
     private void SeedWorkers(ILogger<ShiftsLoggerDbContext>? logger)
     {
-        var workers = new List<Worker>
+        var workerData = new[]
         {
-            new()
-            {
-                Name = "John Smith",
-                Email = "john.smith@company.com",
-                PhoneNumber = "+44 7911 123456",
-            },
-            new()
-            {
-                Name = "Sarah Johnson",
-                Email = "sarah.johnson@company.com",
-                PhoneNumber = "+44 7700 900123",
-            },
-            new()
-            {
-                Name = "Mike Davis",
-                Email = "mike.davis@company.com",
-                PhoneNumber = "+44 7802 345678",
-            },
-            new()
-            {
-                Name = "Emily Wilson",
-                Email = "emily.wilson@company.com",
-                PhoneNumber = "+44 7920 765432",
-            },
-            new()
-            {
-                Name = "David Brown",
-                Email = "david.brown@company.com",
-                PhoneNumber = "+44 7555 123456",
-            },
+            ("John Smith", "john.smith@company.com", "+44 7911 123456"),
+            ("Sarah Johnson", "sarah.johnson@company.com", "+44 7700 900123"),
+            ("Mike Davis", "mike.davis@company.com", "+44 7802 345678"),
+            ("Emily Wilson", "emily.wilson@company.com", "+44 7920 765432"),
+            ("David Brown", "david.brown@company.com", "+44 7555 123456"),
+            ("Lisa Anderson", "lisa.anderson@company.com", "+44 7666 789012"),
+            ("James Taylor", "james.taylor@company.com", "+44 7777 234567"),
+            ("Anna Thompson", "anna.thompson@company.com", "+44 7888 345678")
         };
 
-        foreach (var w in workers)
+        foreach (var (name, email, phone) in workerData)
         {
-            if (!string.IsNullOrWhiteSpace(w.Email) && !Workers.Any(x => x.Email != null && x.Email.ToLower() == w.Email.ToLower()))
-                Workers.Add(w);
+            if (!Workers.Any(w => w.Email != null && w.Email.ToLower() == email.ToLower()))
+            {
+                Workers.Add(new Worker
+                {
+                    Name = name,
+                    Email = email,
+                    PhoneNumber = phone
+                });
+            }
         }
         SaveChanges();
     }
 
     private void SeedLocations(ILogger<ShiftsLoggerDbContext>? logger)
     {
-        var locations = new List<Location>
+        var locationData = new[]
         {
-            new()
-            {
-                Name = "London Office",
-                Address = "1 Canary Wharf",
-                Town = "London",
-                County = "Greater London",
-                PostCode = "E14 5AB",
-                Country = "UK",
-            },
-            new()
-            {
-                Name = "Manchester Warehouse",
-                Address = "22 Trafford Park",
-                Town = "Manchester",
-                County = "Greater Manchester",
-                PostCode = "M17 1AB",
-                Country = "UK",
-            },
-            new()
-            {
-                Name = "Birmingham Plant",
-                Address = "15 Aston Road",
-                Town = "Birmingham",
-                County = "West Midlands",
-                PostCode = "B6 4DA",
-                Country = "UK",
-            },
-            new()
-            {
-                Name = "Leeds Service Centre",
-                Address = "8 Wellington Place",
-                Town = "Leeds",
-                County = "West Yorkshire",
-                PostCode = "LS1 4AP",
-                Country = "UK",
-            },
-            new()
-            {
-                Name = "Bristol Research Lab",
-                Address = "3 Temple Quay",
-                Town = "Bristol",
-                County = "Bristol",
-                PostCode = "BS1 6DZ",
-                Country = "UK",
-            },
+            ("London Office", "1 Canary Wharf", "London", "Greater London", "E14 5AB", "UK"),
+            ("Manchester Warehouse", "22 Trafford Park", "Manchester", "Greater Manchester", "M17 1AB", "UK"),
+            ("Birmingham Plant", "15 Aston Road", "Birmingham", "West Midlands", "B6 4DA", "UK"),
+            ("Leeds Service Centre", "8 Wellington Place", "Leeds", "West Yorkshire", "LS1 4AP", "UK"),
+            ("Bristol Research Lab", "3 Temple Quay", "Bristol", "Bristol", "BS1 6DZ", "UK"),
+            ("Glasgow Branch", "45 George Square", "Glasgow", "Scotland", "G2 1DY", "UK"),
+            ("Cardiff Hub", "12 Cardiff Bay", "Cardiff", "Wales", "CF10 4PA", "UK")
         };
 
-        foreach (var l in locations)
+        foreach (var (name, address, town, county, postCode, country) in locationData)
         {
-            if (!string.IsNullOrWhiteSpace(l.Name) && !Locations.Any(x => x.Name.ToLower() == l.Name.ToLower()))
-                Locations.Add(l);
+            if (!Locations.Any(l => l.Name.ToLower() == name.ToLower()))
+            {
+                Locations.Add(new Location
+                {
+                    Name = name,
+                    Address = address,
+                    Town = town,
+                    County = county,
+                    PostCode = postCode,
+                    Country = country
+                });
+            }
         }
         SaveChanges();
     }
 
-    private void SeedVariedDurationShifts(ILogger<ShiftsLoggerDbContext>? logger)
+    private void SeedRandomShifts(ILogger<ShiftsLoggerDbContext>? logger)
     {
         var savedWorkers = Workers.ToList();
         var savedLocations = Locations.ToList();
 
-        if (!savedWorkers.Any() || !savedLocations.Any())
+        if (savedWorkers.Count == 0 || savedLocations.Count == 0)
+        {
+            logger?.LogWarning("Cannot seed shifts: No workers or locations available.");
             return;
+        }
 
-        // Only seed if we have fewer than 20 shifts total
         var currentShiftCount = Shifts.Count();
         if (currentShiftCount >= 20)
         {
@@ -177,27 +134,26 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             return;
         }
 
-        // Generate a reasonable number of random shifts (not too many to avoid buffer issues)
-        var shiftsToGenerate = Math.Min(12, 20 - currentShiftCount);
-        var variedShifts = GenerateRandomShifts(savedWorkers, savedLocations, shiftsToGenerate);
+        var shiftsToGenerate = 20 - currentShiftCount;
+        var randomShifts = GenerateRandomShifts(savedWorkers, savedLocations, shiftsToGenerate);
 
         try
         {
             var addedCount = 0;
-            // Only add shifts that don't already exist (by StartTime, WorkerId, LocationId)
-            foreach (var s in variedShifts)
+            foreach (var shift in randomShifts)
             {
-                if (s.EndTime <= s.StartTime)
-                    continue; // skip invalid
+                if (shift.EndTime <= shift.StartTime)
+                    continue;
 
-                var exists = Shifts.Any(x =>
-                    x.WorkerId == s.WorkerId
-                    && x.LocationId == s.LocationId
-                    && x.StartTime == s.StartTime
+                var exists = Shifts.Any(s =>
+                    s.WorkerId == shift.WorkerId
+                    && s.LocationId == shift.LocationId
+                    && s.StartTime == shift.StartTime
                 );
+
                 if (!exists)
                 {
-                    Shifts.Add(s);
+                    Shifts.Add(shift);
                     addedCount++;
                 }
             }
@@ -205,40 +161,13 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             if (addedCount > 0)
             {
                 SaveChanges();
-
-                // Log summary
-                try
-                {
-                    logger?.LogInformation(
-                        "Added {AddedCount} varied duration shifts. Total shifts in database: {ShiftCount}",
-                        addedCount, Shifts.Count()
-                    );
-                }
-                catch (Exception logEx)
-                {
-                    try
-                    {
-                        Console.WriteLine($"Seeding summary log error: {logEx}");
-                    }
-                    catch { }
-                }
+                logger?.LogInformation("Added {AddedCount} random shifts. Total shifts in database: {ShiftCount}",
+                    addedCount, Shifts.Count());
             }
         }
         catch (Exception ex)
         {
-            // Use provided logger to log exceptions during seeding
-            try
-            {
-                logger?.LogError(ex, "An error occurred while seeding varied duration shifts.");
-            }
-            catch
-            {
-                try
-                {
-                    Console.WriteLine($"Seeding error: {ex}");
-                }
-                catch { }
-            }
+            logger?.LogError(ex, "An error occurred while seeding random shifts.");
         }
     }
 
@@ -246,44 +175,31 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
     {
         var shifts = new List<Shift>();
         var random = new Random();
-        var baseDate = DateTimeOffset.Now;
-
-        // Possible shift durations in hours
-        var durations = new[] { 4, 5, 8 };
+        var baseDate = DateTimeOffset.Now.Date; // Start from today at midnight
+        
+        var shiftDurations = new[] { 4, 6, 8, 10, 12 }; // More varied shift lengths
+        var startHours = new[] { 6, 7, 8, 9, 14, 15, 16, 18, 22 }; // Various start times
 
         for (int i = 0; i < count; i++)
         {
-            // Select random worker and location
             var worker = workers[random.Next(workers.Count)];
             var location = locations[random.Next(locations.Count)];
-
-            // Generate random start time (between -2 days and +10 days from now)
-            var daysOffset = random.Next(-2, 11);
-            var hoursOffset = random.Next(6, 22); // Business hours: 6 AM to 10 PM
-            var startTime = baseDate.AddDays(daysOffset).AddHours(hoursOffset);
-
-            // Select random duration
-            var durationHours = durations[random.Next(durations.Length)];
+            
+            // Generate shifts within a 30-day window (past and future)
+            var daysOffset = random.Next(-15, 16);
+            var startHour = startHours[random.Next(startHours.Length)];
+            var startTime = baseDate.AddDays(daysOffset).AddHours(startHour);
+            
+            var durationHours = shiftDurations[random.Next(shiftDurations.Length)];
             var endTime = startTime.AddHours(durationHours);
 
-            // Ensure end time is not in the past if start time is in the past
-            if (endTime < baseDate && startTime < baseDate)
-            {
-                // If both times are in the past, move them to future
-                var futureOffset = random.Next(1, 8);
-                startTime = baseDate.AddDays(futureOffset).AddHours(hoursOffset);
-                endTime = startTime.AddHours(durationHours);
-            }
-
-            var shift = new Shift
+            shifts.Add(new Shift
             {
                 WorkerId = worker.WorkerId,
                 LocationId = location.LocationId,
                 StartTime = startTime,
                 EndTime = endTime
-            };
-
-            shifts.Add(shift);
+            });
         }
 
         return shifts;
