@@ -5,18 +5,18 @@
       "name": "Backend (API) Debug",
       "type": "coreclr",
       "request": "launch",
-      "program": "/home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ShiftsLoggerV2.RyanW84/bin/Debug/net9.0/ShiftsLoggerV2.RyanW84.dll",
+      "program": "${workspaceFolder}/ShiftsLoggerV2.RyanW84/bin/Debug/net9.0/ShiftsLoggerV2.RyanW84.dll",
       "args": [],
-      "cwd": "/home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ShiftsLoggerV2.RyanW84",
+      "cwd": "${workspaceFolder}/ShiftsLoggerV2.RyanW84",
       "console": "integratedTerminal"
     },
     {
       "name": "ConsoleFrontEnd Debug",
       "type": "coreclr",
       "request": "launch",
-      "program": "/home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ConsoleFrontEnd/bin/Debug/net9.0/ConsoleFrontEnd.dll",
+      "program": "${workspaceFolder}/ConsoleFrontEnd/bin/Debug/net9.0/ConsoleFrontEnd.dll",
       "args": [],
-      "cwd": "/home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ConsoleFrontEnd",
+      "cwd": "${workspaceFolder}/ConsoleFrontEnd",
       "console": "integratedTerminal"
     }
   ],

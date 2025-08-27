@@ -17,6 +17,25 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+
+        // Configure services for testing
+        builder.ConfigureServices(services =>
+        {
+            // Remove the existing DbContext registration
+            var descriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(DbContextOptions<ShiftsLoggerDbContext>));
+
+            if (descriptor != null)
+            {
+                services.Remove(descriptor);
+            }
+
+            // Add in-memory database for testing
+            services.AddDbContext<ShiftsLoggerDbContext>(options =>
+            {
+                options.UseInMemoryDatabase("InMemoryTestDb");
+            });
+        });
     }
 }
 

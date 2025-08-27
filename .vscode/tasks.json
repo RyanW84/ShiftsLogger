@@ -4,7 +4,8 @@
     {
       "label": "Run ShiftsLogger API (background)",
       "type": "shell",
-  "command": "dotnet run --project /home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84.csproj",
+      "command": "dotnet",
+      "args": ["run", "--project", "${workspaceFolder}/ShiftsLoggerV2.RyanW84/ShiftsLoggerV2.RyanW84.csproj"],
       "isBackground": true,
       "problemMatcher": [],
       "presentation": { "reveal": "always", "panel": "dedicated" }
@@ -12,7 +13,8 @@
     {
       "label": "Run ConsoleFrontEnd",
       "type": "shell",
-      "command": "dotnet run --project /home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/ConsoleFrontEnd/ConsoleFrontEnd.csproj",
+      "command": "dotnet",
+      "args": ["run", "--project", "${workspaceFolder}/ConsoleFrontEnd/ConsoleFrontEnd.csproj"],
       "isBackground": false,
       "problemMatcher": [],
       "presentation": { "reveal": "always", "panel": "shared" }
@@ -21,12 +23,12 @@
       "label": "Run backend then frontend",
       "dependsOn": ["Run ShiftsLogger API (background)", "Run ConsoleFrontEnd"],
       "dependsOrder": "sequence"
-    }
-    ,
+    },
     {
       "label": "wait-for-backend",
       "type": "shell",
-      "command": "/home/ryanw/OneDrive_ryan.weavers@gmail.com/Documents/GitHub/ShiftsLogger/.vscode/wait-for-backend.sh https://127.0.0.1:7009 60",
+      "command": "${workspaceFolder}/.vscode/wait-for-backend.sh",
+      "args": ["https://127.0.0.1:7009", "60"],
       "isBackground": false,
       "problemMatcher": [],
       "presentation": { "reveal": "always", "panel": "shared" }

@@ -57,11 +57,12 @@ static string GetConnectionString(IConfiguration configuration)
     else
     {
         // Use SQL Server on Linux - read from user secrets
-        var connectionString = configuration.GetConnectionString("LinuxSqlServer");
+        var connectionString = configuration["ConnectionStrings:LinuxSqlServer"];
 
         if (string.IsNullOrWhiteSpace(connectionString))
             throw new InvalidOperationException(
-                "LinuxSqlServer connection string must be configured for non-Windows platforms."
+                "LinuxSqlServer connection string must be configured in user secrets for non-Windows platforms. " +
+                "Run 'dotnet user-secrets set \"ConnectionStrings:LinuxSqlServer\" \"<your-connection-string>\"' to set it."
             );
 
         // Add connection timeout if not present

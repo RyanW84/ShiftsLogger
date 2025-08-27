@@ -5,8 +5,8 @@
     "LogLevel": "Information"
   },
   "IntegrationTests": {
-    "Enabled": false,
-    "Reason": "Database provider conflicts - need to resolve EF Core registration issue"
+    "Enabled": true,
+    "Reason": "Database provider conflicts resolved with CustomWebApplicationFactory"
   },
   "TestCategories": {
     "Models": {
@@ -22,7 +22,7 @@
       "Pattern": "FullyQualifiedName~Controllers"
     },
     "Integration": {
-      "Enabled": false,
+      "Enabled": true,
       "Pattern": "FullyQualifiedName~Integration"
     }
   }

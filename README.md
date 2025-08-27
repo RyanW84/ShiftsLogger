@@ -84,12 +84,12 @@ The solution follows a clean architecture approach with clear separation of conc
 - `Microsoft.EntityFrameworkCore.Tools` (9.0.8) - Migration tools
 
 #### API & Documentation
-- `Microsoft.AspNetCore.OpenApi` (9.0.6) - OpenAPI support
+- `Microsoft.AspNetCore.OpenApi` (9.0.8) - OpenAPI support
 - `Microsoft.OpenApi` (1.6.24) - OpenAPI specifications
-- `Scalar.AspNetCore` (2.4.17) - Modern API documentation
+- `Scalar.AspNetCore` (2.7.2) - Modern API documentation
 
 #### Mapping & DI
-- `AutoMapper` (14.0.0) - Object-to-object mapping
+- `AutoMapper` (15.0.1) - Object-to-object mapping
 - `Microsoft.Extensions.DependencyInjection` (9.0.8) - Dependency injection
 - `Microsoft.Extensions.Logging` (9.0.8) - Logging framework
 
@@ -99,40 +99,34 @@ The solution follows a clean architecture approach with clear separation of conc
 ### Console Frontend Project (ConsoleFrontEnd)
 
 #### Core Dependencies
-- `AutoMapper` (14.0.0) - Object mapping
-- `Microsoft.AspNetCore.OpenApi` (9.0.6) - API integration
-- `Microsoft.EntityFrameworkCore` (9.0.6) - Database operations
-- `Microsoft.EntityFrameworkCore.Design` (9.0.6) - Design tools
-- `Microsoft.EntityFrameworkCore.SqlServer` (9.0.6) - SQL Server support
-- `Microsoft.EntityFrameworkCore.Tools` (9.0.6) - EF tools
+- `AutoMapper` (15.0.1) - Object mapping
 
 #### Hosting & Configuration
-- `Microsoft.Extensions.DependencyInjection` (9.0.6) - DI container
-- `Microsoft.Extensions.Hosting` (9.0.6) - Host builder
-- `Microsoft.Extensions.Logging` (9.0.6) - Logging
+- `Microsoft.Extensions.DependencyInjection` (9.0.8) - DI container
+- `Microsoft.Extensions.Hosting` (9.0.8) - Host builder
+- `Microsoft.Extensions.Http` (9.0.8) - HTTP client factory
+- `Microsoft.Extensions.Logging` (9.0.8) - Logging
 
-#### API & Documentation
-- `Microsoft.OpenApi` (1.6.24) - OpenAPI client
-- `Scalar.AspNetCore` (2.4.17) - API documentation
+#### UI & Console
 - `Spectre.Console` (0.50.0) - Console UI
 
 ### Test Project (ShiftsLoggerV2.RyanW84.Tests)
 
 #### Testing Framework
-- `Microsoft.NET.Test.Sdk` (17.12.0) - Test SDK
-- `xunit` (2.9.2) - Testing framework
-- `xunit.runner.visualstudio` (2.8.2) - Visual Studio test runner
+- `Microsoft.NET.Test.Sdk` (17.14.1) - Test SDK
+- `xunit` (2.9.3) - Testing framework
+- `xunit.runner.visualstudio` (3.1.4) - Visual Studio test runner
 
 #### Mocking & Assertions
 - `Moq` (4.20.72) - Mocking framework
-- `FluentAssertions` (7.0.0) - Fluent assertion library
+- `FluentAssertions` (8.6.0) - Fluent assertion library
 
 #### Integration Testing
-- `Microsoft.AspNetCore.Mvc.Testing` (9.0.6) - ASP.NET Core testing
+- `Microsoft.AspNetCore.Mvc.Testing` (9.0.8) - ASP.NET Core testing
 - `Microsoft.EntityFrameworkCore.InMemory` (9.0.8) - In-memory database for tests
 
 #### Code Coverage
-- `coverlet.collector` (6.0.2) - Code coverage collection
+- `coverlet.collector` (6.0.4) - Code coverage collection
 
 ## 📁 Project Structure
 
@@ -221,17 +215,29 @@ ShiftsLogger/
    dotnet restore
    ```
 
-3. **Set up the database**
+3. **Set up user secrets** (for Linux SQL Server)
+   ```bash
+   # Run the setup script
+   ./setup-user-secrets.sh  # Linux/macOS
+   # OR
+   setup-user-secrets.bat   # Windows
+
+   # Then set your connection string
+   cd ShiftsLoggerV2.RyanW84
+   dotnet user-secrets set "ConnectionStrings:LinuxSqlServer" "Server=127.0.0.1,1433;Database=ShiftsLoggerDb;User Id=sa;Password=YOUR_PASSWORD;TrustServerCertificate=yes;Encrypt=false;MultipleActiveResultSets=yes"
+   ```
+
+4. **Set up the database**
    ```bash
    dotnet ef database update --project ShiftsLoggerV2.RyanW84
    ```
 
-4. **Run the API**
+5. **Run the API**
    ```bash
    dotnet run --project ShiftsLoggerV2.RyanW84
    ```
 
-5. **Run the console frontend** (in a separate terminal)
+6. **Run the console frontend** (in a separate terminal)
    ```bash
    dotnet run --project ConsoleFrontEnd
    ```
@@ -256,9 +262,17 @@ The application automatically selects the appropriate connection string based on
 ```
 
 #### Linux (SQL Server)
-```json
-"LinuxSqlServer": "Server=127.0.0.1,1433;Database=ShiftsLoggerDb;User Id=$$YourUserNameHere$$;Password=$$YourPasswordHere$$;TrustServerCertificate=yes;Encrypt=false;MultipleActiveResultSets=yes"
+For Linux environments, configure the connection string using user secrets:
+
+```bash
+# Navigate to the API project directory
+cd ShiftsLoggerV2.RyanW84
+
+# Set the Linux SQL Server connection string in user secrets
+dotnet user-secrets set "ConnectionStrings:LinuxSqlServer" "Server=127.0.0.1,1433;Database=ShiftsLoggerDb;User Id=sa;Password=YourSecurePassword;TrustServerCertificate=yes;Encrypt=false;MultipleActiveResultSets=yes"
 ```
+
+**Security Note**: Never commit database passwords to source control. Always use user secrets or environment variables for sensitive configuration.
 
 #### Testing (In-Memory)
 For testing environments, the application uses Entity Framework's in-memory database provider.

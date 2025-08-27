@@ -9,7 +9,7 @@ ShiftsLoggerV2.RyanW84.Tests/
 ├── Controllers/
 │   └── WorkersControllerTests.cs
 ├── Integration/
-│   └── WorkersControllerIntegrationTests.cs  (Disabled - see notes)
+│   └── WorkersControllerIntegrationTests.cs  (Now Enabled ✅)
 ├── Models/
 │   ├── LocationTests.cs
 │   ├── ShiftTests.cs
