@@ -35,7 +35,11 @@ public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
 
             if (!entities.Any())
             {
-                return Result<List<TEntity>>.NotFound($"No {typeof(TEntity).Name.ToLower()}s found with the specified criteria.");
+                return Result<List<TEntity>>.Success(
+                    entities,
+                    $"No {typeof(TEntity).Name.ToLower()}s found with the specified criteria.",
+                    HttpStatusCode.OK
+                );
             }
 
             return Result<List<TEntity>>.Success(

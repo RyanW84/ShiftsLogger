@@ -83,9 +83,15 @@ public class WorkerBusinessService : BaseService<Worker, WorkerFilterOptions, Wo
         if (workerResult.IsFailure)
             return workerResult;
 
-        // Check if worker has any shifts (you might want to prevent deletion if they have shifts)
-        // This would require access to shift repository or a method to check relationships
-        // For now, we'll allow deletion but this could be enhanced
+        var worker = workerResult.Data!;
+        
+        // Check if worker has any associated shifts
+        var hasShifts = await _workerRepository.HasAssociatedShiftsAsync(id).ConfigureAwait(false);
+            
+        if (hasShifts)
+        {
+            return Result.Failure($"Cannot delete worker '{worker.Name}' because they have associated shifts. Please reassign or delete the shifts first.");
+        }
 
         return Result.Success();
     }

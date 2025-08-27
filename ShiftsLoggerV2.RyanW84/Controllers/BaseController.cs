@@ -19,6 +19,19 @@ public abstract class BaseController : ControllerBase
     {
         if (!result.IsSuccess)
         {
+            // Check if it's a NotFound result with empty data - treat as success with empty collection
+            if (result.StatusCode == HttpStatusCode.NotFound && result.Data is IEnumerable<object> emptyEnumerable && !emptyEnumerable.Any())
+            {
+                return Ok(new ApiResponseDto<T>
+                {
+                    RequestFailed = false,
+                    ResponseCode = HttpStatusCode.OK,
+                    Message = successMessage,
+                    Data = result.Data,
+                    TotalCount = 0
+                });
+            }
+
             return StatusCode((int)result.StatusCode, new ApiResponseDto<T>
             {
                 RequestFailed = true,

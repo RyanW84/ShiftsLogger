@@ -103,7 +103,7 @@ public class WorkerRepository : BaseRepository<Worker, WorkerFilterOptions, Work
 
             if (!workers.Any())
             {
-                return Result<List<Worker>>.NotFound("No workers found with the specified criteria.");
+                return Result<List<Worker>>.Success(workers, "No workers found with the specified criteria.", System.Net.HttpStatusCode.OK);
             }
 
             return Result<List<Worker>>.Success(workers, "Workers retrieved successfully.", System.Net.HttpStatusCode.OK);
@@ -158,5 +158,15 @@ public class WorkerRepository : BaseRepository<Worker, WorkerFilterOptions, Work
         entity.Name = updateDto.Name.Trim();
         entity.Email = string.IsNullOrWhiteSpace(updateDto.Email) ? null : updateDto.Email.Trim();
         entity.PhoneNumber = string.IsNullOrWhiteSpace(updateDto.PhoneNumber) ? null : updateDto.PhoneNumber.Trim();
+    }
+
+    /// <summary>
+    /// Checks if a worker has any associated shifts
+    /// </summary>
+    /// <param name="workerId">The worker ID to check</param>
+    /// <returns>True if the worker has associated shifts, false otherwise</returns>
+    public async Task<bool> HasAssociatedShiftsAsync(int workerId)
+    {
+        return await DbContext.Shifts.AnyAsync(s => s.WorkerId == workerId);
     }
 }

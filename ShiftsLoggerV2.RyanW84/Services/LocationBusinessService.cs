@@ -54,9 +54,15 @@ public class LocationBusinessService : BaseService<Location, LocationFilterOptio
         if (locationResult.IsFailure)
             return locationResult;
 
-        // Check if location has any shifts (you might want to prevent deletion if they have shifts)
-        // This would require access to shift repository or a method to check relationships
-        // For now, we'll allow deletion but this could be enhanced
+        var location = locationResult.Data!;
+        
+        // Check if location has any associated shifts
+        var hasShifts = await _locationRepository.HasAssociatedShiftsAsync(id).ConfigureAwait(false);
+            
+        if (hasShifts)
+        {
+            return Result.Failure($"Cannot delete location '{location.Name}' because it has associated shifts. Please reassign or delete the shifts first.");
+        }
 
         return Result.Success();
     }

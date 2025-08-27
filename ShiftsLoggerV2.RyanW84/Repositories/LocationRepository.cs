@@ -21,6 +21,9 @@ public class LocationRepository : BaseRepository<Location, LocationFilterOptions
     {
         var query = DbSet.AsQueryable();
 
+        // Include Shifts navigation property for count display
+        query = query.Include(l => l.Shifts);
+
         // Apply filters
         if (filterOptions.LocationId.HasValue && filterOptions.LocationId.Value > 0)
             query = query.Where(l => l.LocationId == filterOptions.LocationId.Value);
@@ -170,5 +173,15 @@ public class LocationRepository : BaseRepository<Location, LocationFilterOptions
         entity.County = updateDto.County.Trim();
         entity.PostCode = updateDto.PostCode.Trim();
         entity.Country = updateDto.Country.Trim();
+    }
+
+    /// <summary>
+    /// Checks if a location has any associated shifts
+    /// </summary>
+    /// <param name="locationId">The location ID to check</param>
+    /// <returns>True if the location has associated shifts, false otherwise</returns>
+    public async Task<bool> HasAssociatedShiftsAsync(int locationId)
+    {
+        return await DbContext.Shifts.AnyAsync(s => s.LocationId == locationId);
     }
 }

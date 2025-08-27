@@ -22,6 +22,12 @@ public interface IShiftRepository : IRepository<Shift, ShiftFilterOptions, Shift
 /// </summary>
 public interface IWorkerRepository : IRepository<Worker, WorkerFilterOptions, WorkerApiRequestDto, WorkerApiRequestDto>
 {
+    /// <summary>
+    /// Checks if a worker has any associated shifts
+    /// </summary>
+    /// <param name="workerId">The worker ID to check</param>
+    /// <returns>True if the worker has associated shifts, false otherwise</returns>
+    Task<bool> HasAssociatedShiftsAsync(int workerId);
 }
 
 /// <summary>
@@ -29,4 +35,10 @@ public interface IWorkerRepository : IRepository<Worker, WorkerFilterOptions, Wo
 /// </summary>
 public interface ILocationRepository : IRepository<Location, LocationFilterOptions, LocationApiRequestDto, LocationApiRequestDto>
 {
+    /// <summary>
+    /// Checks if a location has any associated shifts
+    /// </summary>
+    /// <param name="locationId">The location ID to check</param>
+    /// <returns>True if the location has associated shifts, false otherwise</returns>
+    Task<bool> HasAssociatedShiftsAsync(int locationId);
 }
