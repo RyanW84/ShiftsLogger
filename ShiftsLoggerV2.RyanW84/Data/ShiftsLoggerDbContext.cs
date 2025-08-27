@@ -169,69 +169,21 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
         if (!savedWorkers.Any() || !savedLocations.Any())
             return;
 
-        // Seed shifts with varied durations to test duration filtering and display
-        var variedShifts = new List<Shift>
+        // Only seed if we have fewer than 20 shifts total
+        var currentShiftCount = Shifts.Count();
+        if (currentShiftCount >= 20)
         {
-            new()
-            {
-                StartTime = DateTimeOffset.Now.AddDays(3).AddHours(6),
-                EndTime = DateTimeOffset.Now.AddDays(3).AddHours(10), // 4 hours
-                WorkerId = savedWorkers.First().WorkerId,
-                LocationId = savedLocations.Skip(1).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
-            },
-            new()
-            {
-                StartTime = DateTimeOffset.Now.AddDays(4).AddHours(14),
-                EndTime = DateTimeOffset.Now.AddDays(4).AddHours(22), // 8 hours
-                WorkerId = savedWorkers.Skip(1).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
-                LocationId = savedLocations.Skip(2).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
-            },
-            new()
-            {
-                StartTime = DateTimeOffset.Now.AddDays(5).AddHours(9),
-                EndTime = DateTimeOffset.Now.AddDays(5).AddHours(14), // 5 hours
-                WorkerId = savedWorkers.Skip(2).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
-                LocationId = savedLocations.Skip(3).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
-            },
-            new()
-            {
-                StartTime = DateTimeOffset.Now.AddDays(6).AddHours(16),
-                EndTime = DateTimeOffset.Now.AddDays(6).AddHours(20), // 4 hours
-                WorkerId = savedWorkers.Skip(3).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
-                LocationId = savedLocations.Skip(4).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
-            },
-            new()
-            {
-                StartTime = DateTimeOffset.Now.AddDays(7).AddHours(8),
-                EndTime = DateTimeOffset.Now.AddDays(7).AddHours(12), // 4 hours
-                WorkerId = savedWorkers.Skip(4).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
-                LocationId = savedLocations.First().LocationId,
-            },
-            new()
-            {
-                StartTime = DateTimeOffset.Now.AddDays(8).AddHours(10),
-                EndTime = DateTimeOffset.Now.AddDays(8).AddHours(18), // 8 hours
-                WorkerId = savedWorkers.First().WorkerId,
-                LocationId = savedLocations.Skip(1).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
-            },
-            new()
-            {
-                StartTime = DateTimeOffset.Now.AddDays(9).AddHours(13),
-                EndTime = DateTimeOffset.Now.AddDays(9).AddHours(21), // 8 hours
-                WorkerId = savedWorkers.Skip(1).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
-                LocationId = savedLocations.Skip(2).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
-            },
-            new()
-            {
-                StartTime = DateTimeOffset.Now.AddDays(10).AddHours(11),
-                EndTime = DateTimeOffset.Now.AddDays(10).AddHours(15), // 4 hours
-                WorkerId = savedWorkers.Skip(2).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
-                LocationId = savedLocations.Skip(3).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
-            },
-        };
+            logger?.LogInformation("Sufficient shifts already exist ({ShiftCount}). Skipping seeding.", currentShiftCount);
+            return;
+        }
+
+        // Generate a reasonable number of random shifts (not too many to avoid buffer issues)
+        var shiftsToGenerate = Math.Min(12, 20 - currentShiftCount);
+        var variedShifts = GenerateRandomShifts(savedWorkers, savedLocations, shiftsToGenerate);
 
         try
         {
+            var addedCount = 0;
             // Only add shifts that don't already exist (by StartTime, WorkerId, LocationId)
             foreach (var s in variedShifts)
             {
@@ -244,26 +196,32 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
                     && x.StartTime == s.StartTime
                 );
                 if (!exists)
+                {
                     Shifts.Add(s);
+                    addedCount++;
+                }
             }
 
-            SaveChanges();
+            if (addedCount > 0)
+            {
+                SaveChanges();
 
-            // Log summary
-            try
-            {
-                logger?.LogInformation(
-                    "Added varied duration shifts. Total shifts in database: {ShiftCount}",
-                    Shifts.Count()
-                );
-            }
-            catch (Exception logEx)
-            {
+                // Log summary
                 try
                 {
-                    Console.WriteLine($"Seeding summary log error: {logEx}");
+                    logger?.LogInformation(
+                        "Added {AddedCount} varied duration shifts. Total shifts in database: {ShiftCount}",
+                        addedCount, Shifts.Count()
+                    );
                 }
-                catch { }
+                catch (Exception logEx)
+                {
+                    try
+                    {
+                        Console.WriteLine($"Seeding summary log error: {logEx}");
+                    }
+                    catch { }
+                }
             }
         }
         catch (Exception ex)
@@ -281,6 +239,71 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
                 }
                 catch { }
             }
+        }
+    }
+
+    private List<Shift> GenerateRandomShifts(List<Worker> workers, List<Location> locations, int count)
+    {
+        var shifts = new List<Shift>();
+        var random = new Random();
+        var baseDate = DateTimeOffset.Now;
+
+        // Possible shift durations in hours
+        var durations = new[] { 4, 5, 8 };
+
+        for (int i = 0; i < count; i++)
+        {
+            // Select random worker and location
+            var worker = workers[random.Next(workers.Count)];
+            var location = locations[random.Next(locations.Count)];
+
+            // Generate random start time (between -2 days and +10 days from now)
+            var daysOffset = random.Next(-2, 11);
+            var hoursOffset = random.Next(6, 22); // Business hours: 6 AM to 10 PM
+            var startTime = baseDate.AddDays(daysOffset).AddHours(hoursOffset);
+
+            // Select random duration
+            var durationHours = durations[random.Next(durations.Length)];
+            var endTime = startTime.AddHours(durationHours);
+
+            // Ensure end time is not in the past if start time is in the past
+            if (endTime < baseDate && startTime < baseDate)
+            {
+                // If both times are in the past, move them to future
+                var futureOffset = random.Next(1, 8);
+                startTime = baseDate.AddDays(futureOffset).AddHours(hoursOffset);
+                endTime = startTime.AddHours(durationHours);
+            }
+
+            var shift = new Shift
+            {
+                WorkerId = worker.WorkerId,
+                LocationId = location.LocationId,
+                StartTime = startTime,
+                EndTime = endTime
+            };
+
+            shifts.Add(shift);
+        }
+
+        return shifts;
+    }
+
+    public void ResetShiftsForTesting(ILogger<ShiftsLoggerDbContext>? logger)
+    {
+        try
+        {
+            var shiftCount = Shifts.Count();
+            if (shiftCount > 0)
+            {
+                Shifts.RemoveRange(Shifts);
+                SaveChanges();
+                logger?.LogInformation("Cleared {ShiftCount} shifts from database for testing purposes.", shiftCount);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Failed to reset shifts for testing.");
         }
     }
 }
