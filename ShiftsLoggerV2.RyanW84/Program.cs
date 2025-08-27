@@ -1,10 +1,10 @@
+using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.InteropServices;
 using Scalar.AspNetCore;
 using ShiftsLoggerV2.RyanW84.Data;
 using ShiftsLoggerV2.RyanW84.Extensions;
-using System.Reflection;
+using ShiftsLoggerV2.RyanW84.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +18,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
 // Prevents circular dependency issues
-builder.Services.AddControllers()
+builder
+    .Services.AddControllers()
     .AddJsonOptions(opts =>
         opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles
     );
@@ -28,40 +29,46 @@ if (builder.Environment.EnvironmentName == "Testing")
 {
     // Use In-Memory database for testing
     builder.Services.AddDbContext<ShiftsLoggerDbContext>(options =>
-        options.UseInMemoryDatabase("InMemoryTestDb"));
+        options.UseInMemoryDatabase("InMemoryTestDb")
+    );
 }
 else
 {
     // Use SQL Server for development and production
     var connectionString = GetConnectionString(builder.Configuration);
-    builder.Services.AddDbContext<ShiftsLoggerDbContext>(options => 
-        options.UseSqlServer(connectionString));
+    builder.Services.AddDbContext<ShiftsLoggerDbContext>(options =>
+        options.UseSqlServer(connectionString)
+    );
 }
 
 // Register all application services
 builder.Services.AddApplicationServices();
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 static string GetConnectionString(IConfiguration configuration)
 {
     var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-    
+
     if (isWindows)
     {
         // Use LocalDB on Windows
-        return configuration.GetConnectionString("DefaultConnection") 
-               ?? "Server=(localdb)\\MSSQLLocalDB;Database=ShiftsLoggerDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
+        return configuration.GetConnectionString("DefaultConnection")
+            ?? "Server=(localdb)\\MSSQLLocalDB;Database=ShiftsLoggerDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
     }
     else
     {
         // Use SQL Server on Linux - read from user secrets
         var connectionString = configuration.GetConnectionString("LinuxSqlServer");
-        
+
         if (string.IsNullOrWhiteSpace(connectionString))
-            throw new InvalidOperationException("LinuxSqlServer connection string must be configured for non-Windows platforms.");
+            throw new InvalidOperationException(
+                "LinuxSqlServer connection string must be configured for non-Windows platforms."
+            );
 
         // Add connection timeout if not present
-        if (!connectionString.Contains("Connection Timeout") && !connectionString.Contains("Timeout"))
+        if (
+            !connectionString.Contains("Connection Timeout")
+            && !connectionString.Contains("Timeout")
+        )
         {
             connectionString += ";Connection Timeout=30;Command Timeout=30";
         }
@@ -78,13 +85,14 @@ if (app.Environment.IsDevelopment())
 
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ShiftsLoggerDbContext>();
-    
+
     // Apply migrations and seed data
     dbContext.Database.Migrate();
-    
-    var logger = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ShiftsLoggerDbContext>>();
+
+    var logger =
+        scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ShiftsLoggerDbContext>>();
     dbContext.SeedData(logger);
-    
+
     Console.WriteLine("Database setup completed successfully");
 }
 

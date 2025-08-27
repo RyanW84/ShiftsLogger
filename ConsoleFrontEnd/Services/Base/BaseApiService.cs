@@ -2,6 +2,8 @@ using ConsoleFrontEnd.Models.Dtos;
 using ConsoleFrontEnd.Services.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+
+using System.Net.Http;
 using System.Net.Http.Json;
 
 namespace ConsoleFrontEnd.Services.Base;

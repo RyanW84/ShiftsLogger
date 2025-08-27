@@ -12,11 +12,11 @@ namespace ShiftsLoggerV2.RyanW84.Services;
 /// <summary>
 /// Business logic service for Location operations
 /// </summary>
-public class LocationValidation : BaseService<Location, LocationFilterOptions, LocationApiRequestDto, LocationApiRequestDto>, ILocationBusinessService
+public class LocationBusinessService : BaseService<Location, LocationFilterOptions, LocationApiRequestDto, LocationApiRequestDto>, ILocationBusinessService
 {
     private readonly ILocationRepository _locationRepository;
 
-    public LocationValidation(ILocationRepository locationRepository) : base(locationRepository)
+    public LocationBusinessService(ILocationRepository locationRepository) : base(locationRepository)
     {
         _locationRepository = locationRepository;
     }
@@ -134,10 +134,10 @@ public class LocationValidation : BaseService<Location, LocationFilterOptions, L
         // Basic post code validation - allows alphanumeric characters, spaces, and dashes
         // This is a simplified pattern that works for most international formats
         var postCodePattern = @"^[A-Za-z0-9\s\-]+$";
-        
+
         try
         {
-            return Regex.IsMatch(postCode.Trim(), postCodePattern) && 
+            return Regex.IsMatch(postCode.Trim(), postCodePattern) &&
                    postCode.Trim().Length >= 3 &&
                    postCode.Any(char.IsLetterOrDigit);
         }

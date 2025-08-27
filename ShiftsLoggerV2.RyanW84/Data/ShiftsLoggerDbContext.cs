@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using ShiftsLoggerV2.RyanW84.Models;
 
 namespace ShiftsLoggerV2.RyanW84.Data;
@@ -24,14 +23,8 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             .WithMany(w => w.Shifts)
             .HasForeignKey(s => s.WorkerId)
             .OnDelete(DeleteBehavior.Cascade);
-        modelBuilder
-            .Entity<Worker>()
-            .HasIndex(w => w.Email)
-            .IsUnique(); // Ensure unique email addresses for workers
-        modelBuilder
-            .Entity<Worker>()
-            .HasIndex(w => w.PhoneNumber)
-            .IsUnique();
+        modelBuilder.Entity<Worker>().HasIndex(w => w.Email).IsUnique(); // Ensure unique email addresses for workers
+        modelBuilder.Entity<Worker>().HasIndex(w => w.PhoneNumber).IsUnique();
     }
 
     public void SeedData(ILogger<ShiftsLoggerDbContext>? logger)
@@ -43,80 +36,90 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
         // Seed Workers (idempotent: skip if worker with same email exists)
         var workers = new List<Worker>
         {
-            new() {
+            new()
+            {
                 Name = "John Smith",
                 Email = "john.smith@company.com",
-                PhoneNumber = "+44 7911 123456"
+                PhoneNumber = "+44 7911 123456",
             },
-            new() {
+            new()
+            {
                 Name = "Sarah Johnson",
                 Email = "sarah.johnson@company.com",
-                PhoneNumber = "+44 7700 900123"
+                PhoneNumber = "+44 7700 900123",
             },
-            new() {
+            new()
+            {
                 Name = "Mike Davis",
                 Email = "mike.davis@company.com",
-                PhoneNumber = "+44 7802 345678"
+                PhoneNumber = "+44 7802 345678",
             },
-            new() {
+            new()
+            {
                 Name = "Emily Wilson",
                 Email = "emily.wilson@company.com",
-                PhoneNumber = "+44 7920 765432"
+                PhoneNumber = "+44 7920 765432",
             },
-            new() {
+            new()
+            {
                 Name = "David Brown",
                 Email = "david.brown@company.com",
-                PhoneNumber = "+44 7555 123456"
-            }
+                PhoneNumber = "+44 7555 123456",
+            },
         };
 
         // Seed Locations (idempotent: skip if location with same name exists)
         var locations = new List<Location>
         {
-            new() {
+            new()
+            {
                 Name = "London Office",
                 Address = "1 Canary Wharf",
                 Town = "London",
                 County = "Greater London",
                 PostCode = "E14 5AB",
-                Country = "UK"
+                Country = "UK",
             },
-            new() {
+            new()
+            {
                 Name = "Manchester Warehouse",
                 Address = "22 Trafford Park",
                 Town = "Manchester",
                 County = "Greater Manchester",
                 PostCode = "M17 1AB",
-                Country = "UK"
+                Country = "UK",
             },
-            new() {
+            new()
+            {
                 Name = "Birmingham Plant",
                 Address = "15 Aston Road",
                 Town = "Birmingham",
                 County = "West Midlands",
                 PostCode = "B6 4DA",
-                Country = "UK"
+                Country = "UK",
             },
-            new() {
+            new()
+            {
                 Name = "Leeds Service Centre",
                 Address = "8 Wellington Place",
                 Town = "Leeds",
                 County = "West Yorkshire",
                 PostCode = "LS1 4AP",
-                Country = "UK"
+                Country = "UK",
             },
-            new() {
+            new()
+            {
                 Name = "Bristol Research Lab",
                 Address = "3 Temple Quay",
                 Town = "Bristol",
                 County = "Bristol",
                 PostCode = "BS1 6DZ",
-                Country = "UK"
-            }
+                Country = "UK",
+            },
         };
 
-    try
-    {
+        try
+        {
             // Insert workers if they do not already exist (by email)
             foreach (var w in workers)
             {
@@ -140,11 +143,20 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             // Optional: log summary of seeded counts (best-effort)
             try
             {
-                logger?.LogInformation("Seeded Workers: {WorkerCount}, Locations: {LocationCount}, Shifts: {ShiftCount}", Workers.Count(), Locations.Count(), Shifts.Count());
+                logger?.LogInformation(
+                    "Seeded Workers: {WorkerCount}, Locations: {LocationCount}, Shifts: {ShiftCount}",
+                    Workers.Count(),
+                    Locations.Count(),
+                    Shifts.Count()
+                );
             }
             catch (Exception logEx)
             {
-                try { Console.WriteLine($"Seeding summary log error: {logEx}"); } catch { }
+                try
+                {
+                    Console.WriteLine($"Seeding summary log error: {logEx}");
+                }
+                catch { }
             }
 
             // Get the saved entities with their IDs
@@ -154,45 +166,70 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             // Seed Shifts (using the actual IDs from saved entities)
             // Seed Shifts (ensure referenced worker/location IDs exist and times are sensible)
             var shifts = new List<Shift>
-        {
-            new() {
+            {
+                new()
+                {
                     StartTime = DateTimeOffset.Now.AddHours(-2),
                     EndTime = DateTimeOffset.Now.AddHours(6),
                     WorkerId = savedWorkers.First().WorkerId,
-                    LocationId = savedLocations.First().LocationId
-            },
-            new() {
+                    LocationId = savedLocations.First().LocationId,
+                },
+                new()
+                {
                     StartTime = DateTimeOffset.Now.AddDays(1).AddHours(8),
                     EndTime = DateTimeOffset.Now.AddDays(1).AddHours(16),
-                    WorkerId = savedWorkers.Skip(1).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
-                    LocationId = savedLocations.Skip(1).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
-            },
-            new() {
+                    WorkerId =
+                        savedWorkers.Skip(1).FirstOrDefault()?.WorkerId
+                        ?? savedWorkers.First().WorkerId,
+                    LocationId =
+                        savedLocations.Skip(1).FirstOrDefault()?.LocationId
+                        ?? savedLocations.First().LocationId,
+                },
+                new()
+                {
                     StartTime = DateTimeOffset.Now.AddDays(2).AddHours(7),
                     EndTime = DateTimeOffset.Now.AddDays(2).AddHours(15),
-                    WorkerId = savedWorkers.Skip(2).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
-                    LocationId = savedLocations.Skip(2).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
-            },
-            new() {
+                    WorkerId =
+                        savedWorkers.Skip(2).FirstOrDefault()?.WorkerId
+                        ?? savedWorkers.First().WorkerId,
+                    LocationId =
+                        savedLocations.Skip(2).FirstOrDefault()?.LocationId
+                        ?? savedLocations.First().LocationId,
+                },
+                new()
+                {
                     StartTime = DateTimeOffset.Now.AddDays(-1).AddHours(9),
                     EndTime = DateTimeOffset.Now.AddDays(-1).AddHours(17),
-                    WorkerId = savedWorkers.Skip(3).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
-                    LocationId = savedLocations.Skip(3).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
-            },
-            new() {
+                    WorkerId =
+                        savedWorkers.Skip(3).FirstOrDefault()?.WorkerId
+                        ?? savedWorkers.First().WorkerId,
+                    LocationId =
+                        savedLocations.Skip(3).FirstOrDefault()?.LocationId
+                        ?? savedLocations.First().LocationId,
+                },
+                new()
+                {
                     StartTime = DateTimeOffset.Now.AddDays(-2).AddHours(10),
                     EndTime = DateTimeOffset.Now.AddDays(-2).AddHours(18),
-                    WorkerId = savedWorkers.Skip(4).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
-                    LocationId = savedLocations.Skip(4).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId
-            }
-        };
+                    WorkerId =
+                        savedWorkers.Skip(4).FirstOrDefault()?.WorkerId
+                        ?? savedWorkers.First().WorkerId,
+                    LocationId =
+                        savedLocations.Skip(4).FirstOrDefault()?.LocationId
+                        ?? savedLocations.First().LocationId,
+                },
+            };
             // Only add shifts that don't already exist (by StartTime, WorkerId, LocationId)
             foreach (var s in shifts)
             {
                 if (s.EndTime <= s.StartTime)
                     continue; // skip invalid
 
-                var exists = Shifts.Any(x => x.WorkerId == s.WorkerId && x.LocationId == s.LocationId && x.StartTime == s.StartTime);
+                var exists = Shifts.Any(x =>
+                    x.WorkerId == s.WorkerId
+                    && x.LocationId == s.LocationId
+                    && x.StartTime == s.StartTime
+                );
                 if (!exists)
                     Shifts.Add(s);
             }
@@ -208,7 +245,11 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             }
             catch
             {
-                try { Console.WriteLine($"Seeding error: {ex}"); } catch { }
+                try
+                {
+                    Console.WriteLine($"Seeding error: {ex}");
+                }
+                catch { }
             }
         }
     }

@@ -3,41 +3,23 @@ using Microsoft.AspNetCore.Mvc;
 using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
-using ShiftsLoggerV2.RyanW84.Services;
+using ShiftsLoggerV2.RyanW84.Services.Interfaces;
 using ShiftsLoggerV2.RyanW84.Common;
-using System.Globalization;
-using Spectre.Console;
 
 namespace ShiftsLoggerV2.RyanW84.Controllers;
 
 [ApiController]
-//http://localhost:7009/api/shifts/ this is what the route will look like
 [Route("api/[controller]")]
-public class ShiftsController : ControllerBase
+public class ShiftsController : BaseController
 {
-    private readonly IShiftService _shiftService;
-    private readonly ShiftValidation _validation;
+    private readonly IShiftBusinessService _shiftBusinessService;
 
-    public ShiftsController(IShiftService shiftService, ShiftValidation validation)
+    public ShiftsController(IShiftBusinessService shiftBusinessService)
     {
-        _shiftService = shiftService;
-        _validation = validation;
+        _shiftBusinessService = shiftBusinessService;
     }
 
-    // Convert ModelState errors into a consistent ApiResponseDto shape
-    private ActionResult BadRequestModelState()
-    {
-        var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-        var message = errors.Any() ? "Validation failed: " + string.Join("; ", errors) : "Validation failed";
-        return BadRequest(new ApiResponseDto<object>
-        {
-            RequestFailed = true,
-            ResponseCode = System.Net.HttpStatusCode.BadRequest,
-            Message = message,
-            Data = null,
-            TotalCount = 0
-        });
-    }
+
 
     // This is the route for getting all shifts
     [HttpGet(Name = "Get All Shifts")]
@@ -46,26 +28,8 @@ public class ShiftsController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _validation.GetAllAsync(shiftOptions);
-            if (!result.IsSuccess)
-            {
-                return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Shift>>
-                {
-                    RequestFailed = true,
-                    ResponseCode = result.StatusCode,
-                    Message = result.Message,
-                    Data = null
-                });
-            }
-
-            return Ok(new ApiResponseDto<List<Shift>>
-            {
-                RequestFailed = false,
-                ResponseCode = System.Net.HttpStatusCode.OK,
-                Message = "Shifts retrieved successfully",
-                Data = result.Data?.ToList(),
-                TotalCount = result.Data?.Count() ?? 0
-            });
+            var result = await _shiftBusinessService.GetAllAsync(shiftOptions);
+            return HandleResult(result, "Shifts retrieved successfully");
         }
         catch (Exception ex)
         {
@@ -88,40 +52,8 @@ public class ShiftsController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _validation.GetByIdAsync(id);
-
-            if (!result.IsSuccess)
-            {
-                if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    AnsiConsole.MarkupLine($"[red]Shift: {id} Not Found![/]");
-                    return NotFound(new ApiResponseDto<Shift>
-                    {
-                        RequestFailed = true,
-                        ResponseCode = System.Net.HttpStatusCode.NotFound,
-                        Message = result.Message,
-                        Data = null
-                    });
-                }
-
-                return StatusCode((int)result.StatusCode, new ApiResponseDto<Shift>
-                {
-                    RequestFailed = true,
-                    ResponseCode = result.StatusCode,
-                    Message = result.Message,
-                    Data = null
-                });
-            }
-
-            AnsiConsole.MarkupLine($"[Green]Shift: {id} returned successfully[/]");
-            return Ok(new ApiResponseDto<Shift>
-            {
-                RequestFailed = false,
-                ResponseCode = System.Net.HttpStatusCode.OK,
-                Message = "Shift retrieved successfully",
-                Data = result.Data,
-                TotalCount = 1
-            });
+            var result = await _shiftBusinessService.GetByIdAsync(id);
+            return HandleResult(result, "Shift retrieved successfully");
         }
         catch (Exception ex)
         {
@@ -155,7 +87,7 @@ public class ShiftsController : ControllerBase
                 return BadRequestModelState();
             }
 
-            var result = await _validation.CreateAsync(shift);
+            var result = await _shiftBusinessService.CreateAsync(shift);
 
             if (!result.IsSuccess)
             {
@@ -208,7 +140,7 @@ public class ShiftsController : ControllerBase
                 return BadRequestModelState();
             }
 
-            var result = await _validation.UpdateAsync(id, shift);
+            var result = await _shiftBusinessService.UpdateAsync(id, shift);
 
             if (!result.IsSuccess)
             {
@@ -251,7 +183,7 @@ public class ShiftsController : ControllerBase
         try
         {
             // Use the new SOLID business service for enhanced functionality
-            var result = await _validation.DeleteAsync(id);
+            var result = await _shiftBusinessService.DeleteAsync(id);
 
             if (!result.IsSuccess)
             {
@@ -300,7 +232,7 @@ public class ShiftsController : ControllerBase
                 EndDate = endDate
             };
 
-            var result = await _validation.GetAllAsync(filterOptions);
+            var result = await _shiftBusinessService.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Shift>>
@@ -342,7 +274,7 @@ public class ShiftsController : ControllerBase
         {
             var filterOptions = new ShiftFilterOptions { WorkerId = workerId };
 
-            var result = await _validation.GetAllAsync(filterOptions);
+            var result = await _shiftBusinessService.GetAllAsync(filterOptions);
             if (!result.IsSuccess)
             {
                 return StatusCode((int)result.StatusCode, new ApiResponseDto<List<Shift>>

@@ -1,5 +1,9 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using ShiftsLoggerV2.RyanW84.Data;
 using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using System.Net;
@@ -8,12 +12,20 @@ using Xunit;
 
 namespace ShiftsLoggerV2.RyanW84.Tests.Integration;
 
-public class WorkersControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
+    }
+}
+
+public class WorkersControllerIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
+{
+    private readonly CustomWebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
 
-    public WorkersControllerIntegrationTests(WebApplicationFactory<Program> factory)
+    public WorkersControllerIntegrationTests(CustomWebApplicationFactory<Program> factory)
     {
         _factory = factory;
         _client = _factory.CreateClient();

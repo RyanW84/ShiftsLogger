@@ -2,6 +2,7 @@
 using ShiftsLoggerV2.RyanW84.Repositories;
 using ShiftsLoggerV2.RyanW84.Repositories.Interfaces;
 using ShiftsLoggerV2.RyanW84.Services;
+using ShiftsLoggerV2.RyanW84.Services.Interfaces;
 
 namespace ShiftsLoggerV2.RyanW84.Extensions;
 
@@ -27,13 +28,10 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static IServiceCollection AddBusinessServices(this IServiceCollection services)
     {
-        services.AddScoped<ShiftValidation>();
-        services.AddScoped<WorkerValidation>();
-        services.AddScoped<LocationValidation>();
-        services.AddScoped<IShiftService, ShiftService>();
-        services.AddScoped<IWorkerService, WorkerService>();
-        services.AddScoped<ILocationService, LocationService>();
-
+        // Register business services (consolidated from validation classes)
+        services.AddScoped<IShiftBusinessService, ShiftBusinessService>();
+        services.AddScoped<IWorkerBusinessService, WorkerBusinessService>();
+        services.AddScoped<ILocationBusinessService, LocationBusinessService>();
 
         return services;
     }

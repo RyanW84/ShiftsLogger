@@ -12,11 +12,11 @@ namespace ShiftsLoggerV2.RyanW84.Services;
 /// <summary>
 /// Business logic service for Worker operations
 /// </summary>
-public class WorkerValidation : BaseService<Worker, WorkerFilterOptions, WorkerApiRequestDto, WorkerApiRequestDto>, IWorkerBusinessService
+public class WorkerBusinessService : BaseService<Worker, WorkerFilterOptions, WorkerApiRequestDto, WorkerApiRequestDto>, IWorkerBusinessService
 {
     private readonly IWorkerRepository _workerRepository;
 
-    public WorkerValidation(IWorkerRepository workerRepository) : base(workerRepository)
+    public WorkerBusinessService(IWorkerRepository workerRepository) : base(workerRepository)
     {
         _workerRepository = workerRepository;
     }
@@ -114,7 +114,7 @@ public class WorkerValidation : BaseService<Worker, WorkerFilterOptions, WorkerA
 
         // Remove formatting characters for validation
         var cleanPhone = phoneNumber.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace(".", "");
-        
+
         // Must contain at least 10 digits
         var digitCount = cleanPhone.Count(char.IsDigit);
         return digitCount >= 10 && digitCount <= 15;

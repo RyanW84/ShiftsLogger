@@ -1,0 +1,85 @@
+using System.Net;
+using Microsoft.AspNetCore.Mvc;
+using ShiftsLoggerV2.RyanW84.Common;
+using ShiftsLoggerV2.RyanW84.Dtos;
+
+namespace ShiftsLoggerV2.RyanW84.Controllers;
+
+/// <summary>
+/// Base controller providing common functionality for all API controllers
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+public abstract class BaseController : ControllerBase
+{
+    /// <summary>
+    /// Handles Result<T> and converts it to appropriate ActionResult<ApiResponseDto<T>>
+    /// </summary>
+    protected ActionResult<ApiResponseDto<T>> HandleResult<T>(Result<T> result, string successMessage)
+    {
+        if (!result.IsSuccess)
+        {
+            return StatusCode((int)result.StatusCode, new ApiResponseDto<T>
+            {
+                RequestFailed = true,
+                ResponseCode = result.StatusCode,
+                Message = result.Message,
+                Data = default,
+                TotalCount = 0
+            });
+        }
+
+        return Ok(new ApiResponseDto<T>
+        {
+            RequestFailed = false,
+            ResponseCode = HttpStatusCode.OK,
+            Message = successMessage,
+            Data = result.Data,
+            TotalCount = result.Data is IEnumerable<object> enumerable ? enumerable.Count() : (result.Data != null ? 1 : 0)
+        });
+    }
+
+    /// <summary>
+    /// Handles Result and converts it to appropriate ActionResult<ApiResponseDto<string>>
+    /// </summary>
+    protected ActionResult<ApiResponseDto<string>> HandleResult(Result result, string successMessage)
+    {
+        if (!result.IsSuccess)
+        {
+            return StatusCode((int)result.StatusCode, new ApiResponseDto<string>
+            {
+                RequestFailed = true,
+                ResponseCode = result.StatusCode,
+                Message = result.Message,
+                Data = string.Empty,
+                TotalCount = 0
+            });
+        }
+
+        return Ok(new ApiResponseDto<string>
+        {
+            RequestFailed = false,
+            ResponseCode = HttpStatusCode.OK,
+            Message = successMessage,
+            Data = string.Empty,
+            TotalCount = 0
+        });
+    }
+
+    /// <summary>
+    /// Converts ModelState errors into a consistent ApiResponseDto shape
+    /// </summary>
+    protected ActionResult BadRequestModelState()
+    {
+        var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+        var message = errors.Any() ? "Validation failed: " + string.Join("; ", errors) : "Validation failed";
+        return BadRequest(new ApiResponseDto<object>
+        {
+            RequestFailed = true,
+            ResponseCode = HttpStatusCode.BadRequest,
+            Message = message,
+            Data = null,
+            TotalCount = 0
+        });
+    }
+}

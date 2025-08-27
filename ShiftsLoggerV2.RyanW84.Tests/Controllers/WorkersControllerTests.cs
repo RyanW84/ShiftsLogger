@@ -5,7 +5,7 @@ using ShiftsLoggerV2.RyanW84.Controllers;
 using ShiftsLoggerV2.RyanW84.Dtos;
 using ShiftsLoggerV2.RyanW84.Models;
 using ShiftsLoggerV2.RyanW84.Models.FilterOptions;
-using ShiftsLoggerV2.RyanW84.Services;
+using ShiftsLoggerV2.RyanW84.Services.Interfaces;
 using ShiftsLoggerV2.RyanW84.Common;
 using System.Net;
 using Xunit;
@@ -14,15 +14,13 @@ namespace ShiftsLoggerV2.RyanW84.Tests.Controllers;
 
 public class WorkersControllerTests
 {
-    private readonly Mock<IWorkerService> _mockWorkerService;
-    private readonly Mock<WorkerValidation> _mockValidation;
+    private readonly Mock<IWorkerBusinessService> _mockWorkerBusinessService;
     private readonly WorkersController _controller;
 
     public WorkersControllerTests()
     {
-        _mockWorkerService = new Mock<IWorkerService>();
-        _mockValidation = new Mock<WorkerValidation>(Mock.Of<Repositories.Interfaces.IWorkerRepository>());
-        _controller = new WorkersController(_mockWorkerService.Object, _mockValidation.Object);
+        _mockWorkerBusinessService = new Mock<IWorkerBusinessService>();
+        _controller = new WorkersController(_mockWorkerBusinessService.Object);
     }
 
     [Fact]
@@ -37,7 +35,7 @@ public class WorkersControllerTests
         };
 
         var result = Result<List<Worker>>.Success(workers, "Workers retrieved successfully");
-        _mockValidation.Setup(v => v.GetAllAsync(filterOptions))
+        _mockWorkerBusinessService.Setup(v => v.GetAllAsync(filterOptions))
             .ReturnsAsync(result);
 
         // Act
@@ -63,7 +61,7 @@ public class WorkersControllerTests
         var filterOptions = new WorkerFilterOptions();
         var result = Result<List<Worker>>.Failure("Database error", HttpStatusCode.InternalServerError);
         
-        _mockValidation.Setup(v => v.GetAllAsync(filterOptions))
+        _mockWorkerBusinessService.Setup(v => v.GetAllAsync(filterOptions))
             .ReturnsAsync(result);
 
         // Act
@@ -89,7 +87,7 @@ public class WorkersControllerTests
         var worker = new Worker { WorkerId = workerId, Name = "John Doe" };
         var result = Result<Worker>.Success(worker, "Worker found");
         
-        _mockValidation.Setup(v => v.GetByIdAsync(workerId))
+        _mockWorkerBusinessService.Setup(v => v.GetByIdAsync(workerId))
             .ReturnsAsync(result);
 
         // Act
@@ -112,17 +110,18 @@ public class WorkersControllerTests
         const int workerId = 999;
         var result = Result<Worker>.Failure("Worker not found", HttpStatusCode.NotFound);
         
-        _mockValidation.Setup(v => v.GetByIdAsync(workerId))
+        _mockWorkerBusinessService.Setup(v => v.GetByIdAsync(workerId))
             .ReturnsAsync(result);
 
         // Act
         var response = await _controller.GetWorkerById(workerId);
 
         // Assert
-        response.Result.Should().BeOfType<NotFoundObjectResult>();
-        var notFoundResult = response.Result as NotFoundObjectResult;
-        
-        var apiResponse = notFoundResult!.Value as ApiResponseDto<Worker>;
+        response.Result.Should().BeOfType<ObjectResult>();
+        var objectResult = response.Result as ObjectResult;
+        objectResult!.StatusCode.Should().Be(404);
+
+        var apiResponse = objectResult.Value as ApiResponseDto<Worker>;
         apiResponse!.RequestFailed.Should().BeTrue();
         apiResponse.ResponseCode.Should().Be(HttpStatusCode.NotFound);
         apiResponse.Data.Should().BeNull();
@@ -149,20 +148,19 @@ public class WorkersControllerTests
 
         var result = Result<Worker>.Success(createdWorker, "Worker created successfully");
         
-        _mockValidation.Setup(v => v.CreateAsync(workerDto))
+        _mockWorkerBusinessService.Setup(v => v.CreateAsync(workerDto))
             .ReturnsAsync(result);
 
         // Act
         var response = await _controller.CreateWorker(workerDto);
 
         // Assert
-        response.Result.Should().BeOfType<ObjectResult>();
-        var objectResult = response.Result as ObjectResult;
-        objectResult!.StatusCode.Should().Be(201);
-        
-        var apiResponse = objectResult.Value as ApiResponseDto<Worker>;
+        response.Result.Should().BeOfType<OkObjectResult>();
+        var okResult = response.Result as OkObjectResult;
+
+        var apiResponse = okResult!.Value as ApiResponseDto<Worker>;
         apiResponse!.RequestFailed.Should().BeFalse();
-        apiResponse.ResponseCode.Should().Be(HttpStatusCode.Created);
+        apiResponse.ResponseCode.Should().Be(HttpStatusCode.OK);
         apiResponse.Data!.Name.Should().Be("John Doe");
         apiResponse.Data.Email.Should().Be("john@example.com");
     }
@@ -174,7 +172,7 @@ public class WorkersControllerTests
         var workerDto = new WorkerApiRequestDto { Name = "" }; // Invalid name
         var result = Result<Worker>.Failure("Worker name is required.", HttpStatusCode.BadRequest);
         
-        _mockValidation.Setup(v => v.CreateAsync(workerDto))
+        _mockWorkerBusinessService.Setup(v => v.CreateAsync(workerDto))
             .ReturnsAsync(result);
 
         // Act
@@ -197,7 +195,7 @@ public class WorkersControllerTests
     public async Task GetWorkerById_WithInvalidId_ShouldReturnBadRequest(int invalidId)
     {
         // Arrange
-        _mockValidation.Setup(v => v.GetByIdAsync(invalidId))
+        _mockWorkerBusinessService.Setup(v => v.GetByIdAsync(invalidId))
             .ReturnsAsync(Result<Worker>.Failure("ID must be greater than 0", HttpStatusCode.BadRequest));
 
         // Act
