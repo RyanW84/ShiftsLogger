@@ -43,11 +43,23 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
 
     public void SeedData(ILogger<ShiftsLoggerDbContext>? logger)
     {
-        // Only seed data if tables are empty
-        if (Workers.Any() || Locations.Any() || Shifts.Any())
-            return;
+        // Seed workers and locations if they don't exist
+        if (!Workers.Any())
+        {
+            SeedWorkers(logger);
+        }
 
-        // Seed Workers (idempotent: skip if worker with same email exists)
+        if (!Locations.Any())
+        {
+            SeedLocations(logger);
+        }
+
+        // Always try to seed some varied duration shifts for testing
+        SeedVariedDurationShifts(logger);
+    }
+
+    private void SeedWorkers(ILogger<ShiftsLoggerDbContext>? logger)
+    {
         var workers = new List<Worker>
         {
             new()
@@ -82,7 +94,16 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             },
         };
 
-        // Seed Locations (idempotent: skip if location with same name exists)
+        foreach (var w in workers)
+        {
+            if (!string.IsNullOrWhiteSpace(w.Email) && !Workers.Any(x => x.Email != null && x.Email.ToLower() == w.Email.ToLower()))
+                Workers.Add(w);
+        }
+        SaveChanges();
+    }
+
+    private void SeedLocations(ILogger<ShiftsLoggerDbContext>? logger)
+    {
         var locations = new List<Location>
         {
             new()
@@ -132,109 +153,87 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             },
         };
 
+        foreach (var l in locations)
+        {
+            if (!string.IsNullOrWhiteSpace(l.Name) && !Locations.Any(x => x.Name.ToLower() == l.Name.ToLower()))
+                Locations.Add(l);
+        }
+        SaveChanges();
+    }
+
+    private void SeedVariedDurationShifts(ILogger<ShiftsLoggerDbContext>? logger)
+    {
+        var savedWorkers = Workers.ToList();
+        var savedLocations = Locations.ToList();
+
+        if (!savedWorkers.Any() || !savedLocations.Any())
+            return;
+
+        // Seed shifts with varied durations to test duration filtering and display
+        var variedShifts = new List<Shift>
+        {
+            new()
+            {
+                StartTime = DateTimeOffset.Now.AddDays(3).AddHours(6),
+                EndTime = DateTimeOffset.Now.AddDays(3).AddHours(10), // 4 hours
+                WorkerId = savedWorkers.First().WorkerId,
+                LocationId = savedLocations.Skip(1).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
+            },
+            new()
+            {
+                StartTime = DateTimeOffset.Now.AddDays(4).AddHours(14),
+                EndTime = DateTimeOffset.Now.AddDays(4).AddHours(22), // 8 hours
+                WorkerId = savedWorkers.Skip(1).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
+                LocationId = savedLocations.Skip(2).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
+            },
+            new()
+            {
+                StartTime = DateTimeOffset.Now.AddDays(5).AddHours(9),
+                EndTime = DateTimeOffset.Now.AddDays(5).AddHours(14), // 5 hours
+                WorkerId = savedWorkers.Skip(2).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
+                LocationId = savedLocations.Skip(3).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
+            },
+            new()
+            {
+                StartTime = DateTimeOffset.Now.AddDays(6).AddHours(16),
+                EndTime = DateTimeOffset.Now.AddDays(6).AddHours(20), // 4 hours
+                WorkerId = savedWorkers.Skip(3).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
+                LocationId = savedLocations.Skip(4).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
+            },
+            new()
+            {
+                StartTime = DateTimeOffset.Now.AddDays(7).AddHours(8),
+                EndTime = DateTimeOffset.Now.AddDays(7).AddHours(12), // 4 hours
+                WorkerId = savedWorkers.Skip(4).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
+                LocationId = savedLocations.First().LocationId,
+            },
+            new()
+            {
+                StartTime = DateTimeOffset.Now.AddDays(8).AddHours(10),
+                EndTime = DateTimeOffset.Now.AddDays(8).AddHours(18), // 8 hours
+                WorkerId = savedWorkers.First().WorkerId,
+                LocationId = savedLocations.Skip(1).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
+            },
+            new()
+            {
+                StartTime = DateTimeOffset.Now.AddDays(9).AddHours(13),
+                EndTime = DateTimeOffset.Now.AddDays(9).AddHours(21), // 8 hours
+                WorkerId = savedWorkers.Skip(1).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
+                LocationId = savedLocations.Skip(2).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
+            },
+            new()
+            {
+                StartTime = DateTimeOffset.Now.AddDays(10).AddHours(11),
+                EndTime = DateTimeOffset.Now.AddDays(10).AddHours(15), // 4 hours
+                WorkerId = savedWorkers.Skip(2).FirstOrDefault()?.WorkerId ?? savedWorkers.First().WorkerId,
+                LocationId = savedLocations.Skip(3).FirstOrDefault()?.LocationId ?? savedLocations.First().LocationId,
+            },
+        };
+
         try
         {
-            // Insert workers if they do not already exist (by email)
-            foreach (var w in workers)
-            {
-                if (string.IsNullOrWhiteSpace(w.Email))
-                    continue;
-                if (!Workers.Any(x => x.Email != null && x.Email.ToLower() == w.Email.ToLower()))
-                    Workers.Add(w);
-            }
-
-            // Insert locations if not already present (by name)
-            foreach (var l in locations)
-            {
-                if (string.IsNullOrWhiteSpace(l.Name))
-                    continue;
-                if (!Locations.Any(x => x.Name.ToLower() == l.Name.ToLower()))
-                    Locations.Add(l);
-            }
-
-            SaveChanges();
-
-            // Optional: log summary of seeded counts (best-effort)
-            try
-            {
-                logger?.LogInformation(
-                    "Seeded Workers: {WorkerCount}, Locations: {LocationCount}, Shifts: {ShiftCount}",
-                    Workers.Count(),
-                    Locations.Count(),
-                    Shifts.Count()
-                );
-            }
-            catch (Exception logEx)
-            {
-                try
-                {
-                    Console.WriteLine($"Seeding summary log error: {logEx}");
-                }
-                catch { }
-            }
-
-            // Get the saved entities with their IDs
-            var savedWorkers = Workers.ToList();
-            var savedLocations = Locations.ToList();
-
-            // Seed Shifts (using the actual IDs from saved entities)
-            // Seed Shifts (ensure referenced worker/location IDs exist and times are sensible)
-            var shifts = new List<Shift>
-            {
-                new()
-                {
-                    StartTime = DateTimeOffset.Now.AddHours(-2),
-                    EndTime = DateTimeOffset.Now.AddHours(6),
-                    WorkerId = savedWorkers.First().WorkerId,
-                    LocationId = savedLocations.First().LocationId,
-                },
-                new()
-                {
-                    StartTime = DateTimeOffset.Now.AddDays(1).AddHours(8),
-                    EndTime = DateTimeOffset.Now.AddDays(1).AddHours(16),
-                    WorkerId =
-                        savedWorkers.Skip(1).FirstOrDefault()?.WorkerId
-                        ?? savedWorkers.First().WorkerId,
-                    LocationId =
-                        savedLocations.Skip(1).FirstOrDefault()?.LocationId
-                        ?? savedLocations.First().LocationId,
-                },
-                new()
-                {
-                    StartTime = DateTimeOffset.Now.AddDays(2).AddHours(7),
-                    EndTime = DateTimeOffset.Now.AddDays(2).AddHours(15),
-                    WorkerId =
-                        savedWorkers.Skip(2).FirstOrDefault()?.WorkerId
-                        ?? savedWorkers.First().WorkerId,
-                    LocationId =
-                        savedLocations.Skip(2).FirstOrDefault()?.LocationId
-                        ?? savedLocations.First().LocationId,
-                },
-                new()
-                {
-                    StartTime = DateTimeOffset.Now.AddDays(-1).AddHours(9),
-                    EndTime = DateTimeOffset.Now.AddDays(-1).AddHours(17),
-                    WorkerId =
-                        savedWorkers.Skip(3).FirstOrDefault()?.WorkerId
-                        ?? savedWorkers.First().WorkerId,
-                    LocationId =
-                        savedLocations.Skip(3).FirstOrDefault()?.LocationId
-                        ?? savedLocations.First().LocationId,
-                },
-                new()
-                {
-                    StartTime = DateTimeOffset.Now.AddDays(-2).AddHours(10),
-                    EndTime = DateTimeOffset.Now.AddDays(-2).AddHours(18),
-                    WorkerId =
-                        savedWorkers.Skip(4).FirstOrDefault()?.WorkerId
-                        ?? savedWorkers.First().WorkerId,
-                    LocationId =
-                        savedLocations.Skip(4).FirstOrDefault()?.LocationId
-                        ?? savedLocations.First().LocationId,
-                },
-            };
             // Only add shifts that don't already exist (by StartTime, WorkerId, LocationId)
-            foreach (var s in shifts)
+            foreach (var s in variedShifts)
             {
                 if (s.EndTime <= s.StartTime)
                     continue; // skip invalid
@@ -249,13 +248,30 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
             }
 
             SaveChanges();
+
+            // Log summary
+            try
+            {
+                logger?.LogInformation(
+                    "Added varied duration shifts. Total shifts in database: {ShiftCount}",
+                    Shifts.Count()
+                );
+            }
+            catch (Exception logEx)
+            {
+                try
+                {
+                    Console.WriteLine($"Seeding summary log error: {logEx}");
+                }
+                catch { }
+            }
         }
         catch (Exception ex)
         {
             // Use provided logger to log exceptions during seeding
             try
             {
-                logger?.LogError(ex, "An error occurred while seeding the database.");
+                logger?.LogError(ex, "An error occurred while seeding varied duration shifts.");
             }
             catch
             {
