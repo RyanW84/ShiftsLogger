@@ -85,6 +85,7 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
         SaveChanges();
     }
 
+    // Seed random data
     private void SeedLocations(ILogger<ShiftsLoggerDbContext>? logger)
     {
         var locationData = new[]
