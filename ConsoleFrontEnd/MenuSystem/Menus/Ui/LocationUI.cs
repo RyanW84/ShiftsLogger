@@ -175,7 +175,7 @@ public class LocationUI : ILocationUi
         _display.DisplayHeader("Select Location", "blue");
 
         var currentPage = 1;
-        const int pageSize = 20; // Larger page size for selection
+        const int pageSize = 10;
 
         while (true)
         {
@@ -196,7 +196,7 @@ public class LocationUI : ILocationUi
             }
 
             var choices = response.Data
-                .Select(l => $"{l.LocationId}: {l.Name} - {l.Town}, {l.Country}")
+                .Select((l, index) => $"{index + 1}. {l.Name} - {l.Town}, {l.Country}")
                 .ToList();
 
             // Add navigation options if there are more pages
@@ -206,6 +206,7 @@ public class LocationUI : ILocationUi
                 choices.Add("Previous Page...");
 
             choices.Add("Enter ID Manually");
+            choices.Add("Cancel/Return to Menu");
 
             var selected = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
@@ -227,9 +228,23 @@ public class LocationUI : ILocationUi
             {
                 return AnsiConsole.Ask<int>("[green]Enter location ID:[/]");
             }
+            else if (selected == "Cancel/Return to Menu")
+            {
+                return -1;
+            }
             else
             {
-                return UiHelper.ExtractIdFromChoice(selected);
+                // Extract the count from the selected choice and get the corresponding location
+                var count = UiHelper.ExtractCountFromChoice(selected);
+                if (count > 0 && count <= response.Data.Count)
+                {
+                    return response.Data[count - 1].LocationId;
+                }
+                else
+                {
+                    _display.DisplayError("Invalid selection.");
+                    continue;
+                }
             }
         }
     }
@@ -239,7 +254,7 @@ public class LocationUI : ILocationUi
         _display.DisplayHeader("Select Location", "blue");
 
         var currentPage = 1;
-        const int pageSize = 20; // Larger page size for selection
+        const int pageSize = 10;
 
         while (true)
         {
@@ -260,7 +275,7 @@ public class LocationUI : ILocationUi
             }
 
             var choices = response.Data
-                .Select(l => $"{l.LocationId}: {l.Name} - {l.Town}, {l.Country}")
+                .Select((l, index) => $"{index + 1}. {l.Name} - {l.Town}, {l.Country}")
                 .ToList();
 
             // Add navigation options if there are more pages
@@ -270,6 +285,7 @@ public class LocationUI : ILocationUi
                 choices.Add("Previous Page...");
 
             choices.Add("Enter ID Manually");
+            choices.Add("Cancel/Return to Menu");
 
             var selected = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
@@ -291,9 +307,23 @@ public class LocationUI : ILocationUi
             {
                 return AnsiConsole.Ask<int>("[green]Enter location ID:[/]");
             }
+            else if (selected == "Cancel/Return to Menu")
+            {
+                return -1;
+            }
             else
             {
-                return UiHelper.ExtractIdFromChoice(selected);
+                // Extract the count from the selected choice and get the corresponding location
+                var count = UiHelper.ExtractCountFromChoice(selected);
+                if (count > 0 && count <= response.Data.Count)
+                {
+                    return response.Data[count - 1].LocationId;
+                }
+                else
+                {
+                    _display.DisplayError("Invalid selection.");
+                    continue;
+                }
             }
         }
     }

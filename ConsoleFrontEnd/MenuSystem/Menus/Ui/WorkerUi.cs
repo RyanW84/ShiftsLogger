@@ -186,7 +186,7 @@ public class WorkerUi : IWorkerUi
         _display.DisplayHeader("Select Worker", "blue");
 
         var currentPage = 1;
-        const int pageSize = 20; // Larger page size for selection
+        const int pageSize = 10; // Display 10 items at a time
 
         while (true)
         {
@@ -206,7 +206,7 @@ public class WorkerUi : IWorkerUi
             }
 
             var choices = response.Data
-                .Select(w => $"{w.WorkerId}: {w.Name}")
+                .Select((w, index) => $"{index + 1}. {w.Name}")
                 .ToList();
 
             // Add navigation options if there are more pages
@@ -216,6 +216,7 @@ public class WorkerUi : IWorkerUi
                 choices.Add("Previous Page...");
 
             choices.Add("Enter ID Manually");
+            choices.Add("Cancel/Return to Menu");
 
             var selected = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
@@ -237,9 +238,23 @@ public class WorkerUi : IWorkerUi
             {
                 return AnsiConsole.Ask<int>("[green]Enter worker ID:[/]");
             }
+            else if (selected == "Cancel/Return to Menu")
+            {
+                return -1; // Signal cancellation
+            }
             else
             {
-                return UiHelper.ExtractIdFromChoice(selected);
+                // Extract the count from the selected choice and get the corresponding worker
+                var count = UiHelper.ExtractCountFromChoice(selected);
+                if (count > 0 && count <= response.Data.Count)
+                {
+                    return response.Data[count - 1].WorkerId;
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("[red]Invalid selection.[/]");
+                    continue;
+                }
             }
         }
     }

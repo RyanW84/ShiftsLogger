@@ -126,16 +126,16 @@ public class WorkerMenu : BaseMenu
 
     private async Task ViewWorkerByIdAsync()
     {
-        var allWorkersResponse = await _workerService.GetAllWorkersAsync();
-        if (allWorkersResponse.RequestFailed || allWorkersResponse.Data == null || !allWorkersResponse.Data.Any())
+        DisplayService.DisplayHeader("Select Worker", "blue");
+
+        var workerId = await _workerUi.GetWorkerByIdUi();
+        if (workerId <= 0)
         {
-            DisplayService.DisplayError(allWorkersResponse.Message ?? "No workers found.");
+            DisplayService.DisplayError("No worker selected.");
             InputService.WaitForKeyPress();
             return;
         }
-        var workerChoices = allWorkersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
-        var selected = InputService.GetMenuChoice("Select a worker by ID:", workerChoices);
-        var workerId = UiHelper.ExtractIdFromChoice(selected);
+
         var response = await _workerService.GetWorkerByIdAsync(workerId);
         DisplayService.DisplayHeader($"Worker Details (ID: {workerId})", "blue");
         if (response.RequestFailed || response.Data == null)
@@ -189,17 +189,25 @@ public class WorkerMenu : BaseMenu
     private async Task UpdateWorkerAsync()
     {
         DisplayService.DisplayHeader("Update Worker", "yellow");
-        var allWorkersResponse = await _workerService.GetAllWorkersAsync();
-        if (allWorkersResponse.RequestFailed || allWorkersResponse.Data == null || !allWorkersResponse.Data.Any())
+
+        var workerId = await _workerUi.GetWorkerByIdUi();
+        if (workerId <= 0)
         {
-            DisplayService.DisplayError(allWorkersResponse.Message ?? "No workers found.");
+            DisplayService.DisplayError("No worker selected.");
             InputService.WaitForKeyPress();
             return;
         }
-        var workerChoices = allWorkersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
-        var selected = InputService.GetMenuChoice("Select a worker to update:", workerChoices);
-        var workerId = UiHelper.ExtractIdFromChoice(selected);
-        var worker = allWorkersResponse.Data.First(w => w.WorkerId == workerId);
+
+        // Get the current worker details
+        var workerResponse = await _workerService.GetWorkerByIdAsync(workerId);
+        if (workerResponse.RequestFailed || workerResponse.Data == null)
+        {
+            DisplayService.DisplayError(workerResponse.Message ?? "Failed to retrieve worker details.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+
+        var worker = workerResponse.Data;
         var name = InputService.GetTextInput($"Enter new name (current: {worker.Name}):", false);
         var email = InputService.GetTextInput($"Enter new email (current: {worker.Email}):", false);
         var phone = InputService.GetTextInput($"Enter new phone (current: {worker.PhoneNumber}):", false);
@@ -226,16 +234,15 @@ public class WorkerMenu : BaseMenu
     private async Task DeleteWorkerAsync()
     {
         DisplayService.DisplayHeader("Delete Worker", "red");
-        var allWorkersResponse = await _workerService.GetAllWorkersAsync();
-        if (allWorkersResponse.RequestFailed || allWorkersResponse.Data == null || !allWorkersResponse.Data.Any())
+
+        var workerId = await _workerUi.GetWorkerByIdUi();
+        if (workerId <= 0)
         {
-            DisplayService.DisplayError(allWorkersResponse.Message ?? "No workers found.");
+            DisplayService.DisplayError("No worker selected.");
             InputService.WaitForKeyPress();
             return;
         }
-        var workerChoices = allWorkersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
-        var selected = InputService.GetMenuChoice("Select a worker to delete:", workerChoices);
-        var workerId = UiHelper.ExtractIdFromChoice(selected);
+
         if (InputService.GetConfirmation($"Are you sure you want to delete worker {workerId}?"))
         {
             var response = await _workerService.DeleteWorkerAsync(workerId);

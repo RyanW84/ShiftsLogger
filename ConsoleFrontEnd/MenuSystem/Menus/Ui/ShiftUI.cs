@@ -222,7 +222,7 @@ public class ShiftUI : IShiftUi
         _display.DisplayHeader("Select Shift", "blue");
 
         var currentPage = 1;
-        const int pageSize = 20; // Larger page size for selection
+        const int pageSize = 10; // Display 10 items at a time
 
         while (true)
         {
@@ -243,7 +243,7 @@ public class ShiftUI : IShiftUi
             }
 
             var choices = response.Data
-                .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)")
+                .Select((s, index) => $"{index + 1}. {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)")
                 .ToList();
 
             // Add navigation options if there are more pages
@@ -253,6 +253,7 @@ public class ShiftUI : IShiftUi
                 choices.Add("Previous Page...");
 
             choices.Add("Enter ID Manually");
+            choices.Add("Cancel/Return to Menu");
 
             var selected = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
@@ -274,9 +275,23 @@ public class ShiftUI : IShiftUi
             {
                 return AnsiConsole.Ask<int>("[green]Enter shift ID:[/]");
             }
+            else if (selected == "Cancel/Return to Menu")
+            {
+                return -1; // Signal cancellation
+            }
             else
             {
-                return UiHelper.ExtractIdFromChoice(selected);
+                // Extract the count from the selected choice and get the corresponding shift
+                var count = UiHelper.ExtractCountFromChoice(selected);
+                if (count > 0 && count <= response.Data.Count)
+                {
+                    return response.Data[count - 1].ShiftId;
+                }
+                else
+                {
+                    _display.DisplayError("Invalid selection.");
+                    continue;
+                }
             }
         }
     }

@@ -126,16 +126,16 @@ public class LocationMenu : BaseMenu
 
     private async Task ViewLocationByIdAsync()
     {
-        var allLocationsResponse = await _locationService.GetAllLocationsAsync();
-        if (allLocationsResponse.RequestFailed || allLocationsResponse.Data == null || !allLocationsResponse.Data.Any())
+        DisplayService.DisplayHeader("Select Location", "blue");
+
+        var locationId = await _locationUi.GetLocationByIdUi();
+        if (locationId <= 0)
         {
-            DisplayService.DisplayError(allLocationsResponse.Message ?? "No locations found.");
+            DisplayService.DisplayError("No location selected.");
             InputService.WaitForKeyPress();
             return;
         }
-        var locationChoices = allLocationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
-        var selected = InputService.GetMenuChoice("Select a location by ID:", locationChoices);
-        var locationId = UiHelper.ExtractIdFromChoice(selected);
+
         var response = await _locationService.GetLocationByIdAsync(locationId);
         DisplayService.DisplayHeader($"Location Details (ID: {locationId})", "blue");
         if (response.RequestFailed || response.Data == null)
@@ -184,17 +184,25 @@ public class LocationMenu : BaseMenu
     private async Task UpdateLocationAsync()
     {
         DisplayService.DisplayHeader("Update Location");
-        var allLocationsResponse = await _locationService.GetAllLocationsAsync();
-        if (allLocationsResponse.RequestFailed || allLocationsResponse.Data == null || !allLocationsResponse.Data.Any())
+
+        var locationId = await _locationUi.GetLocationByIdUi();
+        if (locationId <= 0)
         {
-            DisplayService.DisplayError(allLocationsResponse.Message ?? "No locations found.");
+            DisplayService.DisplayError("No location selected.");
             InputService.WaitForKeyPress();
             return;
         }
-        var locationChoices = allLocationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
-        var selected = InputService.GetMenuChoice("Select a location to update:", locationChoices);
-        var locationId = UiHelper.ExtractIdFromChoice(selected);
-        var location = allLocationsResponse.Data.First(l => l.LocationId == locationId);
+
+        // Get the current location details
+        var locationResponse = await _locationService.GetLocationByIdAsync(locationId);
+        if (locationResponse.RequestFailed || locationResponse.Data == null)
+        {
+            DisplayService.DisplayError(locationResponse.Message ?? "Failed to retrieve location details.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+
+        var location = locationResponse.Data;
         var name = InputService.GetTextInput($"Enter new name (current: {location.Name}):", false);
         var address = InputService.GetTextInput($"Enter new address (current: {location.Address}):", false);
         var town = InputService.GetTextInput($"Enter new town (current: {location.Town}):", false);
@@ -227,16 +235,15 @@ public class LocationMenu : BaseMenu
     private async Task DeleteLocationAsync()
     {
         DisplayService.DisplayHeader("Delete Location", "red");
-        var allLocationsResponse = await _locationService.GetAllLocationsAsync();
-        if (allLocationsResponse.RequestFailed || allLocationsResponse.Data == null || !allLocationsResponse.Data.Any())
+
+        var locationId = await _locationUi.GetLocationByIdUi();
+        if (locationId <= 0)
         {
-            DisplayService.DisplayError(allLocationsResponse.Message ?? "No locations found.");
+            DisplayService.DisplayError("No location selected.");
             InputService.WaitForKeyPress();
             return;
         }
-        var locationChoices = allLocationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
-        var selected = InputService.GetMenuChoice("Select a location to delete:", locationChoices);
-        var locationId = UiHelper.ExtractIdFromChoice(selected);
+
         if (InputService.GetConfirmation($"Are you sure you want to delete location {locationId}?"))
         {
             var response = await _locationService.DeleteLocationAsync(locationId);

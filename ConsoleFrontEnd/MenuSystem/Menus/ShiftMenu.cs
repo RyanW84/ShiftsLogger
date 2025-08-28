@@ -139,9 +139,10 @@ public class ShiftMenu : BaseMenu
             return;
         }
 
-        var workerChoices = workersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
+        var workerChoices = workersResponse.Data.Select((w, index) => $"{index + 1}. {w.Name}").ToArray();
         var selectedWorkerChoice = InputService.GetMenuChoice("Select Worker:", workerChoices);
-        var workerId = UiHelper.ExtractIdFromChoice(selectedWorkerChoice);
+        var workerCount = UiHelper.ExtractCountFromChoice(selectedWorkerChoice);
+        var workerId = workersResponse.Data[workerCount - 1].WorkerId;
         var filter = new ShiftFilterOptions { WorkerId = workerId };
         var response = await _shiftService.GetShiftsByFilterAsync(filter);
         if (response.RequestFailed || response.Data == null || !response.Data.Any())
@@ -283,18 +284,14 @@ public class ShiftMenu : BaseMenu
     {
         // Use the same selection-style UI as Update/Delete so users can pick from a list
         DisplayService.DisplayHeader("Select Shift", "blue");
-        var allShiftsResponse = await _shiftService.GetAllShiftsAsync();
-        if (allShiftsResponse.RequestFailed || allShiftsResponse.Data == null || !allShiftsResponse.Data.Any())
+
+        var shiftId = await _shiftUi.GetShiftByIdUi();
+        if (shiftId <= 0)
         {
-            DisplayService.DisplayError(allShiftsResponse.Message ?? "No shifts found.");
+            DisplayService.DisplayError("No shift selected.");
             InputService.WaitForKeyPress();
             return;
         }
-
-        var shiftChoices = allShiftsResponse.Data
-            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)").ToArray();
-        var selectedShiftChoice = InputService.GetMenuChoice("Select Shift:", shiftChoices);
-        var shiftId = UiHelper.ExtractIdFromChoice(selectedShiftChoice);
 
         DisplayService.DisplayHeader($"Shift Details (ID: {shiftId})", "blue");
         var response = await _shiftService.GetShiftByIdAsync(shiftId);
@@ -410,9 +407,10 @@ public class ShiftMenu : BaseMenu
         try
         {
             // Select worker with validation
-            var workerChoices = workersResponse.Data.Select(w => $"{w.WorkerId}: {w.Name}").ToArray();
+            var workerChoices = workersResponse.Data.Select((w, index) => $"{index + 1}. {w.Name}").ToArray();
             var selectedWorkerChoice = InputService.GetMenuChoice("Select Worker:", workerChoices);
-            var workerId = UiHelper.ExtractIdFromChoice(selectedWorkerChoice);
+            var workerCount = UiHelper.ExtractCountFromChoice(selectedWorkerChoice);
+            var workerId = workersResponse.Data[workerCount - 1].WorkerId;
             if (workerId <= 0)
             {
                 DisplayService.DisplayError("Invalid worker ID.");
@@ -421,9 +419,10 @@ public class ShiftMenu : BaseMenu
             }
 
             // Select location with validation
-            var locationChoices = locationsResponse.Data.Select(l => $"{l.LocationId}: {l.Name}").ToArray();
+            var locationChoices = locationsResponse.Data.Select((l, index) => $"{index + 1}. {l.Name}").ToArray();
             var selectedLocationChoice = InputService.GetMenuChoice("Select Location:", locationChoices);
-            var locationId = UiHelper.ExtractIdFromChoice(selectedLocationChoice);
+            var locationCount = UiHelper.ExtractCountFromChoice(selectedLocationChoice);
+            var locationId = locationsResponse.Data[locationCount - 1].LocationId;
             if (locationId <= 0)
             {
                 DisplayService.DisplayError("Invalid location ID.");
@@ -483,19 +482,25 @@ public class ShiftMenu : BaseMenu
     private async Task UpdateShiftAsync()
     {
         DisplayService.DisplayHeader("Update Shift");
-        var allShiftsResponse = await _shiftService.GetAllShiftsAsync();
-        if (allShiftsResponse.RequestFailed || allShiftsResponse.Data == null || !allShiftsResponse.Data.Any())
+
+        var shiftId = await _shiftUi.GetShiftByIdUi();
+        if (shiftId <= 0)
         {
-            DisplayService.DisplayError(allShiftsResponse.Message ?? "No shifts found.");
+            DisplayService.DisplayError("No shift selected.");
             InputService.WaitForKeyPress();
             return;
         }
 
-        var shiftChoices = allShiftsResponse.Data
-            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)").ToArray();
-        var selectedShiftChoice = InputService.GetMenuChoice("Select Shift to update:", shiftChoices);
-        var shiftId = UiHelper.ExtractIdFromChoice(selectedShiftChoice);
-        var shift = allShiftsResponse.Data.First(s => s.ShiftId == shiftId);
+        // Get the current shift details
+        var shiftResponse = await _shiftService.GetShiftByIdAsync(shiftId);
+        if (shiftResponse.RequestFailed || shiftResponse.Data == null)
+        {
+            DisplayService.DisplayError(shiftResponse.Message ?? "Failed to retrieve shift details.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+
+        var shift = shiftResponse.Data;
 
         // Use the interactive validator to allow keeping current values or selecting new ones
         var existingDto = new ShiftApiRequestDto
@@ -541,19 +546,25 @@ public class ShiftMenu : BaseMenu
     private async Task DeleteShiftAsync()
     {
         DisplayService.DisplayHeader("Delete Shift", "red");
-        var allShiftsResponse = await _shiftService.GetAllShiftsAsync();
-        if (allShiftsResponse.RequestFailed || allShiftsResponse.Data == null || !allShiftsResponse.Data.Any())
+
+        var shiftId = await _shiftUi.GetShiftByIdUi();
+        if (shiftId <= 0)
         {
-            DisplayService.DisplayError(allShiftsResponse.Message ?? "No shifts found.");
+            DisplayService.DisplayError("No shift selected.");
             InputService.WaitForKeyPress();
             return;
         }
 
-        var shiftChoices = allShiftsResponse.Data
-            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)").ToArray();
-        var selectedShiftChoice = InputService.GetMenuChoice("Select Shift to delete:", shiftChoices);
-        var shiftId = UiHelper.ExtractIdFromChoice(selectedShiftChoice);
-        var shift = allShiftsResponse.Data.First(s => s.ShiftId == shiftId);
+        // Get the shift details for confirmation
+        var shiftResponse = await _shiftService.GetShiftByIdAsync(shiftId);
+        if (shiftResponse.RequestFailed || shiftResponse.Data == null)
+        {
+            DisplayService.DisplayError(shiftResponse.Message ?? "Failed to retrieve shift details.");
+            InputService.WaitForKeyPress();
+            return;
+        }
+
+        var shift = shiftResponse.Data;
         if (InputService.GetConfirmation($"Are you sure you want to delete shift {shiftId} ({shift.StartTime:dd/MM/yyyy HH:mm} - {shift.EndTime:dd/MM/yyyy HH:mm})?"))
         {
             var response = await _shiftService.DeleteShiftAsync(shiftId);

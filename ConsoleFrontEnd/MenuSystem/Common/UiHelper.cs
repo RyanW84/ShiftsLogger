@@ -229,15 +229,15 @@ public class UiHelper
     }
 
     /// <summary>
-    /// Extract ID from menu choice string using ReadOnlySpan for better performance
+    /// Extract count from menu choice string in format "count. Name"
     /// </summary>
-    public static int ExtractIdFromChoice(string choice)
+    public static int ExtractCountFromChoice(string choice)
     {
         var span = choice.AsSpan();
-        var colonIndex = span.IndexOf(':');
-        if (colonIndex == -1)
-            throw new ArgumentException("Invalid choice format. Expected 'ID: Name' format.");
+        var dotIndex = span.IndexOf('.');
+        if (dotIndex == -1)
+            throw new ArgumentException("Invalid choice format. Expected 'count. Name' format.");
         
-        return int.Parse(span[..colonIndex]);
+        return int.Parse(span[..dotIndex]);
     }
 }
