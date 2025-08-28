@@ -478,3 +478,29 @@ $RECYCLE.BIN/
 
 # Rider
 .idea/
+
+# GitHub Copilot
+# Copilot chat history and conversations
+.copilot/
+.github/copilot/
+**/copilot/
+**/.copilot/
+
+# Copilot workspace data and transactions
+*.copilot-chat
+*.copilot-transaction
+*.copilot-log
+copilot-*.json
+copilot-*.log
+
+# Copilot cache and temporary files
+.copilot-cache/
+.github/copilot-cache/
+**/copilot-cache/
+**/.copilot-cache/
+
+# Copilot suggestions and completions data
+.copilot-suggestions/
+.github/copilot-suggestions/
+**/copilot-suggestions/
+**/.copilot-suggestions/
