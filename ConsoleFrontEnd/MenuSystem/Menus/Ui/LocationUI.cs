@@ -80,9 +80,9 @@ public class LocationUI : ILocationUi
         };
     }
 
-    public void DisplayLocationsTable(IEnumerable<Location> locations)
+    public void DisplayLocationsTable(IEnumerable<Location> locations, int startingRowNumber = 1)
     {
-        _display.DisplayTable(locations, "Locations");
+        _display.DisplayTable(locations, "Locations", startingRowNumber);
     }
 
     public async Task DisplayLocationsWithPaginationAsync(int initialPageNumber = 1, int pageSize = 10)
@@ -110,7 +110,10 @@ public class LocationUI : ILocationUi
                 }
             }
 
-            DisplayLocationsTable(response.Data);
+            // Calculate starting index for continuous numbering across pages
+            int startIndex = (currentPage - 1) * pageSize;
+
+            DisplayLocationsTable(response.Data, startIndex + 1);
 
             // Display pagination info
             _display.DisplayInfo($"Page {response.PageNumber} of {response.TotalPages} | Total: {response.TotalCount} locations");
@@ -195,8 +198,11 @@ public class LocationUI : ILocationUi
                 }
             }
 
+            // Calculate starting index for continuous numbering across pages
+            int startIndex = (currentPage - 1) * pageSize;
+
             var choices = response.Data
-                .Select((l, index) => $"{index + 1}. {l.Name} - {l.Town}, {l.Country}")
+                .Select((l, index) => $"{startIndex + index + 1}. {l.Name} - {l.Town}, {l.Country}")
                 .ToList();
 
             // Add navigation options if there are more pages
@@ -274,8 +280,11 @@ public class LocationUI : ILocationUi
                 }
             }
 
+            // Calculate starting index for continuous numbering across pages
+            int startIndex = (currentPage - 1) * pageSize;
+
             var choices = response.Data
-                .Select((l, index) => $"{index + 1}. {l.Name} - {l.Town}, {l.Country}")
+                .Select((l, index) => $"{startIndex + index + 1}. {l.Name} - {l.Town}, {l.Country}")
                 .ToList();
 
             // Add navigation options if there are more pages

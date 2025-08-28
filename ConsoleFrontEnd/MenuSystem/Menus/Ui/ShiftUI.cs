@@ -127,9 +127,9 @@ public class ShiftUI : IShiftUi
         };
     }
 
-    public void DisplayShiftsTable(IEnumerable<Shift> shifts)
+    public void DisplayShiftsTable(IEnumerable<Shift> shifts, int startingRowNumber = 1)
     {
-        _display.DisplayTable(shifts, "Shifts");
+        _display.DisplayTable(shifts, "Shifts", startingRowNumber);
     }
 
     public async Task DisplayShiftsWithPaginationAsync(int initialPageNumber = 1, int pageSize = 10)
@@ -157,7 +157,10 @@ public class ShiftUI : IShiftUi
                 }
             }
 
-            DisplayShiftsTable(response.Data);
+            // Calculate starting index for continuous numbering across pages
+            int startIndex = (currentPage - 1) * pageSize;
+
+            DisplayShiftsTable(response.Data, startIndex + 1);
 
             // Display pagination info
             _display.DisplayInfo($"Page {response.PageNumber} of {response.TotalPages} | Total: {response.TotalCount} shifts");
@@ -242,8 +245,11 @@ public class ShiftUI : IShiftUi
                 }
             }
 
+            // Calculate starting index for continuous numbering across pages
+            int startIndex = (currentPage - 1) * pageSize;
+
             var choices = response.Data
-                .Select((s, index) => $"{index + 1}. {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)")
+                .Select((s, index) => $"{startIndex + index + 1}. {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)")
                 .ToList();
 
             // Add navigation options if there are more pages

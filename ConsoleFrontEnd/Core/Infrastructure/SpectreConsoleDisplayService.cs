@@ -137,7 +137,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         }
     }
 
-    public void DisplayTable<T>(IEnumerable<T> data, string? title = null)
+    public void DisplayTable<T>(IEnumerable<T> data, string? title = null, int startingRowNumber = 1)
     {
         lock (_consoleLock)
         {
@@ -162,13 +162,13 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
             switch (modelName)
             {
                 case "Shift":
-                    DisplayShiftsTable(data.Cast<dynamic>(), title);
+                    DisplayShiftsTable(data.Cast<dynamic>(), title, startingRowNumber);
                     return;
                 case "Worker":
-                    DisplayWorkersTable(data.Cast<dynamic>(), title);
+                    DisplayWorkersTable(data.Cast<dynamic>(), title, startingRowNumber);
                     return;
                 case "Location":
-                    DisplayLocationsTable(data.Cast<dynamic>(), title);
+                    DisplayLocationsTable(data.Cast<dynamic>(), title, startingRowNumber);
                     return;
             }
 
@@ -196,7 +196,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         }
     }
 
-    private void DisplayShiftsTable(IEnumerable<dynamic> shifts, string? title = "Shifts")
+    private void DisplayShiftsTable(IEnumerable<dynamic> shifts, string? title = "Shifts", int startingRowNumber = 1)
     {
         var table = new Table();
         if (!string.IsNullOrEmpty(title))
@@ -214,7 +214,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         table.AddColumn(new TableColumn("[bold]Duration[/]").Centered());
 
         // Add rows with row number instead of shift ID
-        var rowCount = 1;
+        var rowCount = startingRowNumber;
         foreach (var shift in shifts)
         {
             var workerName = shift.Worker?.Name ?? "N/A";
@@ -242,7 +242,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         AnsiConsole.WriteLine();
     }
 
-    private void DisplayWorkersTable(IEnumerable<dynamic> workers, string? title = "Workers")
+    private void DisplayWorkersTable(IEnumerable<dynamic> workers, string? title = "Workers", int startingRowNumber = 1)
     {
         var table = new Table();
         if (!string.IsNullOrEmpty(title))
@@ -259,7 +259,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         table.AddColumn(new TableColumn("[bold]Total Shifts[/]").Centered());
 
         // Add rows with row number instead of worker ID
-        var rowCount = 1;
+        var rowCount = startingRowNumber;
         foreach (var worker in workers)
         {
             // Use lightweight ShiftCount when available to avoid loading full collections
@@ -288,7 +288,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         AnsiConsole.WriteLine();
     }
 
-    private void DisplayLocationsTable(IEnumerable<dynamic> locations, string? title = "Locations")
+    private void DisplayLocationsTable(IEnumerable<dynamic> locations, string? title = "Locations", int startingRowNumber = 1)
     {
         var table = new Table();
         if (!string.IsNullOrEmpty(title))
@@ -307,7 +307,7 @@ public class SpectreConsoleDisplayService : IConsoleDisplayService
         table.AddColumn(new TableColumn("[bold]Total Shifts[/]").Centered());
 
         // Add rows with row number instead of location ID
-        var rowCount = 1;
+        var rowCount = startingRowNumber;
         foreach (var location in locations)
         {
             var shiftCount = location.Shifts?.Count ?? 0;

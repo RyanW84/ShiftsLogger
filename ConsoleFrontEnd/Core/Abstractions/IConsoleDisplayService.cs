@@ -39,7 +39,7 @@ public interface IConsoleDisplayService
     /// <summary>
     /// Displays a table with data
     /// </summary>
-    void DisplayTable<T>(IEnumerable<T> data, string? title = null);
+    void DisplayTable<T>(IEnumerable<T> data, string? title = null, int startingRowNumber = 1);
 
     /// <summary>
     /// Displays system information

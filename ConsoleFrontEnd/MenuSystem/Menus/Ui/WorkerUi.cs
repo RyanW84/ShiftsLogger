@@ -91,9 +91,9 @@ public class WorkerUi : IWorkerUi
         };
     }
 
-    public void DisplayWorkersTable(IEnumerable<Worker> workers)
+    public void DisplayWorkersTable(IEnumerable<Worker> workers, int startingRowNumber = 1)
     {
-        _uiHelper.DisplayEntitiesTable(workers, EntityPluralName);
+        _display.DisplayTable(workers, EntityPluralName, startingRowNumber);
     }
 
     public async Task DisplayWorkersWithPaginationAsync(int initialPageNumber = 1, int pageSize = 10)
@@ -121,7 +121,10 @@ public class WorkerUi : IWorkerUi
                 }
             }
 
-            DisplayWorkersTable(response.Data);
+            // Calculate starting index for continuous numbering across pages
+            int startIndex = (currentPage - 1) * pageSize;
+
+            DisplayWorkersTable(response.Data, startIndex + 1);
 
             // Display pagination info
             _display.DisplayInfo($"Page {response.PageNumber} of {response.TotalPages} | Total: {response.TotalCount} workers");
@@ -205,8 +208,11 @@ public class WorkerUi : IWorkerUi
                 }
             }
 
+            // Calculate starting index for continuous numbering across pages
+            int startIndex = (currentPage - 1) * pageSize;
+
             var choices = response.Data
-                .Select((w, index) => $"{index + 1}. {w.Name}")
+                .Select((w, index) => $"{startIndex + index + 1}. {w.Name}")
                 .ToList();
 
             // Add navigation options if there are more pages
