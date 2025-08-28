@@ -85,6 +85,20 @@ public class WorkerRepository : BaseRepository<Worker, WorkerFilterOptions, Work
             // Build base worker query with filters applied
             var baseQuery = BuildQuery(filterOptions);
 
+            // Check if pagination is needed
+            if (filterOptions is Models.FilterOptions.BaseFilterOptions paginationFilter)
+            {
+                paginationFilter.ValidatePagination();
+
+                // Get total count before pagination
+                var totalCount = await baseQuery.CountAsync();
+
+                // Apply pagination to the base query
+                baseQuery = baseQuery
+                    .Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize)
+                    .Take(paginationFilter.PageSize);
+            }
+
             // Perform a left join/group to compute shift counts per worker without loading full collections
             var counts = await DbContext.Shifts
                 .GroupBy(s => s.WorkerId)
@@ -103,10 +117,17 @@ public class WorkerRepository : BaseRepository<Worker, WorkerFilterOptions, Work
 
             if (!workers.Any())
             {
-                return Result<List<Worker>>.Success(workers, "No workers found with the specified criteria.", System.Net.HttpStatusCode.OK);
+                var message = filterOptions is Models.FilterOptions.BaseFilterOptions emptyFilter
+                    ? $"No workers found for page {emptyFilter.PageNumber}. Total records: {await BuildQuery(filterOptions).CountAsync()}"
+                    : "No workers found with the specified criteria.";
+                return Result<List<Worker>>.Success(workers, message, System.Net.HttpStatusCode.OK);
             }
 
-            return Result<List<Worker>>.Success(workers, "Workers retrieved successfully.", System.Net.HttpStatusCode.OK);
+            var successMessage = filterOptions is Models.FilterOptions.BaseFilterOptions successFilter
+                ? $"Workers retrieved successfully. Page {successFilter.PageNumber} of {Math.Ceiling((double)(await BuildQuery(filterOptions).CountAsync()) / successFilter.PageSize)}. Total: {await BuildQuery(filterOptions).CountAsync()}"
+                : "Workers retrieved successfully.";
+
+            return Result<List<Worker>>.Success(workers, successMessage, System.Net.HttpStatusCode.OK);
         }
         catch (Exception ex)
         {
