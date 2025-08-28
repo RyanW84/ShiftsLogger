@@ -47,9 +47,9 @@ public class WorkersControllerTests
         // Assert
         response.Result.Should().BeOfType<OkObjectResult>();
         var okResult = response.Result as OkObjectResult;
-        okResult!.Value.Should().BeOfType<ApiResponseDto<List<Worker>>>();
+        okResult!.Value.Should().BeOfType<PaginatedApiResponseDto<List<Worker>>>();
         
-        var apiResponse = okResult.Value as ApiResponseDto<List<Worker>>;
+        var apiResponse = okResult.Value as PaginatedApiResponseDto<List<Worker>>;
         apiResponse!.RequestFailed.Should().BeFalse();
         apiResponse.ResponseCode.Should().Be(HttpStatusCode.OK);
         apiResponse.Data.Should().HaveCount(2);
@@ -75,7 +75,8 @@ public class WorkersControllerTests
         var objectResult = response.Result as ObjectResult;
         objectResult!.StatusCode.Should().Be(500);
         
-        var apiResponse = objectResult.Value as ApiResponseDto<List<Worker>>;
+        var apiResponse = objectResult.Value as PaginatedApiResponseDto<List<Worker>>;
+        apiResponse.Should().NotBeNull();
         apiResponse!.RequestFailed.Should().BeTrue();
         apiResponse.ResponseCode.Should().Be(HttpStatusCode.InternalServerError);
         apiResponse.Message.Should().Be("Database error");
