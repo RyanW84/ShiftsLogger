@@ -11,4 +11,5 @@ public interface ILocationUi
     void DisplayLocationsTable(IEnumerable<Location> locations);
     Task<int> GetLocationByIdUi();
     Task<int> SelectLocation();
+    Task DisplayLocationsWithPaginationAsync(int initialPageNumber = 1, int pageSize = 10);
 }

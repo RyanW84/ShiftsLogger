@@ -132,28 +132,152 @@ public class ShiftUI : IShiftUi
         _display.DisplayTable(shifts, "Shifts");
     }
 
+    public async Task DisplayShiftsWithPaginationAsync(int initialPageNumber = 1, int pageSize = 10)
+    {
+        var currentPage = initialPageNumber;
+
+        while (true)
+        {
+            _display.DisplayHeader($"Shifts (Page {currentPage})", "blue");
+
+            var response = await _shiftService.GetAllShiftsAsync(currentPage, pageSize).ConfigureAwait(false);
+
+            if (response.RequestFailed || response.Data == null || !response.Data.Any())
+            {
+                if (currentPage == 1)
+                {
+                    _display.DisplayError("No shifts found.");
+                    return;
+                }
+                else
+                {
+                    _display.DisplayError($"No shifts found on page {currentPage}. Returning to page 1.");
+                    currentPage = 1;
+                    continue;
+                }
+            }
+
+            DisplayShiftsTable(response.Data);
+
+            // Display pagination info
+            _display.DisplayInfo($"Page {response.PageNumber} of {response.TotalPages} | Total: {response.TotalCount} shifts");
+            _display.DisplayInfo($"Showing {response.Data.Count()} of {response.TotalCount} shifts");
+
+            // Create pagination options
+            var options = new List<string>();
+
+            if (response.HasPreviousPage)
+                options.Add("Previous Page");
+
+            if (response.HasNextPage)
+                options.Add("Next Page");
+
+            options.Add("Go to Page");
+            options.Add("Change Page Size");
+            options.Add("Back to Menu");
+
+            var choice = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Choose an action:")
+                    .AddChoices(options)
+            );
+
+            switch (choice)
+            {
+                case "Previous Page":
+                    currentPage--;
+                    break;
+
+                case "Next Page":
+                    currentPage++;
+                    break;
+
+                case "Go to Page":
+                    var pageInput = AnsiConsole.Ask<int>($"Enter page number (1-{response.TotalPages}):");
+                    if (pageInput >= 1 && pageInput <= response.TotalPages)
+                        currentPage = pageInput;
+                    else
+                        _display.DisplayError($"Invalid page number. Please enter a number between 1 and {response.TotalPages}.");
+                    break;
+
+                case "Change Page Size":
+                    var sizeInput = AnsiConsole.Ask<int>("Enter new page size (1-100):");
+                    if (sizeInput >= 1 && sizeInput <= 100)
+                    {
+                        pageSize = sizeInput;
+                        currentPage = 1; // Reset to first page
+                    }
+                    else
+                        _display.DisplayError("Invalid page size. Please enter a number between 1 and 100.");
+                    break;
+
+                case "Back to Menu":
+                    return;
+            }
+        }
+    }
+
     public async Task<int> GetShiftByIdUi()
     {
-    _display.DisplayHeader("Select Shift", "blue");
+        _display.DisplayHeader("Select Shift", "blue");
 
-        var response = await _shiftService.GetAllShiftsAsync().ConfigureAwait(false);
-        if (response.RequestFailed || response.Data == null || !response.Data.Any())
+        var currentPage = 1;
+        const int pageSize = 20; // Larger page size for selection
+
+        while (true)
         {
-            _uiHelper.DisplayValidationError(response.Message ?? "No shifts available.");
-            // Fallback to manual entry
-            return AnsiConsole.Ask<int>("[green]Enter shift ID:[/]");
+            var response = await _shiftService.GetAllShiftsAsync(currentPage, pageSize).ConfigureAwait(false);
+            if (response.RequestFailed || response.Data == null || !response.Data.Any())
+            {
+                if (currentPage == 1)
+                {
+                    _uiHelper.DisplayValidationError(response.Message ?? "No shifts available.");
+                    // Fallback to manual entry
+                    return AnsiConsole.Ask<int>("[green]Enter shift ID:[/]");
+                }
+                else
+                {
+                    currentPage = 1;
+                    continue;
+                }
+            }
+
+            var choices = response.Data
+                .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)")
+                .ToList();
+
+            // Add navigation options if there are more pages
+            if (response.HasNextPage)
+                choices.Add("Next Page...");
+            if (response.HasPreviousPage)
+                choices.Add("Previous Page...");
+
+            choices.Add("Enter ID Manually");
+
+            var selected = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title($"Select Shift (Page {response.PageNumber} of {response.TotalPages}):")
+                    .AddChoices(choices)
+            );
+
+            if (selected == "Next Page...")
+            {
+                currentPage++;
+                continue;
+            }
+            else if (selected == "Previous Page...")
+            {
+                currentPage--;
+                continue;
+            }
+            else if (selected == "Enter ID Manually")
+            {
+                return AnsiConsole.Ask<int>("[green]Enter shift ID:[/]");
+            }
+            else
+            {
+                return UiHelper.ExtractIdFromChoice(selected);
+            }
         }
-
-        var choices = response.Data
-            .Select(s => $"{s.ShiftId}: {s.StartTime:dd/MM/yyyy HH:mm} - {s.EndTime:dd/MM/yyyy HH:mm} ({s.Duration.TotalHours:F1}h)")
-            .ToArray();
-
-        var selected = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-                .Title("Select Shift:")
-                .AddChoices(choices)
-        );
-
-        return UiHelper.ExtractIdFromChoice(selected);
     }
 }

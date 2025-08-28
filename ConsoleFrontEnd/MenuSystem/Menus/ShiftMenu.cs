@@ -275,50 +275,7 @@ public class ShiftMenu : BaseMenu
     private async Task ViewAllShiftsAsync()
     {
         DisplayService.DisplayHeader("All Shifts", "blue");
-        var response = await _shiftService.GetAllShiftsAsync();
-        if (response.RequestFailed)
-        {
-            switch (response.ResponseCode)
-            {
-                case HttpStatusCode.NotFound:
-                    DisplayService.DisplayError("No shifts found (404).");
-                    break;
-                case HttpStatusCode.BadRequest:
-                    DisplayService.DisplayError("Bad request (400).");
-                    break;
-                case HttpStatusCode.InternalServerError:
-                    DisplayService.DisplayError("Server error (500).");
-                    break;
-                case HttpStatusCode.Unauthorized:
-                    DisplayService.DisplayError("Unauthorized (401). Please log in.");
-                    break;
-                case HttpStatusCode.Forbidden:
-                    DisplayService.DisplayError("Forbidden (403). You do not have permission.");
-                    break;
-                case HttpStatusCode.Conflict:
-                    DisplayService.DisplayError("Conflict (409). Resource conflict detected.");
-                    break;
-                case HttpStatusCode.RequestTimeout:
-                    DisplayService.DisplayError("Request Timeout (408). The server timed out.");
-                    break;
-                case (HttpStatusCode)422:
-                    DisplayService.DisplayError("Unprocessable Entity (422). Validation failed.");
-                    break;
-                default:
-                    DisplayService.DisplayError($"Failed to retrieve shifts: {response.Message}");
-                    break;
-            }
-        }
-        else if (response.Data == null || !response.Data.Any())
-        {
-            DisplayService.DisplayError("No shifts found (404).");
-        }
-        else
-        {
-            _shiftUi.DisplayShiftsTable(response.Data);
-            DisplayService.DisplaySuccess($"Total shifts: {response.TotalCount}");
-        }
-
+        await _shiftUi.DisplayShiftsWithPaginationAsync();
         InputService.WaitForKeyPress();
     }
 

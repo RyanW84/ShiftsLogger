@@ -22,11 +22,11 @@ public class LocationService : ILocationService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<ApiResponseDto<List<Location>>> GetLocationsByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.LocationFilterOptions filter)
+    public async Task<ApiResponseDto<List<Location>>> GetLocationsByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.LocationFilterOptions filter, int pageNumber = 1, int pageSize = 10)
     {
         try
         {
-            var queryString = $"api/locations?" + BuildLocationFilterQuery(filter);
+            var queryString = $"api/locations?" + BuildLocationFilterQuery(filter, pageNumber, pageSize);
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
             var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);
@@ -49,7 +49,7 @@ public class LocationService : ILocationService
         }
     }
 
-    private string BuildLocationFilterQuery(ConsoleFrontEnd.Models.FilterOptions.LocationFilterOptions filter)
+    private string BuildLocationFilterQuery(ConsoleFrontEnd.Models.FilterOptions.LocationFilterOptions filter, int pageNumber = 1, int pageSize = 10)
     {
         List<string> query = [];
         if (filter.LocationId.HasValue) query.Add($"LocationId={filter.LocationId.Value}");
@@ -60,14 +60,19 @@ public class LocationService : ILocationService
         if (!string.IsNullOrWhiteSpace(filter.PostCode)) query.Add($"PostCode={Uri.EscapeDataString(filter.PostCode)}");
         if (!string.IsNullOrWhiteSpace(filter.Country)) query.Add($"Country={Uri.EscapeDataString(filter.Country)}");
         if (!string.IsNullOrWhiteSpace(filter.Search)) query.Add($"Search={Uri.EscapeDataString(filter.Search)}");
+
+        // Add pagination parameters
+        query.Add($"pageNumber={pageNumber}");
+        query.Add($"pageSize={pageSize}");
+
         return string.Join("&", query);
     }
 
-    public async Task<ApiResponseDto<List<Location>>> GetAllLocationsAsync()
+    public async Task<ApiResponseDto<List<Location>>> GetAllLocationsAsync(int pageNumber = 1, int pageSize = 10)
     {
         try
         {
-            var queryString = "api/locations";
+            var queryString = $"api/locations?pageNumber={pageNumber}&pageSize={pageSize}";
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
             var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);

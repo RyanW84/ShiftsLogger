@@ -11,4 +11,5 @@ public interface IWorkerUi
     void DisplayWorkersTable(IEnumerable<Worker> workers);
     Task<int> GetWorkerByIdUi();
     Task<int> SelectWorker();
+    Task DisplayWorkersWithPaginationAsync(int initialPageNumber = 1, int pageSize = 10);
 }

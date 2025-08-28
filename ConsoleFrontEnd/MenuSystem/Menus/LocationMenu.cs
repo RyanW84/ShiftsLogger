@@ -14,16 +14,19 @@ namespace ConsoleFrontEnd.MenuSystem.Menus;
 public class LocationMenu : BaseMenu
 {
     private readonly ILocationService _locationService;
+    private readonly ILocationUi _locationUi;
 
     public LocationMenu(
         IConsoleDisplayService displayService,
         IConsoleInputService inputService,
         INavigationService navigationService,
         ILogger<LocationMenu> logger,
-        ILocationService locationService)
+        ILocationService locationService,
+        ILocationUi locationUi)
         : base(displayService, inputService, navigationService, logger)
     {
         _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
+        _locationUi = locationUi ?? throw new ArgumentNullException(nameof(locationUi));
     }
 
     public override string Title => "Location Management";
@@ -117,48 +120,7 @@ public class LocationMenu : BaseMenu
     private async Task ViewAllLocationsAsync()
     {
         DisplayService.DisplayHeader("All Locations", "blue");
-
-        var response = await _locationService.GetAllLocationsAsync();
-
-        if (response.RequestFailed)
-        {
-            switch (response.ResponseCode)
-            {
-                case System.Net.HttpStatusCode.NotFound:
-                    DisplayService.DisplayError("No locations found (404).");
-                    break;
-                case System.Net.HttpStatusCode.BadRequest:
-                    DisplayService.DisplayError("Bad request (400).");
-                    break;
-                case System.Net.HttpStatusCode.InternalServerError:
-                    DisplayService.DisplayError("Server error (500).");
-                    break;
-                case System.Net.HttpStatusCode.Unauthorized:
-                    DisplayService.DisplayError("Unauthorized (401).");
-                    break;
-                case System.Net.HttpStatusCode.Forbidden:
-                    DisplayService.DisplayError("Forbidden (403).");
-                    break;
-                case System.Net.HttpStatusCode.Conflict:
-                    DisplayService.DisplayError("Conflict (409).");
-                    break;
-                case System.Net.HttpStatusCode.RequestTimeout:
-                    DisplayService.DisplayError("Request Timeout (408).");
-                    break;
-                case (System.Net.HttpStatusCode)422:
-                    DisplayService.DisplayError("Unprocessable Entity (422).");
-                    break;
-                default:
-                    DisplayService.DisplayError($"Failed to retrieve locations: {response.Message}");
-                    break;
-            }
-        }
-        else
-        {
-            DisplayService.DisplayTable(response.Data ?? Enumerable.Empty<Location>(), "All Locations");
-            DisplayService.DisplaySuccess($"Total locations: {response.TotalCount}");
-        }
-
+        await _locationUi.DisplayLocationsWithPaginationAsync();
         InputService.WaitForKeyPress();
     }
 

@@ -21,11 +21,11 @@ public class ShiftService : IShiftService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<ApiResponseDto<List<Shift>>> GetShiftsByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter)
+    public async Task<ApiResponseDto<List<Shift>>> GetShiftsByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter, int pageNumber = 1, int pageSize = 10)
     {
         try
         {
-            var queryString = $"api/shifts?" + BuildShiftFilterQuery(filter);
+            var queryString = $"api/shifts?" + BuildShiftFilterQuery(filter, pageNumber, pageSize);
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
             var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);
@@ -48,7 +48,7 @@ public class ShiftService : IShiftService
         }
     }
 
-    private string BuildShiftFilterQuery(ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter)
+    private string BuildShiftFilterQuery(ConsoleFrontEnd.Models.FilterOptions.ShiftFilterOptions filter, int pageNumber = 1, int pageSize = 10)
     {
         List<string> query = [];
         if (filter.ShiftId.HasValue) query.Add($"ShiftId={filter.ShiftId.Value}");
@@ -60,6 +60,11 @@ public class ShiftService : IShiftService
         if (!string.IsNullOrWhiteSpace(filter.WorkerName)) query.Add($"WorkerName={Uri.EscapeDataString(filter.WorkerName)}");
         if (filter.MinDurationMinutes.HasValue) query.Add($"MinDurationMinutes={filter.MinDurationMinutes.Value}");
         if (filter.MaxDurationMinutes.HasValue) query.Add($"MaxDurationMinutes={filter.MaxDurationMinutes.Value}");
+
+        // Add pagination parameters
+        query.Add($"pageNumber={pageNumber}");
+        query.Add($"pageSize={pageSize}");
+
         return string.Join("&", query);
     }
 
@@ -96,11 +101,11 @@ public class ShiftService : IShiftService
         };
     }
 
-    public async Task<ApiResponseDto<List<Shift>>> GetAllShiftsAsync()
+    public async Task<ApiResponseDto<List<Shift>>> GetAllShiftsAsync(int pageNumber = 1, int pageSize = 10)
     {
         try
         {
-            var queryString = "api/shifts";
+            var queryString = $"api/shifts?pageNumber={pageNumber}&pageSize={pageSize}";
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
             var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);

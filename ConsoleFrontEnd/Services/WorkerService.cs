@@ -19,11 +19,11 @@ public class WorkerService : IWorkerService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<ApiResponseDto<List<Worker>>> GetWorkersByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.WorkerFilterOptions filter)
+    public async Task<ApiResponseDto<List<Worker>>> GetWorkersByFilterAsync(ConsoleFrontEnd.Models.FilterOptions.WorkerFilterOptions filter, int pageNumber = 1, int pageSize = 10)
     {
         try
         {
-            var queryString = $"api/workers?" + BuildWorkerFilterQuery(filter);
+            var queryString = $"api/workers?" + BuildWorkerFilterQuery(filter, pageNumber, pageSize);
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
             var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);
@@ -46,7 +46,7 @@ public class WorkerService : IWorkerService
         }
     }
 
-    private string BuildWorkerFilterQuery(ConsoleFrontEnd.Models.FilterOptions.WorkerFilterOptions filter)
+    private string BuildWorkerFilterQuery(ConsoleFrontEnd.Models.FilterOptions.WorkerFilterOptions filter, int pageNumber = 1, int pageSize = 10)
     {
         List<string> query = [];
         if (filter.WorkerId.HasValue) query.Add($"WorkerId={filter.WorkerId.Value}");
@@ -54,14 +54,19 @@ public class WorkerService : IWorkerService
         if (!string.IsNullOrWhiteSpace(filter.Email)) query.Add($"Email={Uri.EscapeDataString(filter.Email)}");
         if (!string.IsNullOrWhiteSpace(filter.PhoneNumber)) query.Add($"PhoneNumber={Uri.EscapeDataString(filter.PhoneNumber)}");
         if (!string.IsNullOrWhiteSpace(filter.Search)) query.Add($"Search={Uri.EscapeDataString(filter.Search)}");
+
+        // Add pagination parameters
+        query.Add($"pageNumber={pageNumber}");
+        query.Add($"pageSize={pageSize}");
+
         return string.Join("&", query);
     }
 
-    public async Task<ApiResponseDto<List<Worker>>> GetAllWorkersAsync()
+    public async Task<ApiResponseDto<List<Worker>>> GetAllWorkersAsync(int pageNumber = 1, int pageSize = 10)
     {
         try
         {
-            var queryString = "api/workers";
+            var queryString = $"api/workers?pageNumber={pageNumber}&pageSize={pageSize}";
             _logger.LogInformation("Making request to: {RequestUrl}", $"{_httpClient.BaseAddress}{queryString}");
 
             var response = await _httpClient.GetAsync(queryString).ConfigureAwait(false);

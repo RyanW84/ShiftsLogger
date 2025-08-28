@@ -14,16 +14,19 @@ namespace ConsoleFrontEnd.MenuSystem.Menus;
 public class WorkerMenu : BaseMenu
 {
     private readonly IWorkerService _workerService;
+    private readonly IWorkerUi _workerUi;
 
     public WorkerMenu(
         IConsoleDisplayService displayService,
         IConsoleInputService inputService,
         INavigationService navigationService,
         ILogger<WorkerMenu> logger,
-        IWorkerService workerService)
+        IWorkerService workerService,
+        IWorkerUi workerUi)
         : base(displayService, inputService, navigationService, logger)
     {
         _workerService = workerService ?? throw new ArgumentNullException(nameof(workerService));
+        _workerUi = workerUi ?? throw new ArgumentNullException(nameof(workerUi));
     }
 
     public override string Title => "Worker Management";
@@ -117,48 +120,7 @@ public class WorkerMenu : BaseMenu
     private async Task ViewAllWorkersAsync()
     {
         DisplayService.DisplayHeader("All Workers", "blue");
-
-        var response = await _workerService.GetAllWorkersAsync();
-
-        if (response.RequestFailed)
-        {
-            switch (response.ResponseCode)
-            {
-                case System.Net.HttpStatusCode.NotFound:
-                    DisplayService.DisplayError("No workers found (404).");
-                    break;
-                case System.Net.HttpStatusCode.BadRequest:
-                    DisplayService.DisplayError("Bad request (400).");
-                    break;
-                case System.Net.HttpStatusCode.InternalServerError:
-                    DisplayService.DisplayError("Server error (500).");
-                    break;
-                case System.Net.HttpStatusCode.Unauthorized:
-                    DisplayService.DisplayError("Unauthorized (401).");
-                    break;
-                case System.Net.HttpStatusCode.Forbidden:
-                    DisplayService.DisplayError("Forbidden (403).");
-                    break;
-                case System.Net.HttpStatusCode.Conflict:
-                    DisplayService.DisplayError("Conflict (409).");
-                    break;
-                case System.Net.HttpStatusCode.RequestTimeout:
-                    DisplayService.DisplayError("Request Timeout (408).");
-                    break;
-                case (System.Net.HttpStatusCode)422:
-                    DisplayService.DisplayError("Unprocessable Entity (422).");
-                    break;
-                default:
-                    DisplayService.DisplayError($"Failed to retrieve workers: {response.Message}");
-                    break;
-            }
-        }
-        else
-        {
-            DisplayService.DisplayTable(response.Data != null ? response.Data : Enumerable.Empty<Worker>(), "All Workers");
-            DisplayService.DisplaySuccess($"Total workers: {response.TotalCount}");
-        }
-
+        await _workerUi.DisplayWorkersWithPaginationAsync();
         InputService.WaitForKeyPress();
     }
 
