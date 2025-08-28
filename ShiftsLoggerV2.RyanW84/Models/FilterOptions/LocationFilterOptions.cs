@@ -2,7 +2,7 @@
 
 namespace ShiftsLoggerV2.RyanW84.Models.FilterOptions;
 
-public class LocationFilterOptions
+public class LocationFilterOptions : BaseFilterOptions
 {
     // This class defines the filter options for retrieving locations, allowing filtering by location ID and name.
     [FromQuery(Name = "LocationId")] public int? LocationId { get; set; } = 0;

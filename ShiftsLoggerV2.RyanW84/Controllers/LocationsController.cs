@@ -23,23 +23,26 @@ public class LocationsController : BaseController
     }
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponseDto<List<Location>>>> GetAllLocations([FromQuery] LocationFilterOptions locationOptions)
+    public async Task<ActionResult<PaginatedApiResponseDto<List<Location>>>> GetAllLocations([FromQuery] LocationFilterOptions locationOptions)
     {
         try
         {
             var result = await _locationBusinessService.GetAllAsync(locationOptions);
-            return HandleResult(result, "Locations retrieved successfully");
+            return HandlePaginatedResult(result, locationOptions, "Locations retrieved successfully");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to retrieve all locations");
             var (status, message) = ErrorMapper.Map(ex);
-            return StatusCode((int)status, new ApiResponseDto<List<Location>>
+            return StatusCode((int)status, new PaginatedApiResponseDto<List<Location>>
             {
                 RequestFailed = true,
                 ResponseCode = status,
                 Message = message,
-                Data = null
+                Data = null,
+                TotalCount = 0,
+                PageNumber = locationOptions.PageNumber,
+                PageSize = locationOptions.PageSize
             });
         }
     }
@@ -50,7 +53,7 @@ public class LocationsController : BaseController
         try
         {
             var result = await _locationBusinessService.GetByIdAsync(id);
-            return HandleResult(result, "Location retrieved successfully");
+            return HandleResult<Location>(result, "Location retrieved successfully");
         }
         catch (Exception ex)
         {
@@ -77,7 +80,7 @@ public class LocationsController : BaseController
             }
 
             var result = await _locationBusinessService.CreateAsync(location);
-            return HandleResult(result, "Location created successfully");
+            return HandleResult<Location>(result, "Location created successfully");
         }
         catch (Exception ex)
         {
@@ -104,7 +107,7 @@ public class LocationsController : BaseController
             }
 
             var result = await _locationBusinessService.UpdateAsync(id, updatedLocation);
-            return HandleResult(result, "Location updated successfully");
+            return HandleResult<Location>(result, "Location updated successfully");
         }
         catch (Exception ex)
         {
@@ -126,7 +129,7 @@ public class LocationsController : BaseController
         try
         {
             var result = await _locationBusinessService.DeleteAsync(id);
-            return HandleResult(result, "Location deleted successfully");
+            return HandleNonGenericResult(result, "Location deleted successfully");
         }
         catch (Exception ex)
         {

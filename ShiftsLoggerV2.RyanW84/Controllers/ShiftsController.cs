@@ -26,24 +26,27 @@ public class ShiftsController : BaseController
 
     // This is the route for getting all shifts
     [HttpGet(Name = "Get All Shifts")]
-    public async Task<ActionResult<ApiResponseDto<List<Shift>>>> GetAllShifts([FromQuery] ShiftFilterOptions shiftOptions)
+    public async Task<ActionResult<PaginatedApiResponseDto<List<Shift>>>> GetAllShifts([FromQuery] ShiftFilterOptions shiftOptions)
     {
         try
         {
             // Use the new SOLID business service for enhanced functionality
             var result = await _shiftBusinessService.GetAllAsync(shiftOptions);
-            return HandleResult(result, "Shifts retrieved successfully");
+            return HandlePaginatedResult(result, shiftOptions, "Shifts retrieved successfully");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to retrieve all shifts");
             var (status, message) = ShiftsLoggerV2.RyanW84.Common.ErrorMapper.Map(ex);
-            return StatusCode((int)status, new ApiResponseDto<List<Shift>>
+            return StatusCode((int)status, new PaginatedApiResponseDto<List<Shift>>
             {
                 RequestFailed = true,
                 ResponseCode = status,
                 Message = message,
-                Data = null
+                Data = null,
+                TotalCount = 0,
+                PageNumber = shiftOptions.PageNumber,
+                PageSize = shiftOptions.PageSize
             });
         }
     }
@@ -56,7 +59,7 @@ public class ShiftsController : BaseController
         {
             // Use the new SOLID business service for enhanced functionality
             var result = await _shiftBusinessService.GetByIdAsync(id);
-            return HandleResult(result, "Shift retrieved successfully");
+            return HandleResult<Shift>(result, "Shift retrieved successfully");
         }
         catch (Exception ex)
         {

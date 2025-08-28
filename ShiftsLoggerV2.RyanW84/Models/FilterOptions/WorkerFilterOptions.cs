@@ -2,7 +2,7 @@
 
 namespace ShiftsLoggerV2.RyanW84.Models.FilterOptions;
 
-public class WorkerFilterOptions
+public class WorkerFilterOptions : BaseFilterOptions
 {
     [FromQuery(Name = "WorkerId")] public int? WorkerId { get; set; } = 0;
 

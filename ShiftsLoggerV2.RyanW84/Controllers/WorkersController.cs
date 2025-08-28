@@ -23,23 +23,26 @@ public class WorkersController : BaseController
     }
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponseDto<List<Worker>>>> GetAllWorkers([FromQuery] WorkerFilterOptions workerOptions)
+    public async Task<ActionResult<PaginatedApiResponseDto<List<Worker>>>> GetAllWorkers([FromQuery] WorkerFilterOptions workerOptions)
     {
         try
         {
             var result = await _workerBusinessService.GetAllAsync(workerOptions);
-            return HandleResult(result, "Workers retrieved successfully");
+            return HandlePaginatedResult(result, workerOptions, "Workers retrieved successfully");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to retrieve all workers");
             var (status, message) = ErrorMapper.Map(ex);
-            return StatusCode((int)status, new ApiResponseDto<List<Worker>>
+            return StatusCode((int)status, new PaginatedApiResponseDto<List<Worker>>
             {
                 RequestFailed = true,
                 ResponseCode = status,
                 Message = message,
-                Data = null
+                Data = null,
+                TotalCount = 0,
+                PageNumber = workerOptions.PageNumber,
+                PageSize = workerOptions.PageSize
             });
         }
     }
@@ -50,7 +53,7 @@ public class WorkersController : BaseController
         try
         {
             var result = await _workerBusinessService.GetByIdAsync(id);
-            return HandleResult(result, "Worker retrieved successfully");
+            return HandleResult<Worker>(result, "Worker retrieved successfully");
         }
         catch (Exception ex)
         {
@@ -77,7 +80,7 @@ public class WorkersController : BaseController
             }
 
             var result = await _workerBusinessService.CreateAsync(worker);
-            return HandleResult(result, "Worker created successfully");
+            return HandleResult<Worker>(result, "Worker created successfully");
         }
         catch (Exception ex)
         {
@@ -104,7 +107,7 @@ public class WorkersController : BaseController
             }
 
             var result = await _workerBusinessService.UpdateAsync(id, updatedWorker);
-            return HandleResult(result, "Worker updated successfully");
+            return HandleResult<Worker>(result, "Worker updated successfully");
         }
         catch (Exception ex)
         {
@@ -126,7 +129,7 @@ public class WorkersController : BaseController
         try
         {
             var result = await _workerBusinessService.DeleteAsync(id);
-            return HandleResult(result, "Worker deleted successfully");
+            return HandleNonGenericResult(result, "Worker deleted successfully");
         }
         catch (Exception ex)
         {

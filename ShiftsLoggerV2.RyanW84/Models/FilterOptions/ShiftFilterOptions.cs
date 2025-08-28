@@ -2,7 +2,7 @@
 
 namespace ShiftsLoggerV2.RyanW84.Models.FilterOptions;
 
-public class ShiftFilterOptions
+public class ShiftFilterOptions : BaseFilterOptions
 {
     [FromQuery(Name = "shiftId")] public int ShiftId { get; set; } // Use int for shift ID filtering
 

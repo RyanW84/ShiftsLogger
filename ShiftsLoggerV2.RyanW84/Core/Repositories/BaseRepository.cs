@@ -31,22 +31,57 @@ public abstract class BaseRepository<TEntity, TFilter, TCreateDto, TUpdateDto>
         try
         {
             var query = BuildQuery(filterOptions);
-            var entities = await query.ToListAsync();
-
-            if (!entities.Any())
+            
+            // Check if filter options support pagination
+            if (filterOptions is Models.FilterOptions.BaseFilterOptions baseFilter)
             {
+                baseFilter.ValidatePagination();
+                
+                // Get total count before pagination
+                var totalCount = await query.CountAsync();
+                
+                // Apply pagination
+                var paginatedQuery = query
+                    .Skip((baseFilter.PageNumber - 1) * baseFilter.PageSize)
+                    .Take(baseFilter.PageSize);
+                
+                var entities = await paginatedQuery.ToListAsync();
+
+                if (!entities.Any() && totalCount > 0)
+                {
+                    return Result<List<TEntity>>.Success(
+                        entities,
+                        $"No {typeof(TEntity).Name.ToLower()}s found for page {baseFilter.PageNumber}. Total records: {totalCount}",
+                        HttpStatusCode.OK
+                    );
+                }
+
                 return Result<List<TEntity>>.Success(
                     entities,
-                    $"No {typeof(TEntity).Name.ToLower()}s found with the specified criteria.",
+                    $"{typeof(TEntity).Name}s retrieved successfully. Page {baseFilter.PageNumber} of {Math.Ceiling((double)totalCount / baseFilter.PageSize)}. Total: {totalCount}",
                     HttpStatusCode.OK
                 );
             }
+            else
+            {
+                // Fallback to non-paginated behavior for backward compatibility
+                var entities = await query.ToListAsync();
 
-            return Result<List<TEntity>>.Success(
-                entities,
-                $"{typeof(TEntity).Name}s retrieved successfully.",
-                HttpStatusCode.OK
-            );
+                if (!entities.Any())
+                {
+                    return Result<List<TEntity>>.Success(
+                        entities,
+                        $"No {typeof(TEntity).Name.ToLower()}s found with the specified criteria.",
+                        HttpStatusCode.OK
+                    );
+                }
+
+                return Result<List<TEntity>>.Success(
+                    entities,
+                    $"{typeof(TEntity).Name}s retrieved successfully.",
+                    HttpStatusCode.OK
+                );
+            }
         }
         catch (Exception ex)
         {
