@@ -47,14 +47,17 @@ public class WorkersControllerTests
         // Assert
         response.Result.Should().BeOfType<OkObjectResult>();
         var okResult = response.Result as OkObjectResult;
-        okResult!.Value.Should().BeOfType<ApiResponseDto<List<Worker>>>();
+        okResult!.Value.Should().BeOfType<PaginatedApiResponseDto<List<Worker>>>();
         
-        var apiResponse = okResult.Value as ApiResponseDto<List<Worker>>;
+        var apiResponse = okResult.Value as PaginatedApiResponseDto<List<Worker>>;
         apiResponse!.RequestFailed.Should().BeFalse();
         apiResponse.ResponseCode.Should().Be(HttpStatusCode.OK);
         apiResponse.Data.Should().HaveCount(2);
         apiResponse.Data![0].Name.Should().Be("John Doe");
         apiResponse.Data[1].Name.Should().Be("Jane Smith");
+        apiResponse.TotalCount.Should().Be(2);
+        apiResponse.PageNumber.Should().Be(1);
+        apiResponse.PageSize.Should().Be(10);
     }
 
     [Fact]
@@ -75,11 +78,14 @@ public class WorkersControllerTests
         var objectResult = response.Result as ObjectResult;
         objectResult!.StatusCode.Should().Be(500);
         
-        var apiResponse = objectResult.Value as ApiResponseDto<List<Worker>>;
+        var apiResponse = objectResult.Value as PaginatedApiResponseDto<List<Worker>>;
         apiResponse!.RequestFailed.Should().BeTrue();
         apiResponse.ResponseCode.Should().Be(HttpStatusCode.InternalServerError);
         apiResponse.Message.Should().Be("Database error");
         apiResponse.Data.Should().BeNull();
+        apiResponse.TotalCount.Should().Be(0);
+        apiResponse.PageNumber.Should().Be(1);
+        apiResponse.PageSize.Should().Be(10);
     }
 
     [Fact]

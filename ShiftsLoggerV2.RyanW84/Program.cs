@@ -93,11 +93,10 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ShiftsLoggerDbContext>();
 
-    // Apply migrations and seed data
-    dbContext.Database.Migrate();
-
     var logger =
         scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ShiftsLoggerDbContext>>();
+
+    // Seed data (this will recreate the database)
     dbContext.SeedData(logger);
 
     Console.WriteLine("Database setup completed successfully");

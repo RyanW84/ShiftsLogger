@@ -67,7 +67,7 @@ public abstract class BaseService<TEntity, TFilter, TCreateDto, TUpdateDto>
 
         var validationResult = await ValidateForDeleteAsync(id).ConfigureAwait(false);
         if (validationResult.IsFailure)
-            return Result.Failure(validationResult.Message);
+            return Result.Failure(validationResult.Message, validationResult.StatusCode);
 
         return await Repository.DeleteAsync(id).ConfigureAwait(false);
     }

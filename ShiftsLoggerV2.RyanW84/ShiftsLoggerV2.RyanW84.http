@@ -4,3 +4,8 @@ GET {{ShiftsLoggerV2.RyanW84_HostAddress}}/api/shifts
 Accept: application/json
 
 ###
+
+GET {{ShiftsLoggerV2.RyanW84_HostAddress}}/api/workers?pageNumber=1&pageSize=10
+Accept: application/json
+
+###
