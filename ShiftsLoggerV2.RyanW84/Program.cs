@@ -16,7 +16,7 @@ if (builder.Environment.IsDevelopment())
 }
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 
 // Prevents circular dependency issues
 builder
@@ -102,7 +102,8 @@ if (app.Environment.IsDevelopment())
     Console.WriteLine("Database setup completed successfully");
 }
 
-app.MapOpenApi();
+app.UseSwagger();
+app.UseSwaggerUI();
 app.MapScalarApiReference(options =>
 {
     options
