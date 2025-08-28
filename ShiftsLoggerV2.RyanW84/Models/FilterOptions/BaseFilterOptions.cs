@@ -6,7 +6,7 @@ public abstract class BaseFilterOptions
 {
     [FromQuery(Name = "pageNumber")] public int PageNumber { get; set; } = 1;
 
-    [FromQuery(Name = "pageSize")] public int PageSize { get; set; } = 50;
+    [FromQuery(Name = "pageSize")] public int PageSize { get; set; } = 10;
 
     // Validation for pagination parameters
     public void ValidatePagination()
