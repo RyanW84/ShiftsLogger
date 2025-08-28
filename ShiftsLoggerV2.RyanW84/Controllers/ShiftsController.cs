@@ -99,7 +99,7 @@ public class ShiftsController : BaseController
             if (!result.IsSuccess)
             {
                 _logger.LogWarning("CreateShift validation failed: {Message}", result.Message);
-                return StatusCode((int)result.StatusCode, new ApiResponseDto<Shift>
+                return BadRequest(new ApiResponseDto<Shift>
                 {
                     RequestFailed = true,
                     ResponseCode = result.StatusCode,
@@ -152,7 +152,7 @@ public class ShiftsController : BaseController
 
             if (!result.IsSuccess)
             {
-                return StatusCode((int)result.StatusCode, new ApiResponseDto<Shift>
+                return BadRequest(new ApiResponseDto<Shift>
                 {
                     RequestFailed = true,
                     ResponseCode = result.StatusCode,

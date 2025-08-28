@@ -193,8 +193,8 @@ public class ShiftsControllerTests
         {
             WorkerId = 1,
             LocationId = 1,
-            StartTime = DateTimeOffset.Now.AddHours(8),
-            EndTime = DateTimeOffset.Now // End time before start time
+            StartTime = DateTimeOffset.Now,
+            EndTime = DateTimeOffset.Now.AddHours(8) // Valid time range to pass ModelState validation
         };
 
         var result = Result<Shift>.Failure("End time must be after start time", HttpStatusCode.BadRequest);
@@ -266,8 +266,8 @@ public class ShiftsControllerTests
         {
             WorkerId = 1,
             LocationId = 1,
-            StartTime = DateTimeOffset.Now.AddHours(8),
-            EndTime = DateTimeOffset.Now // End time before start time
+            StartTime = DateTimeOffset.Now,
+            EndTime = DateTimeOffset.Now.AddHours(8) // Valid time range to pass ModelState validation
         };
 
         var result = Result<Shift>.Failure("End time must be after start time", HttpStatusCode.BadRequest);
