@@ -93,14 +93,59 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ShiftsLoggerDbContext>();
 
-    // Apply migrations and seed data
-    dbContext.Database.Migrate();
+    try
+    {
+        // Check if database exists
+        if (!dbContext.Database.CanConnect())
+        {
+            Console.WriteLine("Database doesn't exist. Creating and applying migrations...");
+            dbContext.Database.Migrate();
+        }
+        else
+        {
+            Console.WriteLine("Database exists. Checking for pending migrations...");
+            var pendingMigrations = dbContext.Database.GetPendingMigrations();
+            if (pendingMigrations.Any())
+            {
+                Console.WriteLine($"Applying {pendingMigrations.Count()} pending migrations...");
+                dbContext.Database.Migrate();
+            }
+            else
+            {
+                Console.WriteLine("No pending migrations. Database is up to date.");
+            }
+        }
 
-    var logger =
-        scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ShiftsLoggerDbContext>>();
-    dbContext.SeedData(logger);
+        var logger = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ShiftsLoggerDbContext>>();
+        dbContext.SeedData(logger);
 
-    Console.WriteLine("Database setup completed successfully");
+        Console.WriteLine("Database setup completed successfully");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database setup failed: {ex.Message}");
+
+        // If it's a migration error, try to recreate the database
+        if (ex.Message.Contains("already an object named") || ex.Message.Contains("already exists"))
+        {
+            Console.WriteLine("Detected existing database conflict. Recreating database...");
+            try
+            {
+                dbContext.Database.EnsureDeleted();
+                dbContext.Database.Migrate();
+
+                var logger = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ShiftsLoggerDbContext>>();
+                dbContext.SeedData(logger);
+
+                Console.WriteLine("Database recreated successfully");
+            }
+            catch (Exception recreateEx)
+            {
+                Console.WriteLine($"Failed to recreate database: {recreateEx.Message}");
+                Console.WriteLine("Please manually delete the database or check your connection string.");
+            }
+        }
+    }
 }
 
 app.MapOpenApi();

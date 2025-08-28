@@ -129,13 +129,8 @@ public class ShiftsLoggerDbContext(DbContextOptions options) : DbContext(options
         }
 
         var currentShiftCount = Shifts.Count();
-        if (currentShiftCount >= 20)
-        {
-            logger?.LogInformation("Sufficient shifts already exist ({ShiftCount}). Skipping seeding.", currentShiftCount);
-            return;
-        }
 
-        var shiftsToGenerate = 20 - currentShiftCount;
+        var shiftsToGenerate = 200;
         var randomShifts = GenerateRandomShifts(savedWorkers, savedLocations, shiftsToGenerate);
 
         try
