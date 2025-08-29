@@ -10,6 +10,7 @@ A comprehensive shift management system built with .NET 9.0, featuring a Web API
 - [Technologies & NuGet Packages](#technologies--nuget-packages)
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
+- [Pagination](#pagination)
 - [Getting Started](#getting-started)
 - [Database Configuration](#database-configuration)
 - [Testing](#testing)
@@ -49,6 +50,7 @@ The solution follows a clean architecture approach with clear separation of conc
 ### API Features
 - Full CRUD operations for Shifts, Workers, and Locations
 - Advanced filtering and querying capabilities
+- **Pagination support** with configurable page size and navigation
 - Date range filtering for shifts
 - Worker-specific shift retrieval
 - Location-based queries (by country, county)
@@ -84,6 +86,8 @@ The solution follows a clean architecture approach with clear separation of conc
 - ✅ **Database Indexes**: Added performance indexes for frequently queried fields
 - ✅ **Query Optimization**: Composite indexes for common query patterns
 - ✅ **Connection Management**: Improved database connection handling
+- ✅ **Pagination Implementation**: Added efficient pagination across all endpoints to handle large datasets
+- ✅ **HTTP Response Optimization**: Resolved size limitations with paginated responses
 
 ### Code Quality
 - ✅ **Dependency Alignment**: Synchronized package versions across projects
@@ -191,7 +195,8 @@ ShiftsLogger/
 ## 🚀 API Endpoints
 
 ### Shifts Controller (`/api/shifts`)
-- `GET /api/shifts` - Get all shifts with filtering
+- `GET /api/shifts` - Get all shifts with filtering and pagination
+  - Query parameters: `pageNumber`, `pageSize`, `workerId`, `locationId`, `startDate`, `endDate`
 - `GET /api/shifts/{id}` - Get shift by ID
 - `POST /api/shifts` - Create new shift
 - `PUT /api/shifts/{id}` - Update shift
@@ -200,7 +205,8 @@ ShiftsLogger/
 - `GET /api/shifts/worker/{workerId}` - Get shifts by worker
 
 ### Workers Controller (`/api/workers`)
-- `GET /api/workers` - Get all workers with filtering
+- `GET /api/workers` - Get all workers with filtering and pagination
+  - Query parameters: `pageNumber`, `pageSize`, `name`, `email`, `phone`
 - `GET /api/workers/{id}` - Get worker by ID
 - `POST /api/workers` - Create new worker
 - `PUT /api/workers/{id}` - Update worker
@@ -209,7 +215,8 @@ ShiftsLogger/
 - `GET /api/workers/by-phone-area-code` - Get workers by phone area code
 
 ### Locations Controller (`/api/locations`)
-- `GET /api/locations` - Get all locations with filtering
+- `GET /api/locations` - Get all locations with filtering and pagination
+  - Query parameters: `pageNumber`, `pageSize`, `name`, `country`, `county`
 - `GET /api/locations/{id}` - Get location by ID
 - `POST /api/locations` - Create new location
 - `PUT /api/locations/{id}` - Update location
@@ -222,7 +229,40 @@ ShiftsLogger/
 - `GET /health/database` - Database connectivity health check
 - `GET /health/custom` - Custom application health checks
 
-## 🚀 Getting Started
+## � Pagination
+
+The API implements efficient pagination for all list endpoints to handle large datasets effectively:
+
+### Pagination Parameters
+- `pageNumber` (int, default: 1) - The page number to retrieve
+- `pageSize` (int, default: 10, max: 1000) - Number of items per page
+
+### Response Format
+```json
+{
+  "items": [...],
+  "totalCount": 150,
+  "pageNumber": 1,
+  "pageSize": 10,
+  "totalPages": 15,
+  "hasNextPage": true,
+  "hasPreviousPage": false
+}
+```
+
+### Usage Examples
+```bash
+# Get first page with 20 items
+GET /api/shifts?pageNumber=1&pageSize=20
+
+# Get second page of workers
+GET /api/workers?pageNumber=2&pageSize=10
+
+# Combine with filtering
+GET /api/locations?pageNumber=1&pageSize=5&country=USA
+```
+
+## �🚀 Getting Started
 
 ### Prerequisites
 - .NET 9.0 SDK
